@@ -163,7 +163,7 @@ export function TruckProfileView() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <div className="bg-white border-b border-gray-200 px-4 py-3">
+      <div className="bg-background border-b border-gray-200 px-4 py-3">
         <div className="flex items-center justify-between">
           <h1 className="text-xl font-semibold text-gray-900">Truck Profiles</h1>
           <div className="flex space-x-2">
@@ -188,7 +188,7 @@ export function TruckProfileView() {
       </div>
 
       {/* Filters */}
-      <div className="bg-white border-b border-gray-200 px-4 py-3 space-y-3">
+      <div className="bg-background border-b border-gray-200 px-4 py-3 space-y-3">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
           <Input

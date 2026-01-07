@@ -42,7 +42,7 @@ export function ViewToggle({ currentView, onViewChange }: ViewToggleProps) {
             variant={isActive ? "default" : "ghost"}
             size="sm"
             onClick={() => onViewChange(view.mode)}
-            className={`h-8 px-3 ${isActive ? 'shadow-sm' : 'hover:bg-white'}`}
+            className={`h-8 px-3 ${isActive ? 'shadow-sm' : 'hover:bg-background'}`}
             title={view.description}
           >
             <Icon className="h-4 w-4 mr-1" />

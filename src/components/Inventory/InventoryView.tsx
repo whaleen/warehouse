@@ -3,16 +3,35 @@ import supabase from '@/lib/supabase';
 import type { InventoryItem, InventoryType } from '@/types/inventory';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { CSVUpload } from './CSVUpload';
 import { CreateSessionDialog } from '@/components/Session/CreateSessionDialog';
 import { ScanningSessionView } from '@/components/Session/ScanningSessionView';
 import { ProductDetailDialog } from '@/components/Products/ProductDetailDialog';
-import { saveSession, setActiveSession, getActiveSession } from '@/lib/sessionManager';
+import {
+  saveSession,
+  setActiveSession,
+  getActiveSession,
+} from '@/lib/sessionManager';
 import type { ScanningSession } from '@/types/session';
-import { RefreshCw, Loader2, Upload, Search, CheckCircle2, Circle, Play, ExternalLink } from 'lucide-react';
+import {
+  RefreshCw,
+  Loader2,
+  Upload,
+  Search,
+  CheckCircle2,
+  Circle,
+  Play,
+  ExternalLink,
+} from 'lucide-react';
 
 export function InventoryView() {
   const [items, setItems] = useState<InventoryItem[]>([]);
@@ -21,9 +40,13 @@ export function InventoryView() {
 
   // Filters
   const [searchTerm, setSearchTerm] = useState('');
-  const [inventoryTypeFilter, setInventoryTypeFilter] = useState<'all' | InventoryType>('all');
+  const [inventoryTypeFilter, setInventoryTypeFilter] = useState<
+    'all' | InventoryType
+  >('all');
   const [subInventoryFilter, setSubInventoryFilter] = useState('all');
-  const [scannedFilter, setScannedFilter] = useState<'all' | 'scanned' | 'pending'>('all');
+  const [scannedFilter, setScannedFilter] = useState<
+    'all' | 'scanned' | 'pending'
+  >('all');
 
   // Dialog state
   const [uploadOpen, setUploadOpen] = useState(false);
@@ -32,7 +55,6 @@ export function InventoryView() {
   const [productDetailOpen, setProductDetailOpen] = useState(false);
   const [selectedModel, setSelectedModel] = useState('');
 
-  // Check for active session on mount
   useEffect(() => {
     const activeSession = getActiveSession();
     if (activeSession) {
@@ -40,12 +62,12 @@ export function InventoryView() {
     }
   }, []);
 
-  // Fetch inventory items with product details
   const fetchItems = async () => {
     try {
       const { data, error } = await supabase
         .from('inventory_items')
-        .select(`
+        .select(
+          `
           *,
           products (
             model,
@@ -55,16 +77,17 @@ export function InventoryView() {
             weight,
             dimensions
           )
-        `)
+        `,
+        )
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('Error fetching inventory items:', error);
+        console.error(error);
       } else {
         setItems(data || []);
       }
     } catch (error) {
-      console.error('Error fetching inventory items:', error);
+      console.error(error);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -80,60 +103,74 @@ export function InventoryView() {
     fetchItems();
   };
 
-  // Handle session creation
   const handleSessionCreated = (session: ScanningSession) => {
     saveSession(session);
     setActiveSession(session.id);
     setActiveSessionView(true);
   };
 
-  // Handle session exit
   const handleSessionExit = () => {
     setActiveSessionView(false);
-    fetchItems(); // Refresh inventory list
+    fetchItems();
   };
 
-  // Handle product detail view
   const handleViewProduct = (model: string) => {
     setSelectedModel(model);
     setProductDetailOpen(true);
   };
 
-  // Get unique sub-inventories for filter
   const uniqueSubInventories = useMemo(() => {
-    const subs = [...new Set(items.map(item => item.sub_inventory))].filter(Boolean);
+    const subs = [...new Set(items.map(item => item.sub_inventory))].filter(
+      Boolean,
+    );
     return subs.sort();
   }, [items]);
 
-  // Filter items
   const filteredItems = useMemo(() => {
     return items.filter(item => {
-      const matchesSearch = !searchTerm ||
+      const matchesSearch =
+        !searchTerm ||
         item.cso.toLowerCase().includes(searchTerm.toLowerCase()) ||
         item.model.toLowerCase().includes(searchTerm.toLowerCase()) ||
         item.serial?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         item.product_type.toLowerCase().includes(searchTerm.toLowerCase());
 
-      const matchesInventoryType = inventoryTypeFilter === 'all' || item.inventory_type === inventoryTypeFilter;
-      const matchesSubInventory = subInventoryFilter === 'all' || item.sub_inventory === subInventoryFilter;
+      const matchesInventoryType =
+        inventoryTypeFilter === 'all' ||
+        item.inventory_type === inventoryTypeFilter;
+
+      const matchesSubInventory =
+        subInventoryFilter === 'all' ||
+        item.sub_inventory === subInventoryFilter;
+
       const matchesScanned =
         scannedFilter === 'all' ||
         (scannedFilter === 'scanned' && item.is_scanned) ||
         (scannedFilter === 'pending' && !item.is_scanned);
 
-      return matchesSearch && matchesInventoryType && matchesSubInventory && matchesScanned;
+      return (
+        matchesSearch &&
+        matchesInventoryType &&
+        matchesSubInventory &&
+        matchesScanned
+      );
     });
-  }, [items, searchTerm, inventoryTypeFilter, subInventoryFilter, scannedFilter]);
+  }, [
+    items,
+    searchTerm,
+    inventoryTypeFilter,
+    subInventoryFilter,
+    scannedFilter,
+  ]);
 
-  // Show session view if active
   if (activeSessionView) {
     return <ScanningSessionView onExit={handleSessionExit} />;
   }
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="flex items-center space-x-2">
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="flex items-center gap-2">
           <Loader2 className="h-6 w-6 animate-spin" />
           <span>Loading inventory...</span>
         </div>
@@ -142,21 +179,32 @@ export function InventoryView() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       {/* Header */}
-      <div className="bg-white border-b border-gray-200 px-4 py-3 sticky top-0 z-10">
+      <div className="sticky top-0 z-10 border-b border-border bg-background px-4 py-3">
         <div className="flex items-center justify-between">
-          <h1 className="text-xl font-semibold text-gray-900">Inventory</h1>
+          <h1 className="text-xl font-semibold text-foreground">Inventory</h1>
           <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={handleRefresh} disabled={refreshing}>
-              <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleRefresh}
+              disabled={refreshing}
+            >
+              <RefreshCw
+                className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`}
+              />
             </Button>
-            <Button variant="outline" size="sm" onClick={() => setUploadOpen(true)}>
-              <Upload className="h-4 w-4 mr-2" />
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setUploadOpen(true)}
+            >
+              <Upload className="mr-2 h-4 w-4" />
               Upload
             </Button>
             <Button size="sm" onClick={() => setCreateSessionOpen(true)}>
-              <Play className="h-4 w-4 mr-2" />
+              <Play className="mr-2 h-4 w-4" />
               Start Session
             </Button>
           </div>
@@ -164,23 +212,25 @@ export function InventoryView() {
       </div>
 
       {/* Filters */}
-      <div className="bg-white border-b border-gray-200 px-4 py-3">
+      <div className="border-b border-border bg-background px-4 py-3">
         <div className="space-y-3">
-          {/* Search */}
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
-              type="text"
               placeholder="Search CSO, Serial, Model..."
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={e => setSearchTerm(e.target.value)}
               className="pl-10"
             />
           </div>
 
-          {/* Filter Selects */}
           <div className="grid grid-cols-2 gap-2">
-            <Select value={inventoryTypeFilter} onValueChange={(value: any) => setInventoryTypeFilter(value)}>
+            <Select
+              value={inventoryTypeFilter}
+              onValueChange={(value: any) =>
+                setInventoryTypeFilter(value)
+              }
+            >
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
@@ -196,7 +246,10 @@ export function InventoryView() {
               </SelectContent>
             </Select>
 
-            <Select value={scannedFilter} onValueChange={(value: any) => setScannedFilter(value)}>
+            <Select
+              value={scannedFilter}
+              onValueChange={(value: any) => setScannedFilter(value)}
+            >
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
@@ -209,14 +262,19 @@ export function InventoryView() {
           </div>
 
           {uniqueSubInventories.length > 0 && (
-            <Select value={subInventoryFilter} onValueChange={setSubInventoryFilter}>
+            <Select
+              value={subInventoryFilter}
+              onValueChange={setSubInventoryFilter}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="All Routes" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Routes</SelectItem>
                 {uniqueSubInventories.map(sub => (
-                  <SelectItem key={sub} value={sub!}>{sub}</SelectItem>
+                  <SelectItem key={sub} value={sub!}>
+                    {sub}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -227,7 +285,7 @@ export function InventoryView() {
       {/* Item List */}
       <div className="p-4 pb-24">
         {filteredItems.length === 0 ? (
-          <div className="text-center py-12 text-gray-500">
+          <div className="py-12 text-center text-muted-foreground">
             {items.length === 0
               ? 'No inventory items. Upload a CSV to get started.'
               : 'No items match your filters.'}
@@ -235,49 +293,68 @@ export function InventoryView() {
         ) : (
           <div className="space-y-2">
             {filteredItems.map(item => (
-              <Card key={item.id} className={`p-4 ${item.is_scanned ? 'bg-green-50' : ''}`}>
+              <Card
+                key={item.id}
+                className={`p-4 ${item.is_scanned ? 'bg-muted' : ''}`}
+              >
                 <div className="flex items-start justify-between">
                   <div className="flex-1 space-y-1">
                     <div className="flex items-center gap-2">
                       {item.is_scanned ? (
-                        <CheckCircle2 className="h-5 w-5 text-green-600" />
+                        <CheckCircle2 className="h-5 w-5 text-primary" />
                       ) : (
-                        <Circle className="h-5 w-5 text-gray-300" />
+                        <Circle className="h-5 w-5 text-muted-foreground/50" />
                       )}
-                      <span className="font-semibold text-gray-900">{item.product_type}</span>
-                      <Badge variant="secondary" className="ml-auto">{item.inventory_type}</Badge>
+                      <span className="font-semibold text-foreground">
+                        {item.product_type}
+                      </span>
+                      <Badge variant="secondary" className="ml-auto">
+                        {item.inventory_type}
+                      </Badge>
                     </div>
 
-                    {/* Product details from catalog */}
                     {item.products && (
                       <div className="ml-7 mb-2">
                         {item.products.brand && (
-                          <Badge variant="outline" className="mr-2 text-xs">
+                          <Badge
+                            variant="outline"
+                            className="mr-2 text-xs"
+                          >
                             {item.products.brand}
                           </Badge>
                         )}
                         {item.products.description && (
-                          <p className="text-sm text-gray-600 mt-1">
+                          <p className="mt-1 text-sm text-muted-foreground">
                             {item.products.description}
                           </p>
                         )}
                       </div>
                     )}
 
-                    <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm ml-7">
+                    <div className="ml-7 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
                       <div>
-                        <span className="text-gray-500">CSO:</span>{' '}
+                        <span className="text-muted-foreground">
+                          CSO:
+                        </span>{' '}
                         <span className="font-mono">{item.cso}</span>
                       </div>
                       <div>
-                        <span className="text-gray-500">Serial:</span>{' '}
-                        <span className="font-mono">{item.serial || '-'}</span>
+                        <span className="text-muted-foreground">
+                          Serial:
+                        </span>{' '}
+                        <span className="font-mono">
+                          {item.serial || '-'}
+                        </span>
                       </div>
                       <div className="col-span-2">
-                        <span className="text-gray-500">Model:</span>{' '}
+                        <span className="text-muted-foreground">
+                          Model:
+                        </span>{' '}
                         <button
-                          onClick={() => handleViewProduct(item.model)}
-                          className="font-mono text-xs text-blue-600 hover:text-blue-800 hover:underline inline-flex items-center gap-1"
+                          onClick={() =>
+                            handleViewProduct(item.model)
+                          }
+                          className="inline-flex items-center gap-1 font-mono text-xs text-primary hover:text-primary/80 hover:underline"
                         >
                           {item.model}
                           <ExternalLink className="h-3 w-3" />
@@ -285,8 +362,12 @@ export function InventoryView() {
                       </div>
                       {item.sub_inventory && (
                         <div>
-                          <span className="text-gray-500">Route:</span>{' '}
-                          <span className="font-mono">{item.sub_inventory}</span>
+                          <span className="text-muted-foreground">
+                            Route:
+                          </span>{' '}
+                          <span className="font-mono">
+                            {item.sub_inventory}
+                          </span>
                         </div>
                       )}
                     </div>
@@ -298,21 +379,18 @@ export function InventoryView() {
         )}
       </div>
 
-      {/* CSV Upload */}
       <CSVUpload
         open={uploadOpen}
         onOpenChange={setUploadOpen}
         onUploadComplete={fetchItems}
       />
 
-      {/* Create Session Dialog */}
       <CreateSessionDialog
         open={createSessionOpen}
         onOpenChange={setCreateSessionOpen}
         onSessionCreated={handleSessionCreated}
       />
 
-      {/* Product Detail Dialog */}
       <ProductDetailDialog
         open={productDetailOpen}
         onOpenChange={setProductDetailOpen}

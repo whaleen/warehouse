@@ -140,7 +140,7 @@ export function ScanningSessionView({ onExit }: ScanningSessionViewProps) {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <div className="bg-white border-b border-gray-200 px-4 py-3 sticky top-0 z-10">
+      <div className="bg-background border-b border-gray-200 px-4 py-3 sticky top-0 z-10">
         <div className="flex items-center gap-3 mb-3">
           <Button variant="ghost" size="icon" onClick={handleExit}>
             <ArrowLeft className="h-5 w-5" />

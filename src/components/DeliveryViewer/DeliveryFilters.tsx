@@ -65,7 +65,7 @@ export function DeliveryFilters({
                           lifecycleFilter !== 'all';
 
   return (
-    <div className="space-y-4 bg-white p-4 border-b border-gray-200 sticky top-0 z-10">
+    <div className="space-y-4 bg-background p-4 border-b border-gray-200 sticky top-0 z-10">
       {/* Search */}
       <div className="relative">
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
