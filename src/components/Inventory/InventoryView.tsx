@@ -244,9 +244,9 @@ export function InventoryView({ onSettingsClick }: InventoryViewProps) {
       <div className="p-4 pb-24 space-y-2">
         {filteredItems.map(item => (
           <Card
-            key={item.id}
+            key={item.id as string}
             className="p-4 cursor-pointer hover:bg-accent transition"
-            onClick={() => handleViewItem(item.id)}
+            onClick={() => handleViewItem(item.id as string)}
           >
             <div className="space-y-2">
               <div className="flex items-center gap-2">
@@ -254,7 +254,7 @@ export function InventoryView({ onSettingsClick }: InventoryViewProps) {
                   {item.products?.product_type ?? item.product_type}
                 </span>
                 <Badge variant="secondary">{item.inventory_type}</Badge>
-                {item.is_scanned && <Badge variant="success">Scanned</Badge>}
+                {item.is_scanned && <Badge variant="outline">Scanned</Badge>}
               </div>
 
               {item.products && (

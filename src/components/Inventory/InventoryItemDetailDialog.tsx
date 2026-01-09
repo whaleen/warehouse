@@ -13,25 +13,25 @@ import supabase from '@/lib/supabase';
 import type { InventoryItem } from '@/types/inventory';
 import { decodeHTMLEntities } from '@/lib/htmlUtils';
 
-interface InventoryItemWithProduct extends InventoryItem {
-  products: {
-    id: string;
-    model: string;
-    product_type: string;
-    brand?: string;
-    description?: string;
-    dimensions?: {
-      width?: number;
-      height?: number;
-      depth?: number;
-    };
-    image_url?: string;
-    product_url?: string;
-    price?: number;
-    msrp?: number;
-    color?: string;
-  } | null;
-}
+// interface InventoryItemWithProduct extends InventoryItem {
+//   products: {
+//     id: string;
+//     model: string;
+//     product_type: string;
+//     brand?: string;
+//     description?: string;
+//     dimensions?: {
+//       width?: number;
+//       height?: number;
+//       depth?: number;
+//     };
+//     image_url?: string;
+//     product_url?: string;
+//     price?: number;
+//     msrp?: number;
+//     color?: string;
+//   } | null;
+// }
 
 interface InventoryItemDetailDialogProps {
   open: boolean;
@@ -45,7 +45,8 @@ export function InventoryItemDetailDialog({
   itemId,
 }: InventoryItemDetailDialogProps) {
   const [item, setItem] =
-    useState<InventoryItemWithProduct | null>(null);
+  useState<InventoryItem | null>(null);
+
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
