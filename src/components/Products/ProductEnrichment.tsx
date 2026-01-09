@@ -5,22 +5,32 @@ import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Loader2, Search, Plus } from 'lucide-react';
+import { Loader2, Search, Plus, ExternalLink } from 'lucide-react';
 import supabase from '@/lib/supabase';
 import { AppHeader } from '@/components/Navigation/AppHeader';
 import { decodeHTMLEntities } from '@/lib/htmlUtils';
 
 interface ProductData {
+  id?: string;
   model: string;
   product_type: string;
   brand?: string;
   description?: string;
-  weight?: number;
   dimensions?: {
     width?: number;
     height?: number;
     depth?: number;
   };
+  image_url?: string;
+  product_url?: string;
+  price?: number;
+  msrp?: number;
+  color?: string;
+  capacity?: string;
+  availability?: string;
+  commercial_category?: string;
+  product_category?: string;
+  is_part?: boolean;
 }
 
 interface ProductEnrichmentProps {
@@ -107,7 +117,6 @@ export function ProductEnrichment({ onSettingsClick }: ProductEnrichmentProps) {
           product_type: productData.product_type,
           brand: productData.brand || 'GE',
           description: productData.description || null,
-          weight: productData.weight || null,
           dimensions: productData.dimensions || null
         }, {
           onConflict: 'model'
@@ -190,27 +199,87 @@ export function ProductEnrichment({ onSettingsClick }: ProductEnrichmentProps) {
                     className="p-4 cursor-pointer hover:bg-accent transition-colors"
                     onClick={() => handleSelectProduct(product)}
                   >
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <span className="font-mono font-semibold">{product.model}</span>
-                        <Badge variant="secondary">{product.product_type}</Badge>
-                      </div>
-                      {product.brand && (
-                        <Badge variant="outline" className="text-xs">
-                          {product.brand}
-                        </Badge>
+                    <div className="flex gap-4">
+                      {/* Product Image */}
+                      {product.image_url && (
+                        <div className="flex-shrink-0 w-20 h-20">
+                          <img
+                            src={product.image_url}
+                            alt={product.model}
+                            className="w-full h-full object-contain rounded"
+                          />
+                        </div>
                       )}
-                      {product.description && (
-                        <p className="text-sm text-muted-foreground">
-                          {decodeHTMLEntities(product.description)}
-                        </p>
-                      )}
-                      <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                        {product.weight && <span>Weight: {product.weight} lbs</span>}
-                        {product.dimensions?.width && product.dimensions?.height && product.dimensions?.depth && (
-                          <span>
-                            {product.dimensions.width}" × {product.dimensions.height}" × {product.dimensions.depth}"
-                          </span>
+
+                      {/* Product Details */}
+                      <div className="flex-1 space-y-2">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="space-y-1">
+                            <div className="font-mono font-semibold">{product.model}</div>
+                            {product.description && (
+                              <p className="text-sm text-muted-foreground line-clamp-2">
+                                {decodeHTMLEntities(product.description)}
+                              </p>
+                            )}
+                          </div>
+                          <Badge variant="secondary" className="flex-shrink-0">
+                            {product.product_type}
+                          </Badge>
+                        </div>
+
+                        {/* Badges */}
+                        <div className="flex items-center gap-2 flex-wrap">
+                          {product.brand && (
+                            <Badge variant="outline" className="text-xs">
+                              {product.brand}
+                            </Badge>
+                          )}
+                          {product.product_category && (
+                            <Badge variant="outline" className="text-xs">
+                              {product.product_category}
+                            </Badge>
+                          )}
+                          {product.color && (
+                            <Badge variant="outline" className="text-xs">
+                              {product.color}
+                            </Badge>
+                          )}
+                          {product.capacity && (
+                            <Badge variant="outline" className="text-xs">
+                              {product.capacity}
+                            </Badge>
+                          )}
+                        </div>
+
+                        {/* Pricing and Dimensions */}
+                        <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                          {product.price && (
+                            <span className="font-medium">${product.price}</span>
+                          )}
+                          {product.dimensions?.width && product.dimensions?.height && product.dimensions?.depth && (
+                            <span>
+                              {product.dimensions.width}" × {product.dimensions.height}" × {product.dimensions.depth}"
+                            </span>
+                          )}
+                          {product.availability && (
+                            <span className="capitalize">{product.availability}</span>
+                          )}
+                        </div>
+
+                        {/* External Link */}
+                        {product.product_url && (
+                          <div className="pt-1">
+                            <a
+                              href={product.product_url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              View Product
+                              <ExternalLink className="h-3 w-3" />
+                            </a>
+                          </div>
                         )}
                       </div>
                     </div>
@@ -279,24 +348,6 @@ export function ProductEnrichment({ onSettingsClick }: ProductEnrichmentProps) {
                   setProductData({ ...productData, description: e.target.value })
                 }
               />
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-2">
-                <Label htmlFor="weight">Weight (lbs)</Label>
-                <Input
-                  id="weight"
-                  type="number"
-                  placeholder="200"
-                  value={productData.weight || ''}
-                  onChange={(e) =>
-                    setProductData({
-                      ...productData,
-                      weight: e.target.value ? parseFloat(e.target.value) : undefined
-                    })
-                  }
-                />
-              </div>
             </div>
 
             <div className="grid grid-cols-3 gap-3">
@@ -386,35 +437,6 @@ export function ProductEnrichment({ onSettingsClick }: ProductEnrichmentProps) {
         </Card>
       )}
 
-      {/* Quick Add Common Models */}
-      <Card className="p-6">
-        <h3 className="font-semibold text-foreground mb-3">Common Product Types</h3>
-        <div className="flex flex-wrap gap-2">
-          {[
-            'WASHER',
-            'DRYER',
-            'REFRIGERATOR',
-            'DISHWASHER',
-            'RANGE',
-            'OVEN',
-            'MICROWAVE',
-            'COOKTOP'
-          ].map((type) => (
-            <Button
-              key={type}
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                if (productData) {
-                  setProductData({ ...productData, product_type: type });
-                }
-              }}
-            >
-              {type}
-            </Button>
-          ))}
-        </div>
-      </Card>
       </div>
     </div>
   );

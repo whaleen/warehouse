@@ -35,6 +35,7 @@ type InventoryItemWithProduct = InventoryItem & {
     dimensions?: Record<string, any>;
     image_url?: string;
     product_url?: string;
+    product_category?: string;
   } | null;
 };
 
@@ -51,6 +52,7 @@ export function InventoryView({ onSettingsClick }: InventoryViewProps) {
   const [inventoryTypeFilter, setInventoryTypeFilter] =
     useState<'all' | InventoryType>('all');
   const [subInventoryFilter, setSubInventoryFilter] = useState('all');
+  const [productCategoryFilter, setProductCategoryFilter] = useState<'all' | 'appliance' | 'part' | 'accessory'>('all');
 
   // Dialog state
   const [createSessionOpen, setCreateSessionOpen] = useState(false);
@@ -82,7 +84,8 @@ export function InventoryView({ onSettingsClick }: InventoryViewProps) {
             description,
             dimensions,
             image_url,
-            product_url
+            product_url,
+            product_category
           )
         `,
         )
@@ -156,9 +159,13 @@ export function InventoryView({ onSettingsClick }: InventoryViewProps) {
         subInventoryFilter === 'all' ||
         item.sub_inventory === subInventoryFilter;
 
-      return matchesSearch && matchesType && matchesSub;
+      const matchesCategory =
+        productCategoryFilter === 'all' ||
+        item.products?.product_category === productCategoryFilter;
+
+      return matchesSearch && matchesType && matchesSub && matchesCategory;
     });
-  }, [items, searchTerm, inventoryTypeFilter, subInventoryFilter]);
+  }, [items, searchTerm, inventoryTypeFilter, subInventoryFilter, productCategoryFilter]);
 
   if (activeSessionView) {
     return <ScanningSessionView onExit={handleSessionExit} />;
@@ -198,27 +205,46 @@ export function InventoryView({ onSettingsClick }: InventoryViewProps) {
           />
         </div>
 
-        <Select
-          value={inventoryTypeFilter}
-          onValueChange={v =>
-            setInventoryTypeFilter(v as 'all' | InventoryType)
-          }
-        >
-          <SelectTrigger>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Types</SelectItem>
-            <SelectItem value="ASIS">ASIS</SelectItem>
-            <SelectItem value="BackHaul">Back Haul</SelectItem>
-            <SelectItem value="Salvage">Salvage</SelectItem>
-            <SelectItem value="Staged">Staged</SelectItem>
-            <SelectItem value="Inbound">Inbound</SelectItem>
-            <SelectItem value="FG">FG</SelectItem>
-            <SelectItem value="LocalStock">Local Stock</SelectItem>
-            <SelectItem value="Parts">Parts</SelectItem>
-          </SelectContent>
-        </Select>
+        <div className="grid grid-cols-2 gap-3">
+          <Select
+            value={inventoryTypeFilter}
+            onValueChange={v =>
+              setInventoryTypeFilter(v as 'all' | InventoryType)
+            }
+          >
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Types</SelectItem>
+              <SelectItem value="ASIS">ASIS</SelectItem>
+              <SelectItem value="BackHaul">Back Haul</SelectItem>
+              <SelectItem value="Salvage">Salvage</SelectItem>
+              <SelectItem value="Staged">Staged</SelectItem>
+              <SelectItem value="Inbound">Inbound</SelectItem>
+              <SelectItem value="FG">FG</SelectItem>
+              <SelectItem value="LocalStock">Local Stock</SelectItem>
+              <SelectItem value="Parts">Parts</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <Select
+            value={productCategoryFilter}
+            onValueChange={v =>
+              setProductCategoryFilter(v as 'all' | 'appliance' | 'part' | 'accessory')
+            }
+          >
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Categories</SelectItem>
+              <SelectItem value="appliance">Appliances</SelectItem>
+              <SelectItem value="part">Parts</SelectItem>
+              <SelectItem value="accessory">Accessories</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
 
         {uniqueSubInventories.length > 0 && (
           <Select
