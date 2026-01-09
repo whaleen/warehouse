@@ -23,6 +23,23 @@ export interface InventoryItem {
   products?: Product;
 }
 
+
+//   id: string;
+//   model: string;
+//   product_type: string;
+//   brand?: string;
+//   description?: string;
+//   dimensions?: {
+//     width?: number;
+//     height?: number;
+//     depth?: number;
+//   };
+//   image_url?: string;
+//   product_url?: string;
+//   price?: number;
+//   msrp?: number;
+//   color?: string;
+
 export interface Product {
   id?: string;
   model: string;
@@ -35,6 +52,11 @@ export interface Product {
     height?: number;
     depth?: number;
   };
+  image_url?: string;
+  product_url?: string;
+  price?: number;
+  msrp?: number;
+  color?: string;
   created_at?: string;
 }
 
