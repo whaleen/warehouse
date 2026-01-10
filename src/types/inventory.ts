@@ -63,7 +63,6 @@ export interface Product {
 export type InventoryType =
   | 'ASIS'
   | 'BackHaul'
-  | 'Salvage'
   | 'Staged'
   | 'Inbound'
   | 'FG'
@@ -88,4 +87,37 @@ export interface ScanResult {
   type: 'unique' | 'multiple' | 'not_found';
   items?: InventoryItem[];
   matchedField?: 'serial' | 'cso' | 'model';
+}
+
+// Load Management Types
+export type LoadStatus = 'active' | 'staged' | 'in_transit' | 'delivered';
+
+export interface LoadMetadata {
+  id?: string;
+  inventory_type: InventoryType;
+  sub_inventory_name: string;
+  status: LoadStatus;
+  created_at?: string;
+  updated_at?: string;
+  created_by?: string;
+  notes?: string;
+}
+
+export interface LoadWithItems {
+  metadata: LoadMetadata;
+  items: InventoryItem[];
+  item_count: number;
+}
+
+// Inventory Conversion Types
+export interface InventoryConversion {
+  id?: string;
+  inventory_item_id: string;
+  from_inventory_type: InventoryType | 'Salvage'; // Include Salvage for historical data
+  to_inventory_type: InventoryType;
+  from_sub_inventory?: string;
+  to_sub_inventory?: string;
+  converted_by?: string;
+  notes?: string;
+  created_at?: string;
 }

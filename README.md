@@ -1,15 +1,16 @@
-# BlueJacket - Appliance Delivery Logistics Viewer
+# "Warehouse" - Warehouse Inventory Management
 
-A React application for viewing appliance delivery logistics data with real-time data from Supabase.
+A React application for managing warehouse inventory and appliance product data with real-time data from Supabase.
 
 ## Project Overview
 
-BlueJacket is designed to display appliance delivery logistics information including:
-- Delivery truck routes and schedules
+"Warehouse" is designed for warehouse inventory management including:
+- Inventory item tracking and management
 - Customer order tracking (CSO)
-- Appliance inventory (washers, refrigerators, microwaves, ranges, dryers, dishwashers)
-- Serial number tracking and delivery status
-- Stop-by-stop delivery progress
+- Product database with comprehensive GE Appliances catalog
+- Serial number tracking for appliances
+- Product categorization (appliances, parts, accessories)
+- Route and delivery status management
 
 ## Tech Stack
 
@@ -22,46 +23,45 @@ BlueJacket is designed to display appliance delivery logistics information inclu
 
 ### Tables
 
-#### `deliveries`
+#### `inventory_items`
 - `id` (uuid, primary key)
-- `date` (date) - Delivery date
-- `truck_id` (text) - Truck identifier (e.g., CAP-008, GRAN15)
+- `date` (date) - Item date
+- `route_id` (text) - Route identifier
 - `stop` (integer) - Stop number on route
 - `cso` (text) - Customer Service Order number
 - `consumer_customer_name` (text) - Customer name
 - `model` (text) - Product model number
-- `qty` (integer) - Quantity delivered
-- `serial` (text) - Serial number
-- `product_type` (text) - WASHER, REFRIGERATOR, MICROWAVE OVEN, etc.
-- `status` (text) - PICKED, DELIVERED, PENDING, etc.
+- `qty` (integer) - Quantity
+- `serial` (text) - Serial number (for appliances only)
+- `product_type` (text) - WASHER, REFRIGERATOR, DISHWASHER, etc.
+- `product_fk` (uuid) - Foreign key to products table
+- `status` (text) - PICKED, DELIVERED, PENDING, SHIPPED, etc.
+- `inventory_type` (text) - WAREHOUSE, IN_TRANSIT, CUSTOMER
+- `sub_inventory` (text) - Specific location within warehouse
+- `is_scanned` (boolean) - Whether item has been scanned
 - `created_at` (timestamp)
 - `updated_at` (timestamp)
-
-#### `trucks`
-- `id` (uuid, primary key)
-- `truck_id` (text, unique) - Truck identifier
-- `driver_name` (text)
-- `capacity` (integer) - Max items per truck
-- `active` (boolean) - Is truck currently active
-- `created_at` (timestamp)
-
-#### `customers`
-- `id` (uuid, primary key)
-- `customer_name` (text)
-- `address` (text)
-- `phone` (text)
-- `email` (text)
-- `created_at` (timestamp)
 
 #### `products`
 - `id` (uuid, primary key)
 - `model` (text, unique) - Product model number
-- `product_type` (text) - Product category
-- `brand` (text)
-- `description` (text)
-- `weight` (decimal) - Product weight
-- `dimensions` (jsonb) - Width, height, depth
+- `product_type` (text) - WASHER, REFRIGERATOR, DISHWASHER, etc.
+- `product_category` (text) - appliance, part, or accessory
+- `brand` (text) - Brand name (e.g., GE, Café, Monogram)
+- `description` (text) - Product description
+- `image_url` (text) - Product image URL
+- `product_url` (text) - Link to product page
+- `price` (numeric) - Current price
+- `msrp` (numeric) - Manufacturer's suggested retail price
+- `color` (text) - Product color/finish
+- `capacity` (text) - Capacity (for appliances)
+- `availability` (text) - Product availability status
+- `commercial_category` (text) - Commercial category hierarchy
+- `is_part` (boolean) - Whether item is a replacement part
+- `dimensions` (jsonb) - Width, height, depth in inches
+- `specs` (jsonb) - All product specifications
 - `created_at` (timestamp)
+- `updated_at` (timestamp)
 
 ## Setup Instructions
 
@@ -94,82 +94,38 @@ npm install
 
 ### 4. Database Migration
 
-Execute the following SQL in your Supabase SQL editor:
+Run the migrations in order from the `/migrations` directory in your Supabase SQL editor:
 
-```sql
--- Enable UUID extension
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+1. `001_initial_schema.sql` - Creates initial products and inventory_items tables
+2. `002_add_product_category.sql` - Adds product categorization
+3. `003_expand_products_schema.sql` - Adds comprehensive product fields (images, pricing, specs)
+4. `004_add_product_category_type.sql` - Creates product_category enum type
+5. `005_add_is_part_field.sql` - Adds is_part boolean for distinguishing parts
+6. `006_recategorize_with_is_part.sql` - Re-categorizes products based on is_part field
 
--- Create deliveries table
-CREATE TABLE deliveries (
-  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
-  date DATE NOT NULL,
-  truck_id TEXT NOT NULL,
-  stop INTEGER NOT NULL,
-  cso TEXT NOT NULL,
-  consumer_customer_name TEXT NOT NULL,
-  model TEXT NOT NULL,
-  qty INTEGER NOT NULL DEFAULT 1,
-  serial TEXT,
-  product_type TEXT NOT NULL,
-  status TEXT NOT NULL DEFAULT 'PENDING',
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
+### 5. Scrape Product Data
 
--- Create trucks table
-CREATE TABLE trucks (
-  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
-  truck_id TEXT UNIQUE NOT NULL,
-  driver_name TEXT,
-  capacity INTEGER DEFAULT 50,
-  active BOOLEAN DEFAULT true,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
+After running migrations, populate the products table with GE Appliances data:
 
--- Create customers table
-CREATE TABLE customers (
-  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
-  customer_name TEXT NOT NULL,
-  address TEXT,
-  phone TEXT,
-  email TEXT,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
--- Create products table
-CREATE TABLE products (
-  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
-  model TEXT UNIQUE NOT NULL,
-  product_type TEXT NOT NULL,
-  brand TEXT,
-  description TEXT,
-  weight DECIMAL,
-  dimensions JSONB,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
--- Create indexes for better performance
-CREATE INDEX idx_deliveries_truck_id ON deliveries(truck_id);
-CREATE INDEX idx_deliveries_date ON deliveries(date);
-CREATE INDEX idx_deliveries_cso ON deliveries(cso);
-CREATE INDEX idx_deliveries_status ON deliveries(status);
-CREATE INDEX idx_deliveries_product_type ON deliveries(product_type);
-
--- Enable Row Level Security
-ALTER TABLE deliveries ENABLE ROW LEVEL SECURITY;
-ALTER TABLE trucks ENABLE ROW LEVEL SECURITY;
-ALTER TABLE customers ENABLE ROW LEVEL SECURITY;
-ALTER TABLE products ENABLE ROW LEVEL SECURITY;
-
--- Create policies for read access (adjust as needed for your use case)
-CREATE POLICY "Allow read access to deliveries" ON deliveries FOR SELECT USING (true);
-CREATE POLICY "Allow read access to trucks" ON trucks FOR SELECT USING (true);
-CREATE POLICY "Allow read access to customers" ON customers FOR SELECT USING (true);
-CREATE POLICY "Allow read access to products" ON products FOR SELECT USING (true);
+```bash
+npm run scrape-products
 ```
 
-### 5. Development
+This will fetch up to 10,000 products from the GE Appliances API including:
+- Product specifications and dimensions
+- Images and product URLs
+- Pricing information (price, MSRP)
+- Product categorization (appliance, part, accessory)
+
+### 6. Seed Inventory Data (Optional)
+
+Generate test inventory data:
+
+```bash
+npm run seed-inventory
+```
+
+### 7. Development
 
 ```bash
 npm run dev
@@ -181,29 +137,69 @@ npm run dev
 src/
 ├── components/
 │   ├── ui/                 # shadcn/ui components
-│   ├── DeliveryViewer/     # Main delivery viewing components
-│   ├── TruckRoutes/        # Truck route displays
-│   ├── DeliveryStatus/     # Status tracking components
-│   └── ProductCatalog/     # Product information display
+│   ├── Dashboard/          # Dashboard view with metrics
+│   ├── Inventory/          # Inventory management components
+│   ├── Products/           # Product database and enrichment
+│   ├── Settings/           # Settings and configuration
+│   └── Navigation/         # App navigation components
 ├── lib/
 │   ├── supabase.ts         # Supabase client setup
-│   └── utils.ts            # Utility functions
-├── types/
-│   └── deliveries.ts       # TypeScript type definitions
+│   ├── utils.ts            # Utility functions
+│   └── htmlUtils.ts        # HTML entity decoding utilities
+├── scripts/
+│   ├── scrapeGEProducts.ts # GE product catalog scraper
+│   └── seed-inventory.ts   # Inventory data seeding
+├── migrations/             # Database migration files
 └── App.tsx
 ```
 
 ## Features
 
-- [ ] Delivery route overview
-- [ ] Real-time delivery status tracking
-- [ ] Truck route optimization display
-- [ ] Customer order tracking (CSO lookup)
-- [ ] Product inventory management
-- [ ] Serial number tracking
-- [ ] Responsive design for mobile and desktop
-- [ ] Search and filter deliveries
-- [ ] Print-friendly delivery manifests
+- [x] **Dashboard** - Overview of warehouse metrics and inventory status
+- [x] **Inventory Management** - Track and manage inventory items across warehouse locations
+  - Filter by product type, status, inventory type, and product category
+  - Search by model, CSO, serial number, or customer name
+  - View comprehensive product details including images and specifications
+  - Support for appliances, parts, and accessories
+- [x] **Product Database** - Comprehensive GE Appliances product catalog
+  - 10,000+ products from GE Appliances API
+  - Product images, descriptions, and specifications
+  - Pricing information (price, MSRP)
+  - Dimensions and technical specs
+  - Product categorization (appliance/part/accessory)
+- [x] **Product Enrichment** - Search and add products to the database
+  - Live search with product images and details
+  - Create new product entries
+  - Link to official product pages
+- [x] **Customer Order Tracking** - Track items by CSO number
+- [x] **Serial Number Tracking** - Track serial numbers for appliances
+- [x] **Route Management** - Assign items to routes and track delivery stops
+- [x] **Status Tracking** - Monitor item status (picked, shipped, delivered, etc.)
+- [x] **Responsive PWA** - Mobile-first design with offline capabilities
+- [x] **Dark Mode** - Theme switching support
+
+## Product Categorization
+
+The application automatically categorizes products into three types:
+
+1. **Appliances** - Full units that require serial numbers (washers, dryers, refrigerators, etc.)
+   - `is_part = false` AND not in "Parts & Accessories" category
+
+2. **Parts** - Replacement components that don't require serial numbers (control boards, shelves, tubes, etc.)
+   - `is_part = true`
+
+3. **Accessories** - Add-on items that don't require serial numbers (filters, racks, kits, etc.)
+   - `is_part = false` AND in "Parts & Accessories" category
+
+This categorization helps warehouse staff understand which items need serial number tracking.
+
+## Data Source
+
+Product data is sourced from the official GE Appliances SearchSpring API:
+- API endpoint: `https://q7rntw.a.searchspring.io/api/search/search.json`
+- Data includes: product specifications, images, pricing, dimensions, availability
+- The scraper respects rate limits (500ms between requests)
+- Data is stored locally in Supabase for fast access
 
 ## Contributing
 

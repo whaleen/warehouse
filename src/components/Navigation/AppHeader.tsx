@@ -9,6 +9,8 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { User, Settings, LogOut, Sun, Moon } from 'lucide-react';
+import { useAuth } from "@/context/AuthContext"
+
 
 interface AppHeaderProps {
   title: string;
@@ -17,6 +19,10 @@ interface AppHeaderProps {
 }
 
 export function AppHeader({ title, actions, onSettingsClick }: AppHeaderProps) {
+
+  const { user, logout } = useAuth()
+
+
   const { theme, setTheme } = useTheme();
 
   const toggleTheme = () => {
@@ -32,13 +38,24 @@ export function AppHeader({ title, actions, onSettingsClick }: AppHeaderProps) {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="rounded-full">
-                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10">
-                  <User className="h-4 w-4 text-primary" />
+                <div className="h-8 w-8 rounded-full overflow-hidden bg-primary/10 flex items-center justify-center">
+                  {user?.image ? (
+                    <img
+                      src={user.image}
+                      alt={user.username}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <User className="h-4 w-4 text-primary" />
+                  )}
                 </div>
+
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuLabel>My Account</DropdownMenuLabel>
+              <DropdownMenuLabel>
+                {user?.username ?? "My Account"}
+              </DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={toggleTheme}>
                 {theme === 'dark' ? (
@@ -58,10 +75,11 @@ export function AppHeader({ title, actions, onSettingsClick }: AppHeaderProps) {
                 <span>Settings</span>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem variant="destructive">
+              <DropdownMenuItem variant="destructive" onClick={logout}>
                 <LogOut className="mr-2 h-4 w-4" />
                 <span>Log out</span>
               </DropdownMenuItem>
+
             </DropdownMenuContent>
           </DropdownMenu>
         </div>

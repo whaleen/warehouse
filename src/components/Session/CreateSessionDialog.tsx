@@ -44,7 +44,6 @@ function generateSessionName(inventoryType: InventoryType, subInventory?: string
   const typeNames: Record<InventoryType, string> = {
     'ASIS': 'ASIS',
     'BackHaul': 'BackHaul',
-    'Salvage': 'Salvage',
     'Staged': 'Staged',
     'Inbound': 'Inbound',
     'FG': 'FG',
@@ -365,7 +364,7 @@ export function CreateSessionDialog({ open, onOpenChange, onSessionCreated }: Cr
                   Creating...
                 </>
               ) : (
-                `Start Session`
+                `Scan`
               )}
             </Button>
           </DialogFooter>
@@ -463,7 +462,7 @@ export function CreateSessionDialog({ open, onOpenChange, onSessionCreated }: Cr
                 ) : (
                   <>
                     <Upload className="h-4 w-4 mr-2" />
-                    Upload & Start Session
+                    Upload & Scan
                   </>
                 )}
               </Button>
