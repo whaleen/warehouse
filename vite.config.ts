@@ -12,8 +12,8 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'mask-icon.svg'],
       manifest: {
-        name: 'BlueJacket Inventory Scanner',
-        short_name: 'BlueJacket',
+        name: 'Warehouse Inventory Scanner',
+        short_name: 'Warehouse',
         description: 'Warehouse appliance inventory scanning and delivery management',
         theme_color: '#3B82F6',
         background_color: '#ffffff',

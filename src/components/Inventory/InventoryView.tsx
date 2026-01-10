@@ -16,6 +16,7 @@ import { CreateSessionDialog } from '@/components/Session/CreateSessionDialog';
 import { ScanningSessionView } from '@/components/Session/ScanningSessionView';
 import { ProductDetailDialog } from '@/components/Products/ProductDetailDialog';
 import { InventoryItemDetailDialog } from './InventoryItemDetailDialog';
+import { LoadManagementDialog } from './LoadManagementDialog';
 import { AppHeader } from '@/components/Navigation/AppHeader';
 import {
   saveSession,
@@ -23,7 +24,7 @@ import {
   getActiveSession,
 } from '@/lib/sessionManager';
 import type { ScanningSession } from '@/types/session';
-import { Loader2, Search, Play, ExternalLink } from 'lucide-react';
+import { Loader2, Search, ExternalLink, PackageOpen, ScanBarcode } from 'lucide-react';
 
 type InventoryItemWithProduct = InventoryItem & {
   products: {
@@ -53,6 +54,7 @@ export function InventoryView({ onSettingsClick }: InventoryViewProps) {
     useState<'all' | InventoryType>('all');
   const [subInventoryFilter, setSubInventoryFilter] = useState('all');
   const [productCategoryFilter, setProductCategoryFilter] = useState<'all' | 'appliance' | 'part' | 'accessory'>('all');
+  const [brandFilter, setBrandFilter] = useState('all');
 
   // Dialog state
   const [createSessionOpen, setCreateSessionOpen] = useState(false);
@@ -61,6 +63,7 @@ export function InventoryView({ onSettingsClick }: InventoryViewProps) {
   const [selectedModel, setSelectedModel] = useState('');
   const [itemDetailOpen, setItemDetailOpen] = useState(false);
   const [selectedItemId, setSelectedItemId] = useState('');
+  const [loadManagementOpen, setLoadManagementOpen] = useState(false);
 
   useEffect(() => {
     if (getActiveSession()) {
@@ -134,6 +137,13 @@ export function InventoryView({ onSettingsClick }: InventoryViewProps) {
     return [...new Set(scoped.map(i => i.sub_inventory).filter(Boolean))].sort();
   }, [items, inventoryTypeFilter]);
 
+  const uniqueBrands = useMemo(() => {
+    const brands = items
+      .map(i => i.products?.brand)
+      .filter(Boolean) as string[];
+    return [...new Set(brands)].sort();
+  }, [items]);
+
   useEffect(() => {
     setSubInventoryFilter('all');
   }, [inventoryTypeFilter]);
@@ -163,9 +173,13 @@ export function InventoryView({ onSettingsClick }: InventoryViewProps) {
         productCategoryFilter === 'all' ||
         item.products?.product_category === productCategoryFilter;
 
-      return matchesSearch && matchesType && matchesSub && matchesCategory;
+      const matchesBrand =
+        brandFilter === 'all' ||
+        item.products?.brand === brandFilter;
+
+      return matchesSearch && matchesType && matchesSub && matchesCategory && matchesBrand;
     });
-  }, [items, searchTerm, inventoryTypeFilter, subInventoryFilter, productCategoryFilter]);
+  }, [items, searchTerm, inventoryTypeFilter, subInventoryFilter, productCategoryFilter, brandFilter]);
 
   if (activeSessionView) {
     return <ScanningSessionView onExit={handleSessionExit} />;
@@ -186,10 +200,17 @@ export function InventoryView({ onSettingsClick }: InventoryViewProps) {
         title="Inventory"
         onSettingsClick={onSettingsClick}
         actions={
-          <Button size="sm" onClick={() => setCreateSessionOpen(true)}>
-            <Play className="mr-2 h-4 w-4" />
-            Start Session
-          </Button>
+          <div className="flex gap-2">
+            <Button size="sm" variant="outline" onClick={() => setLoadManagementOpen(true)}>
+              <PackageOpen className="mr-2 h-4 w-4" />
+              Manage Loads
+            </Button>
+            <Button size="sm" onClick={() => setCreateSessionOpen(true)}>
+              <ScanBarcode className="mr-2 h-4 w-4" />
+              Scan
+            </Button>
+            
+          </div>
         }
       />
 
@@ -205,7 +226,7 @@ export function InventoryView({ onSettingsClick }: InventoryViewProps) {
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-3 gap-3">
           <Select
             value={inventoryTypeFilter}
             onValueChange={v =>
@@ -219,7 +240,6 @@ export function InventoryView({ onSettingsClick }: InventoryViewProps) {
               <SelectItem value="all">All Types</SelectItem>
               <SelectItem value="ASIS">ASIS</SelectItem>
               <SelectItem value="BackHaul">Back Haul</SelectItem>
-              <SelectItem value="Salvage">Salvage</SelectItem>
               <SelectItem value="Staged">Staged</SelectItem>
               <SelectItem value="Inbound">Inbound</SelectItem>
               <SelectItem value="FG">FG</SelectItem>
@@ -242,6 +262,23 @@ export function InventoryView({ onSettingsClick }: InventoryViewProps) {
               <SelectItem value="appliance">Appliances</SelectItem>
               <SelectItem value="part">Parts</SelectItem>
               <SelectItem value="accessory">Accessories</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <Select
+            value={brandFilter}
+            onValueChange={setBrandFilter}
+          >
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Brands</SelectItem>
+              {uniqueBrands.map(brand => (
+                <SelectItem key={brand} value={brand}>
+                  {brand}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
@@ -349,6 +386,11 @@ export function InventoryView({ onSettingsClick }: InventoryViewProps) {
         open={itemDetailOpen}
         onOpenChange={setItemDetailOpen}
         itemId={selectedItemId}
+      />
+
+      <LoadManagementDialog
+        open={loadManagementOpen}
+        onOpenChange={setLoadManagementOpen}
       />
     </div>
   );

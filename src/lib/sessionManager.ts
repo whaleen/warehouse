@@ -1,7 +1,7 @@
 import type { ScanningSession, SessionSummary } from '@/types/session';
 
-const SESSION_STORAGE_KEY = 'bluejacket_scanning_sessions';
-const ACTIVE_SESSION_KEY = 'bluejacket_active_session';
+const SESSION_STORAGE_KEY = 'warehouse_scanning_sessions';
+const ACTIVE_SESSION_KEY = 'warehouse_active_session';
 
 /**
  * Get all saved sessions from localStorage
