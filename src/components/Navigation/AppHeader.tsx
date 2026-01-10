@@ -32,7 +32,10 @@ export function AppHeader({ title, actions, onSettingsClick }: AppHeaderProps) {
   return (
     <div className="sticky top-0 z-10 border-b border-border bg-background px-4 py-3">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold text-foreground">{title}</h1>
+        <div className="flex items-center gap-3">
+          <img src="/warehouse.png" alt="Warehouse" className="h-8 w-8 rounded-full object-cover" />
+          <h1 className="text-xl font-semibold text-foreground">{title}</h1>
+        </div>
         <div className="flex items-center gap-2">
           {actions}
           <DropdownMenu>

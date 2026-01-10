@@ -5,6 +5,26 @@ import { defineConfig } from "vite"
 import { VitePWA } from "vite-plugin-pwa"
 
 export default defineConfig({
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            // Group heavy/frequently-updated deps separately
+            if (id.includes('supabase') || id.includes('@supabase')) {
+              return 'vendor-supabase';
+            }
+            if (id.includes('react') || id.includes('react-dom') || id.includes('react-router')) {
+              return 'vendor-react';
+            }
+            // Everything else vendor → one big but stable chunk
+            return 'vendor';
+          }
+          // Your src code stays in main chunks (or split later)
+        },
+      },
+    },
+  },
   plugins: [
     react(),
     tailwindcss(),

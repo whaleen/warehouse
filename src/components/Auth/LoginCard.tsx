@@ -27,7 +27,10 @@ export function LoginCard() {
     <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
     <div className="min-h-screen flex items-center justify-center bg-background">
       <Card className="w-full max-w-sm p-6 space-y-4">
-        <h1 className="text-xl font-semibold">Sign in</h1>
+        <div className="flex flex-col items-center justify-center gap-2 pb-2">
+          <img src="/warehouse.png" alt="Warehouse" className="h-16 w-16 rounded-full object-cover" />
+          <h1 className="text-2xl font-bold">Warehouse</h1>
+        </div>
 
         <div className="space-y-2">
           <Label>Username</Label>
