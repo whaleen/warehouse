@@ -5,8 +5,8 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Loader2, Plus, Edit, Merge } from 'lucide-react';
-import { getAllLoads, getLoadItemCount, updateLoadStatus } from '@/lib/loadManager';
+import { Loader2, Plus, Edit, Merge, Trash2 } from 'lucide-react';
+import { getAllLoads, getLoadItemCount, updateLoadStatus, deleteLoad } from '@/lib/loadManager';
 import type { LoadMetadata, InventoryType, LoadStatus } from '@/types/inventory';
 import { CreateLoadDialog } from './CreateLoadDialog';
 import { LoadDetailDialog } from './LoadDetailDialog';
@@ -27,6 +27,8 @@ export function LoadManagementDialog({ open, onOpenChange }: LoadManagementDialo
   const [loads, setLoads] = useState<LoadWithCount[]>([]);
   const [loading, setLoading] = useState(false);
   const [statusFilter, setStatusFilter] = useState<'all' | LoadStatus>('all');
+  const [subTypeFilter, setSubTypeFilter] = useState<'all' | InventoryType>('all');
+  const [categoryFilter, setCategoryFilter] = useState('all');
   const [selectedLoads, setSelectedLoads] = useState<Set<string>>(new Set());
 
   // Dialog states
@@ -59,12 +61,50 @@ export function LoadManagementDialog({ open, onOpenChange }: LoadManagementDialo
     if (open) {
       fetchLoads();
       setSelectedLoads(new Set());
+      setSubTypeFilter('all');
+      setCategoryFilter('all');
     }
   }, [open, selectedTab]);
 
-  const filteredLoads = loads.filter(
-    (load) => statusFilter === 'all' || load.status === statusFilter
-  );
+  const filteredLoads = loads.filter((load) => {
+    const matchesStatus = statusFilter === 'all' || load.status === statusFilter;
+    const matchesSubType = subTypeFilter === 'all' || load.inventory_type === subTypeFilter;
+    const matchesCategory = categoryFilter === 'all' || load.category === categoryFilter;
+    return matchesStatus && matchesSubType && matchesCategory;
+  });
+
+  const getCategoryOptions = () => {
+    switch (selectedTab) {
+      case 'ASIS':
+        return ['Regular', 'Salvage'];
+      case 'FG':
+        return ['Back Haul'];
+      default:
+        return [];
+    }
+  };
+
+  const getSubTypeOptions = () => {
+    switch (selectedTab) {
+      case 'ASIS':
+        // ASIS has no sub-types, all loads are just ASIS inventory_type
+        return [];
+      case 'FG':
+        return [
+          { value: 'FG', label: 'FG' },
+          { value: 'BackHaul', label: 'Back Haul' }
+        ];
+      case 'LocalStock':
+        return [
+          { value: 'LocalStock', label: 'Local Stock' },
+          { value: 'Staged', label: 'Staged' },
+          { value: 'Inbound', label: 'Inbound' },
+          { value: 'WillCall', label: 'Will Call' }
+        ];
+      default:
+        return [];
+    }
+  };
 
   const handleStatusChange = async (load: LoadMetadata, newStatus: LoadStatus) => {
     await updateLoadStatus(load.inventory_type, load.sub_inventory_name, newStatus);
@@ -80,6 +120,30 @@ export function LoadManagementDialog({ open, onOpenChange }: LoadManagementDialo
     e.stopPropagation();
     setSelectedLoadForRename(load);
     setRenameDialogOpen(true);
+  };
+
+  const handleDeleteClick = async (load: LoadMetadata, e: React.MouseEvent) => {
+    e.stopPropagation();
+
+    const confirmed = confirm(
+      `Delete load "${load.sub_inventory_name}"?\n\n` +
+      `This will remove the load metadata but keep all ${load.inventory_type} items. ` +
+      `Items will no longer be assigned to this load.`
+    );
+
+    if (!confirmed) return;
+
+    const { success, error } = await deleteLoad(
+      load.inventory_type,
+      load.sub_inventory_name,
+      true // clearItems - set sub_inventory to null
+    );
+
+    if (success) {
+      fetchLoads();
+    } else {
+      alert(`Failed to delete load: ${error?.message || 'Unknown error'}`);
+    }
   };
 
   const toggleLoadSelection = (loadId: string, e: React.MouseEvent) => {
@@ -156,7 +220,39 @@ export function LoadManagementDialog({ open, onOpenChange }: LoadManagementDialo
               <TabsTrigger value="LocalStock">Local Stock</TabsTrigger>
             </TabsList>
 
-            <div className="px-1 py-3 border-b">
+            <div className="px-1 py-3 border-b flex gap-3">
+              {getSubTypeOptions().length > 0 && (
+                <Select value={subTypeFilter} onValueChange={(v) => setSubTypeFilter(v as 'all' | InventoryType)}>
+                  <SelectTrigger className="w-[200px]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Types</SelectItem>
+                    {getSubTypeOptions().map((opt) => (
+                      <SelectItem key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+
+              {getCategoryOptions().length > 0 && (
+                <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                  <SelectTrigger className="w-[200px]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Categories</SelectItem>
+                    {getCategoryOptions().map((cat) => (
+                      <SelectItem key={cat} value={cat}>
+                        {cat}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+
               <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as 'all' | LoadStatus)}>
                 <SelectTrigger className="w-[200px]">
                   <SelectValue />
@@ -209,6 +305,10 @@ export function LoadManagementDialog({ open, onOpenChange }: LoadManagementDialo
                           <div className="flex-1">
                             <div className="flex items-center gap-2">
                               <h3 className="font-semibold">{load.sub_inventory_name}</h3>
+                              <Badge variant="outline">{load.inventory_type}</Badge>
+                              {load.category && (
+                                <Badge variant="secondary">{load.category}</Badge>
+                              )}
                               <Badge className={getStatusColor(load.status)}>
                                 {getStatusLabel(load.status)}
                               </Badge>
@@ -246,6 +346,14 @@ export function LoadManagementDialog({ open, onOpenChange }: LoadManagementDialo
                           >
                             <Edit className="h-4 w-4" />
                           </Button>
+
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={(e) => handleDeleteClick(load, e)}
+                          >
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
                         </div>
                       </div>
                     </Card>
@@ -260,6 +368,7 @@ export function LoadManagementDialog({ open, onOpenChange }: LoadManagementDialo
       <CreateLoadDialog
         open={createDialogOpen}
         onOpenChange={setCreateDialogOpen}
+        defaultInventoryType={selectedTab}
         onSuccess={fetchLoads}
       />
 

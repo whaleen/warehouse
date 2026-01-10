@@ -27,7 +27,7 @@ export function MoveItemsDialog({
   selectedItemIds,
   onSuccess,
 }: MoveItemsDialogProps) {
-  const [moveType, setMoveType] = useState<'existing' | 'new'>('existing');
+  const [moveType, setMoveType] = useState<'existing' | 'new' | 'remove'>('existing');
   const [targetLoadName, setTargetLoadName] = useState('');
   const [newLoadName, setNewLoadName] = useState('');
   const [availableLoads, setAvailableLoads] = useState<LoadMetadata[]>([]);
@@ -72,10 +72,14 @@ export function MoveItemsDialog({
     setError(null);
 
     try {
-      let finalLoadName = targetLoadName;
+      let finalLoadName: string | null = targetLoadName;
 
+      // Handle remove from load
+      if (moveType === 'remove') {
+        finalLoadName = null;
+      }
       // Create new load if needed
-      if (moveType === 'new') {
+      else if (moveType === 'new') {
         const { error: createError } = await createLoad(inventoryType, newLoadName.trim());
         if (createError) {
           setError(createError.message || 'Failed to create load');
@@ -95,7 +99,7 @@ export function MoveItemsDialog({
         .in('id', selectedItemIds);
 
       if (updateError) {
-        setError(updateError.message || 'Failed to move items');
+        setError(updateError.message || 'Failed to update items');
         setLoading(false);
         return;
       }
@@ -124,7 +128,7 @@ export function MoveItemsDialog({
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <RadioGroup value={moveType} onValueChange={(v) => setMoveType(v as 'existing' | 'new')}>
+          <RadioGroup value={moveType} onValueChange={(v) => setMoveType(v as 'existing' | 'new' | 'remove')}>
             <div className="flex items-center space-x-2">
               <RadioGroupItem value="existing" id="existing" />
               <Label htmlFor="existing">Move to existing load</Label>
@@ -132,6 +136,10 @@ export function MoveItemsDialog({
             <div className="flex items-center space-x-2">
               <RadioGroupItem value="new" id="new" />
               <Label htmlFor="new">Create new load</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="remove" id="remove" />
+              <Label htmlFor="remove">Remove from load</Label>
             </div>
           </RadioGroup>
 
@@ -157,7 +165,7 @@ export function MoveItemsDialog({
                 </Select>
               )}
             </div>
-          ) : (
+          ) : moveType === 'new' ? (
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <Label htmlFor="new-load-name">New Load Name</Label>
@@ -177,6 +185,13 @@ export function MoveItemsDialog({
                 placeholder="e.g., LOAD-2026-01-09-A"
               />
             </div>
+          ) : (
+            <div className="p-4 bg-muted rounded-lg text-sm">
+              <p className="text-muted-foreground">
+                {selectedItemIds.length} item{selectedItemIds.length !== 1 ? 's' : ''} will be removed from {currentLoadName || 'the current load'}.
+                The items will remain in the {inventoryType} inventory but won't be assigned to any load.
+              </p>
+            </div>
           )}
 
           {error && <div className="text-sm text-destructive">{error}</div>}
@@ -192,7 +207,7 @@ export function MoveItemsDialog({
             </Button>
             <Button type="submit" disabled={loading}>
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Move Items
+              {moveType === 'remove' ? 'Remove from Load' : 'Move Items'}
             </Button>
           </div>
         </form>

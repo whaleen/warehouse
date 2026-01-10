@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import supabase from '@/lib/supabase';
-import type { InventoryItem, InventoryType } from '@/types/inventory';
+import type { InventoryItem } from '@/types/inventory';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -51,7 +51,7 @@ export function InventoryView({ onSettingsClick }: InventoryViewProps) {
   // Filters
   const [searchTerm, setSearchTerm] = useState('');
   const [inventoryTypeFilter, setInventoryTypeFilter] =
-    useState<'all' | InventoryType>('all');
+    useState<'all' | 'ASIS' | 'FG' | 'LocalStock' | 'Parts'>('all');
   const [subInventoryFilter, setSubInventoryFilter] = useState('all');
   const [productCategoryFilter, setProductCategoryFilter] = useState<'all' | 'appliance' | 'part' | 'accessory'>('all');
   const [brandFilter, setBrandFilter] = useState('all');
@@ -129,10 +129,24 @@ export function InventoryView({ onSettingsClick }: InventoryViewProps) {
   };
 
   const uniqueSubInventories = useMemo(() => {
-    const scoped =
-      inventoryTypeFilter === 'all'
-        ? items
-        : items.filter(i => i.inventory_type === inventoryTypeFilter);
+    // Only show sub-inventory filter for types that use loads
+    const typesWithLoads = ['ASIS', 'FG', 'LocalStock'];
+    if (inventoryTypeFilter === 'all' || !typesWithLoads.includes(inventoryTypeFilter)) {
+      return [];
+    }
+
+    // Get items matching the filter type (including related types)
+    const scoped = items.filter(i => {
+      if (inventoryTypeFilter === 'FG') {
+        return i.inventory_type === 'FG' || i.inventory_type === 'BackHaul';
+      } else if (inventoryTypeFilter === 'LocalStock') {
+        return i.inventory_type === 'LocalStock' || i.inventory_type === 'Staged' || i.inventory_type === 'Inbound' || i.inventory_type === 'WillCall';
+      } else if (inventoryTypeFilter === 'ASIS') {
+        return i.inventory_type === 'ASIS';
+      } else {
+        return i.inventory_type === inventoryTypeFilter;
+      }
+    });
 
     return [...new Set(scoped.map(i => i.sub_inventory).filter(Boolean))].sort();
   }, [items, inventoryTypeFilter]);
@@ -161,9 +175,22 @@ export function InventoryView({ onSettingsClick }: InventoryViewProps) {
         item.products?.brand?.toLowerCase().includes(q) ||
         item.products?.description?.toLowerCase().includes(q);
 
-      const matchesType =
-        inventoryTypeFilter === 'all' ||
-        item.inventory_type === inventoryTypeFilter;
+      // Handle inventory type filter with grouped types
+      const matchesType = (() => {
+        if (inventoryTypeFilter === 'all') return true;
+
+        if (inventoryTypeFilter === 'FG') {
+          return item.inventory_type === 'FG' || item.inventory_type === 'BackHaul';
+        } else if (inventoryTypeFilter === 'LocalStock') {
+          return item.inventory_type === 'LocalStock' || item.inventory_type === 'Staged' || item.inventory_type === 'Inbound';
+        } else if (inventoryTypeFilter === 'Parts') {
+          return item.inventory_type === 'Parts';
+        } else if (inventoryTypeFilter === 'ASIS') {
+          return item.inventory_type === 'ASIS';
+        }
+
+        return item.inventory_type === inventoryTypeFilter;
+      })();
 
       const matchesSub =
         subInventoryFilter === 'all' ||
@@ -230,7 +257,7 @@ export function InventoryView({ onSettingsClick }: InventoryViewProps) {
           <Select
             value={inventoryTypeFilter}
             onValueChange={v =>
-              setInventoryTypeFilter(v as 'all' | InventoryType)
+              setInventoryTypeFilter(v as 'all' | 'ASIS' | 'FG' | 'LocalStock' | 'Parts')
             }
           >
             <SelectTrigger>
@@ -239,9 +266,6 @@ export function InventoryView({ onSettingsClick }: InventoryViewProps) {
             <SelectContent>
               <SelectItem value="all">All Types</SelectItem>
               <SelectItem value="ASIS">ASIS</SelectItem>
-              <SelectItem value="BackHaul">Back Haul</SelectItem>
-              <SelectItem value="Staged">Staged</SelectItem>
-              <SelectItem value="Inbound">Inbound</SelectItem>
               <SelectItem value="FG">FG</SelectItem>
               <SelectItem value="LocalStock">Local Stock</SelectItem>
               <SelectItem value="Parts">Parts</SelectItem>

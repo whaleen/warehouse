@@ -4,10 +4,11 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { Loader2, Search, Move } from 'lucide-react';
+import { Loader2, Search, Move, Plus } from 'lucide-react';
 import { getLoadWithItems } from '@/lib/loadManager';
 import type { LoadMetadata, InventoryItem } from '@/types/inventory';
 import { MoveItemsDialog } from './MoveItemsDialog';
+import { AddItemsToLoadDialog } from './AddItemsToLoadDialog';
 import { decodeHTMLEntities } from '@/lib/htmlUtils';
 
 interface LoadDetailDialogProps {
@@ -23,6 +24,7 @@ export function LoadDetailDialog({ open, onOpenChange, load, onUpdate }: LoadDet
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
   const [moveDialogOpen, setMoveDialogOpen] = useState(false);
+  const [addDialogOpen, setAddDialogOpen] = useState(false);
 
   const fetchItems = async () => {
     setLoading(true);
@@ -104,12 +106,18 @@ export function LoadDetailDialog({ open, onOpenChange, load, onUpdate }: LoadDet
                   <Badge className={getStatusColor(load.status)}>{load.status}</Badge>
                 </div>
               </div>
-              {selectedItems.size > 0 && (
-                <Button size="sm" onClick={() => setMoveDialogOpen(true)}>
-                  <Move className="mr-2 h-4 w-4" />
-                  Move {selectedItems.size} Items
+              <div className="flex gap-2">
+                <Button size="sm" variant="outline" onClick={() => setAddDialogOpen(true)}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Move Items Here
                 </Button>
-              )}
+                {selectedItems.size > 0 && (
+                  <Button size="sm" onClick={() => setMoveDialogOpen(true)}>
+                    <Move className="mr-2 h-4 w-4" />
+                    Move {selectedItems.size}
+                  </Button>
+                )}
+              </div>
             </div>
           </DialogHeader>
 
@@ -222,6 +230,17 @@ export function LoadDetailDialog({ open, onOpenChange, load, onUpdate }: LoadDet
         selectedItemIds={Array.from(selectedItems)}
         onSuccess={() => {
           setSelectedItems(new Set());
+          fetchItems();
+          onUpdate?.();
+        }}
+      />
+
+      <AddItemsToLoadDialog
+        open={addDialogOpen}
+        onOpenChange={setAddDialogOpen}
+        inventoryType={load.inventory_type}
+        currentLoadName={load.sub_inventory_name}
+        onSuccess={() => {
           fetchItems();
           onUpdate?.();
         }}

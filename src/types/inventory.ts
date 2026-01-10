@@ -65,6 +65,7 @@ export type InventoryType =
   | 'BackHaul'
   | 'Staged'
   | 'Inbound'
+  | 'WillCall'
   | 'FG'
   | 'LocalStock'
   | 'Parts';
@@ -97,6 +98,7 @@ export interface LoadMetadata {
   inventory_type: InventoryType;
   sub_inventory_name: string;
   status: LoadStatus;
+  category?: string;
   created_at?: string;
   updated_at?: string;
   created_by?: string;

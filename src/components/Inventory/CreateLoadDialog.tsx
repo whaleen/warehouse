@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,15 +12,23 @@ import type { InventoryType } from '@/types/inventory';
 interface CreateLoadDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  defaultInventoryType?: InventoryType;
   onSuccess?: () => void;
 }
 
-export function CreateLoadDialog({ open, onOpenChange, onSuccess }: CreateLoadDialogProps) {
-  const [inventoryType, setInventoryType] = useState<InventoryType>('ASIS');
+export function CreateLoadDialog({ open, onOpenChange, defaultInventoryType, onSuccess }: CreateLoadDialogProps) {
+  const [inventoryType, setInventoryType] = useState<InventoryType>(defaultInventoryType || 'ASIS');
   const [loadName, setLoadName] = useState('');
+  const [category, setCategory] = useState('');
   const [notes, setNotes] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (open && defaultInventoryType) {
+      setInventoryType(defaultInventoryType);
+    }
+  }, [open, defaultInventoryType]);
 
   const generateLoadName = () => {
     const date = new Date().toISOString().slice(0, 10);
@@ -42,7 +50,9 @@ export function CreateLoadDialog({ open, onOpenChange, onSuccess }: CreateLoadDi
     const { error: createError } = await createLoad(
       inventoryType,
       loadName.trim(),
-      notes.trim() || undefined
+      notes.trim() || undefined,
+      undefined, // createdBy
+      category.trim() || undefined
     );
 
     setLoading(false);
@@ -54,8 +64,9 @@ export function CreateLoadDialog({ open, onOpenChange, onSuccess }: CreateLoadDi
 
     // Success - reset form and close
     setLoadName('');
+    setCategory('');
     setNotes('');
-    setInventoryType('ASIS');
+    setInventoryType(defaultInventoryType || 'ASIS');
     onOpenChange(false);
     onSuccess?.();
   };
@@ -64,9 +75,10 @@ export function CreateLoadDialog({ open, onOpenChange, onSuccess }: CreateLoadDi
     if (!newOpen) {
       // Reset form when closing
       setLoadName('');
+      setCategory('');
       setNotes('');
       setError(null);
-      setInventoryType('ASIS');
+      setInventoryType(defaultInventoryType || 'ASIS');
     }
     onOpenChange(newOpen);
   };
@@ -91,10 +103,41 @@ export function CreateLoadDialog({ open, onOpenChange, onSuccess }: CreateLoadDi
               <SelectContent>
                 <SelectItem value="ASIS">ASIS</SelectItem>
                 <SelectItem value="FG">FG (Finished Goods)</SelectItem>
+                <SelectItem value="BackHaul">Back Haul (FG)</SelectItem>
                 <SelectItem value="LocalStock">Local Stock</SelectItem>
+                <SelectItem value="Staged">Staged (Local Stock)</SelectItem>
+                <SelectItem value="Inbound">Inbound (Local Stock)</SelectItem>
               </SelectContent>
             </Select>
           </div>
+
+          {(inventoryType === 'ASIS' || inventoryType === 'FG') && (
+            <div className="space-y-2">
+              <Label htmlFor="category">Category (Optional)</Label>
+              <Select value={category} onValueChange={setCategory}>
+                <SelectTrigger id="category">
+                  <SelectValue placeholder="Select category..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">None</SelectItem>
+                  {inventoryType === 'ASIS' && (
+                    <>
+                      <SelectItem value="Regular">Regular</SelectItem>
+                      <SelectItem value="Salvage">Salvage</SelectItem>
+                    </>
+                  )}
+                  {inventoryType === 'FG' && (
+                    <SelectItem value="Back Haul">Back Haul</SelectItem>
+                  )}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                {inventoryType === 'ASIS'
+                  ? 'Categorize as Regular or Salvage ASIS load'
+                  : 'Categorize as Back Haul load'}
+              </p>
+            </div>
+          )}
 
           <div className="space-y-2">
             <div className="flex items-center justify-between">

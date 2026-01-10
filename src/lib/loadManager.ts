@@ -2,13 +2,31 @@ import supabase from './supabase';
 import type { LoadMetadata, LoadWithItems, InventoryType, LoadStatus, InventoryItem } from '@/types/inventory';
 
 /**
+ * Map main inventory types to their database sub-types
+ * Note: Parts NEVER use loads, so Parts is not included here
+ */
+function getInventoryTypes(mainType: InventoryType): InventoryType[] {
+  switch (mainType) {
+    case 'FG':
+      return ['FG', 'BackHaul'];
+    case 'LocalStock':
+      return ['LocalStock', 'Staged', 'Inbound', 'WillCall'];
+    case 'ASIS':
+      return ['ASIS'];
+    default:
+      return [mainType];
+  }
+}
+
+/**
  * Create a new load (metadata record)
  */
 export async function createLoad(
   inventoryType: InventoryType,
   subInventoryName: string,
   notes?: string,
-  createdBy?: string
+  createdBy?: string,
+  category?: string
 ): Promise<{ data: LoadMetadata | null; error: any }> {
   const { data, error } = await supabase
     .from('load_metadata')
@@ -16,6 +34,7 @@ export async function createLoad(
       inventory_type: inventoryType,
       sub_inventory_name: subInventoryName,
       status: 'active' as LoadStatus,
+      category,
       notes,
       created_by: createdBy
     })
@@ -122,6 +141,23 @@ export async function updateLoadStatus(
 }
 
 /**
+ * Update load metadata (category, notes, etc.)
+ */
+export async function updateLoadMetadata(
+  inventoryType: InventoryType,
+  subInventoryName: string,
+  updates: { category?: string; notes?: string }
+): Promise<{ success: boolean; error?: any }> {
+  const { error } = await supabase
+    .from('load_metadata')
+    .update({ ...updates, updated_at: new Date().toISOString() })
+    .eq('inventory_type', inventoryType)
+    .eq('sub_inventory_name', subInventoryName);
+
+  return { success: !error, error };
+}
+
+/**
  * Get load with all its items
  */
 export async function getLoadWithItems(
@@ -180,7 +216,12 @@ export async function getAllLoads(
     .order('created_at', { ascending: false });
 
   if (inventoryType) {
-    query = query.eq('inventory_type', inventoryType);
+    const types = getInventoryTypes(inventoryType);
+    if (types.length === 1) {
+      query = query.eq('inventory_type', types[0]);
+    } else {
+      query = query.in('inventory_type', types);
+    }
   }
 
   const { data, error } = await query;

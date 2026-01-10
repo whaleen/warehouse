@@ -3,8 +3,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Loader2 } from 'lucide-react';
-import { renameLoad } from '@/lib/loadManager';
+import { renameLoad, updateLoadMetadata } from '@/lib/loadManager';
 import type { LoadMetadata } from '@/types/inventory';
 
 interface RenameLoadDialogProps {
@@ -16,12 +17,14 @@ interface RenameLoadDialogProps {
 
 export function RenameLoadDialog({ open, onOpenChange, load, onSuccess }: RenameLoadDialogProps) {
   const [newName, setNewName] = useState('');
+  const [category, setCategory] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (open) {
       setNewName(load.sub_inventory_name);
+      setCategory(load.category || '');
       setError(null);
     }
   }, [open, load]);
@@ -34,26 +37,48 @@ export function RenameLoadDialog({ open, onOpenChange, load, onSuccess }: Rename
       return;
     }
 
-    if (newName.trim() === load.sub_inventory_name) {
-      setError('New name must be different from current name');
+    const nameChanged = newName.trim() !== load.sub_inventory_name;
+    const categoryChanged = category.trim() !== (load.category || '');
+
+    if (!nameChanged && !categoryChanged) {
+      setError('No changes to save');
       return;
     }
 
     setLoading(true);
     setError(null);
 
-    const { success, error: renameError } = await renameLoad(
-      load.inventory_type,
-      load.sub_inventory_name,
-      newName.trim()
-    );
+    // If name changed, rename the load
+    if (nameChanged) {
+      const { success, error: renameError } = await renameLoad(
+        load.inventory_type,
+        load.sub_inventory_name,
+        newName.trim()
+      );
+
+      if (!success) {
+        setError(renameError || 'Failed to rename load');
+        setLoading(false);
+        return;
+      }
+    }
+
+    // If category changed, update metadata
+    if (categoryChanged) {
+      const { success, error: updateError } = await updateLoadMetadata(
+        load.inventory_type,
+        nameChanged ? newName.trim() : load.sub_inventory_name,
+        { category: category.trim() || undefined }
+      );
+
+      if (!success) {
+        setError(updateError || 'Failed to update category');
+        setLoading(false);
+        return;
+      }
+    }
 
     setLoading(false);
-
-    if (!success) {
-      setError(renameError || 'Failed to rename load');
-      return;
-    }
 
     // Success
     onOpenChange(false);
@@ -64,7 +89,7 @@ export function RenameLoadDialog({ open, onOpenChange, load, onSuccess }: Rename
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Rename Load</DialogTitle>
+          <DialogTitle>Edit Load</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -88,6 +113,34 @@ export function RenameLoadDialog({ open, onOpenChange, load, onSuccess }: Rename
             </p>
           </div>
 
+          {(load.inventory_type === 'ASIS' || load.inventory_type === 'FG') && (
+            <div className="space-y-2">
+              <Label htmlFor="category">Category (Optional)</Label>
+              <Select value={category} onValueChange={setCategory}>
+                <SelectTrigger id="category">
+                  <SelectValue placeholder="Select category..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">None</SelectItem>
+                  {load.inventory_type === 'ASIS' && (
+                    <>
+                      <SelectItem value="Regular">Regular</SelectItem>
+                      <SelectItem value="Salvage">Salvage</SelectItem>
+                    </>
+                  )}
+                  {load.inventory_type === 'FG' && (
+                    <SelectItem value="Back Haul">Back Haul</SelectItem>
+                  )}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                {load.inventory_type === 'ASIS'
+                  ? 'Categorize as Regular or Salvage ASIS load'
+                  : 'Categorize as Back Haul load'}
+              </p>
+            </div>
+          )}
+
           {error && <div className="text-sm text-destructive">{error}</div>}
 
           <div className="flex justify-end gap-2">
@@ -101,7 +154,7 @@ export function RenameLoadDialog({ open, onOpenChange, load, onSuccess }: Rename
             </Button>
             <Button type="submit" disabled={loading || !newName.trim()}>
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Rename Load
+              Save Changes
             </Button>
           </div>
         </form>

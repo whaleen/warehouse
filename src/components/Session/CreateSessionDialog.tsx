@@ -48,7 +48,8 @@ function generateSessionName(inventoryType: InventoryType, subInventory?: string
     'Inbound': 'Inbound',
     'FG': 'FG',
     'LocalStock': 'LocalStock',
-    'Parts': 'Parts'
+    'Parts': 'Parts',
+    'WillCall': 'WillCall'
   };
 
   return `${typeNames[inventoryType]} - ${date} ${time}`;
