@@ -8,6 +8,7 @@ import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/
 import supabase from '@/lib/supabase';
 import { getAllLoads } from '@/lib/loadManager';
 import { AppHeader } from '@/components/Navigation/AppHeader';
+import { useAuth } from '@/context/AuthContext';
 
 interface DashboardViewProps {
   onSettingsClick: () => void;
@@ -51,6 +52,7 @@ interface DetailedStats {
 }
 
 export function DashboardView({ onSettingsClick, onViewChange }: DashboardViewProps) {
+  const { user } = useAuth();
   const [stats, setStats] = useState<DetailedStats>({
     totalItems: 0,
     localStock: { total: 0, unassigned: 0, staged: 0, inbound: 0, routes: 0 },
@@ -317,8 +319,16 @@ export function DashboardView({ onSettingsClick, onViewChange }: DashboardViewPr
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
-                <div className="p-3 bg-primary/20 rounded-full">
-                  <User className="h-6 w-6 text-primary" />
+                <div className="h-12 w-12 rounded-full overflow-hidden bg-primary/20 flex items-center justify-center">
+                  {user?.image ? (
+                    <img
+                      src={user.image}
+                      alt={user.username}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <User className="h-6 w-6 text-primary" />
+                  )}
                 </div>
                 <div>
                   <h1 className="text-2xl font-bold">Welcome back, {currentUser.name}</h1>
