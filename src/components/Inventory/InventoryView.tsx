@@ -12,17 +12,11 @@ import {
 } from '@/components/ui/select';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { CreateSessionDialog } from '@/components/Session/CreateSessionDialog';
 import { ScanningSessionView } from '@/components/Session/ScanningSessionView';
 import { ProductDetailDialog } from '@/components/Products/ProductDetailDialog';
 import { InventoryItemDetailDialog } from './InventoryItemDetailDialog';
 import { AppHeader } from '@/components/Navigation/AppHeader';
-import {
-  saveSession,
-  setActiveSession,
-  getActiveSession,
-} from '@/lib/sessionManager';
-import type { ScanningSession } from '@/types/session';
+import { getActiveSession } from '@/lib/sessionManager';
 import { Loader2, Search, ExternalLink, PackageOpen, ScanBarcode } from 'lucide-react';
 
 type InventoryItemWithProduct = InventoryItem & {
@@ -41,7 +35,7 @@ type InventoryItemWithProduct = InventoryItem & {
 
 interface InventoryViewProps {
   onSettingsClick: () => void;
-  onViewChange: (view: 'dashboard' | 'inventory' | 'products' | 'settings' | 'loads') => void;
+  onViewChange: (view: 'dashboard' | 'inventory' | 'products' | 'settings' | 'loads' | 'create-session') => void;
 }
 
 export function InventoryView({ onSettingsClick, onViewChange }: InventoryViewProps) {
@@ -66,8 +60,7 @@ export function InventoryView({ onSettingsClick, onViewChange }: InventoryViewPr
   const [productCategoryFilter, setProductCategoryFilter] = useState<'all' | 'appliance' | 'part' | 'accessory'>('all');
   const [brandFilter, setBrandFilter] = useState('all');
 
-  // Dialog state
-  const [createSessionOpen, setCreateSessionOpen] = useState(false);
+  // State
   const [activeSessionView, setActiveSessionView] = useState(false);
   const [productDetailOpen, setProductDetailOpen] = useState(false);
   const [selectedModel, setSelectedModel] = useState('');
@@ -145,12 +138,6 @@ export function InventoryView({ onSettingsClick, onViewChange }: InventoryViewPr
   useEffect(() => {
     fetchItems();
   }, []);
-
-  const handleSessionCreated = (session: ScanningSession) => {
-    saveSession(session);
-    setActiveSession(session.id);
-    setActiveSessionView(true);
-  };
 
   const handleSessionExit = () => {
     setActiveSessionView(false);
@@ -271,7 +258,7 @@ export function InventoryView({ onSettingsClick, onViewChange }: InventoryViewPr
               <PackageOpen className="mr-2 h-4 w-4" />
               Manage Loads
             </Button>
-            <Button size="sm" onClick={() => setCreateSessionOpen(true)}>
+            <Button size="sm" onClick={() => onViewChange('create-session')}>
               <ScanBarcode className="mr-2 h-4 w-4" />
               Scan
             </Button>
@@ -432,12 +419,6 @@ export function InventoryView({ onSettingsClick, onViewChange }: InventoryViewPr
           </Card>
         ))}
       </div>
-
-      <CreateSessionDialog
-        open={createSessionOpen}
-        onOpenChange={setCreateSessionOpen}
-        onSessionCreated={handleSessionCreated}
-      />
 
       <ProductDetailDialog
         open={productDetailOpen}

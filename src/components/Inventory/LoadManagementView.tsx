@@ -153,17 +153,18 @@ export function LoadManagementView({ onSettingsClick, onViewChange }: LoadManage
     setSelectedLoads(newSelection);
   };
 
-  const getStatusVariant = (status: LoadStatus): 'default' | 'secondary' | 'destructive' | 'outline' => {
+  const getStatusColor = (status: LoadStatus) => {
     switch (status) {
       case 'active':
-      case 'delivered':
-        return 'default'; // Primary color for active/positive statuses
+        return 'bg-blue-500';
       case 'staged':
-        return 'outline'; // Less prominent for staged
+        return 'bg-yellow-500';
       case 'in_transit':
-        return 'secondary'; // Neutral for in transit
+        return 'bg-purple-500';
+      case 'delivered':
+        return 'bg-green-500';
       default:
-        return 'secondary'; // Fallback to neutral
+        return 'bg-gray-500';
     }
   };
 
@@ -305,7 +306,7 @@ export function LoadManagementView({ onSettingsClick, onViewChange }: LoadManage
                               {load.category && (
                                 <Badge variant="secondary">{load.category}</Badge>
                               )}
-                              <Badge variant={getStatusVariant(load.status)}>
+                              <Badge className={getStatusColor(load.status)}>
                                 {getStatusLabel(load.status)}
                               </Badge>
                             </div>

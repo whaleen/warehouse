@@ -60,9 +60,9 @@ export function ItemSelectionDialog({
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Multiple Items Found</DialogTitle>
-          <div className="text-sm text-muted-foreground mt-2">
+          <div className="text-sm text-gray-600 mt-2">
             Found {items.length} items matching <span className="font-semibold">{fieldLabel}</span>:{' '}
-            <span className="font-mono bg-muted px-2 py-1 rounded">{matchedValue}</span>
+            <span className="font-mono bg-gray-100 px-2 py-1 rounded">{matchedValue}</span>
           </div>
         </DialogHeader>
 
@@ -75,7 +75,7 @@ export function ItemSelectionDialog({
             <Button size="sm" variant="outline" onClick={clearAll}>
               Clear All
             </Button>
-            <div className="ml-auto text-sm text-muted-foreground">
+            <div className="ml-auto text-sm text-gray-600">
               {selectedIds.size} of {items.length} selected
             </div>
           </div>
@@ -87,8 +87,8 @@ export function ItemSelectionDialog({
                 key={item.id}
                 className={`p-4 cursor-pointer transition-colors ${
                   selectedIds.has(item.id!)
-                    ? 'border-primary bg-accent'
-                    : 'hover:bg-accent'
+                    ? 'border-blue-500 bg-blue-50'
+                    : 'hover:bg-gray-50'
                 }`}
                 onClick={() => toggleSelection(item.id!)}
               >
@@ -100,33 +100,33 @@ export function ItemSelectionDialog({
                   />
                   <div className="flex-1 space-y-2">
                     <div className="flex items-center justify-between">
-                      <div className="font-semibold text-foreground">
+                      <div className="font-semibold text-gray-900">
                         {item.product_type}
                       </div>
                       <Badge variant="secondary">{item.inventory_type}</Badge>
                     </div>
                     <div className="grid grid-cols-2 gap-2 text-sm">
                       <div>
-                        <span className="text-muted-foreground">CSO:</span>{' '}
+                        <span className="text-gray-500">CSO:</span>{' '}
                         <span className="font-mono">{item.cso}</span>
                       </div>
                       <div>
-                        <span className="text-muted-foreground">Serial:</span>{' '}
+                        <span className="text-gray-500">Serial:</span>{' '}
                         <span className="font-mono">{item.serial || '-'}</span>
                       </div>
                       <div>
-                        <span className="text-muted-foreground">Model:</span>{' '}
+                        <span className="text-gray-500">Model:</span>{' '}
                         <span className="font-mono text-xs">{item.model}</span>
                       </div>
                       {item.sub_inventory && (
                         <div>
-                          <span className="text-muted-foreground">Route:</span>{' '}
+                          <span className="text-gray-500">Route:</span>{' '}
                           <span className="font-mono">{item.sub_inventory}</span>
                         </div>
                       )}
                     </div>
                     {item.consumer_customer_name && (
-                      <div className="text-xs text-muted-foreground">
+                      <div className="text-xs text-gray-600">
                         {item.consumer_customer_name}
                       </div>
                     )}

@@ -248,7 +248,7 @@ export function AddItemsToLoadDialog({
                           </Badge>
                         )}
                         {item.sub_inventory && (
-                          <Badge variant="outline" className="text-xs">
+                          <Badge variant="outline" className="text-xs bg-orange-500/10 text-orange-700 dark:text-orange-300">
                             Current load: {item.sub_inventory}
                           </Badge>
                         )}

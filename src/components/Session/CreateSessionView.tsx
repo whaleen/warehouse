@@ -1,22 +1,21 @@
 import { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Loader2, Upload } from 'lucide-react';
+import { Loader2, Upload, ArrowLeft } from 'lucide-react';
 import Papa from 'papaparse';
 import type { InventoryType, InventoryItem } from '@/types/inventory';
 import type { ScanningSession } from '@/types/session';
 import supabase from '@/lib/supabase';
-import { generateSessionId } from '@/lib/sessionManager';
+import { generateSessionId, saveSession, setActiveSession } from '@/lib/sessionManager';
+import { AppHeader } from '@/components/Navigation/AppHeader';
 
-interface CreateSessionDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  onSessionCreated: (session: ScanningSession) => void;
+interface CreateSessionViewProps {
+  onSettingsClick: () => void;
+  onViewChange: (view: 'dashboard' | 'inventory' | 'products' | 'settings' | 'loads' | 'create-load' | 'create-session') => void;
 }
 
 interface CSVRow {
@@ -32,7 +31,6 @@ interface CSVRow {
   Status: string;
 }
 
-// Helper to generate session name based on inventory type
 function generateSessionName(inventoryType: InventoryType, subInventory?: string): string {
   const date = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   const time = new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
@@ -55,7 +53,7 @@ function generateSessionName(inventoryType: InventoryType, subInventory?: string
   return `${typeNames[inventoryType]} - ${date} ${time}`;
 }
 
-export function CreateSessionDialog({ open, onOpenChange, onSessionCreated }: CreateSessionDialogProps) {
+export function CreateSessionView({ onSettingsClick, onViewChange }: CreateSessionViewProps) {
   const [activeTab, setActiveTab] = useState<'existing' | 'upload'>('existing');
   const [sessionName, setSessionName] = useState('');
   const [inventoryType, setInventoryType] = useState<InventoryType>('FG');
@@ -71,8 +69,6 @@ export function CreateSessionDialog({ open, onOpenChange, onSessionCreated }: Cr
 
   // Fetch available sub-inventories when inventory type changes
   useEffect(() => {
-    if (!open) return;
-
     const fetchSubInventories = async () => {
       const { data } = await supabase
         .from('inventory_items')
@@ -87,19 +83,19 @@ export function CreateSessionDialog({ open, onOpenChange, onSessionCreated }: Cr
     };
 
     fetchSubInventories();
-  }, [inventoryType, open]);
+  }, [inventoryType]);
 
   // Auto-generate session name when inventory type or sub-inventory changes
   useEffect(() => {
-    if (open && activeTab === 'existing') {
+    if (activeTab === 'existing') {
       const name = generateSessionName(inventoryType, subInventory !== 'all' ? subInventory : undefined);
       setSessionName(name);
     }
-  }, [inventoryType, subInventory, open, activeTab]);
+  }, [inventoryType, subInventory, activeTab]);
 
   // Preview count
   useEffect(() => {
-    if (!open || activeTab !== 'existing') return;
+    if (activeTab !== 'existing') return;
 
     const fetchPreview = async () => {
       let query = supabase
@@ -116,7 +112,13 @@ export function CreateSessionDialog({ open, onOpenChange, onSessionCreated }: Cr
     };
 
     fetchPreview();
-  }, [inventoryType, subInventory, open, activeTab]);
+  }, [inventoryType, subInventory, activeTab]);
+
+  const handleSessionCreated = (session: ScanningSession) => {
+    saveSession(session);
+    setActiveSession(session.id);
+    onViewChange('inventory');
+  };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
@@ -124,7 +126,6 @@ export function CreateSessionDialog({ open, onOpenChange, onSessionCreated }: Cr
       setFile(selectedFile);
       setError(null);
 
-      // Parse and preview first 5 rows
       Papa.parse(selectedFile, {
         header: true,
         preview: 5,
@@ -145,14 +146,12 @@ export function CreateSessionDialog({ open, onOpenChange, onSessionCreated }: Cr
     setError(null);
 
     try {
-      // Parse the entire CSV file
       Papa.parse(file, {
         header: true,
         skipEmptyLines: true,
         complete: async (results) => {
           const rows = results.data as CSVRow[];
 
-          // Transform CSV rows to inventory items
           const inventoryItems: InventoryItem[] = rows.map(row => ({
             date: row.Date || undefined,
             route_id: row.Truck_Id || undefined,
@@ -169,7 +168,6 @@ export function CreateSessionDialog({ open, onOpenChange, onSessionCreated }: Cr
             is_scanned: false
           }));
 
-          // Insert into database
           const { error: insertError } = await supabase
             .from('inventory_items')
             .insert(inventoryItems);
@@ -180,10 +178,8 @@ export function CreateSessionDialog({ open, onOpenChange, onSessionCreated }: Cr
             return;
           }
 
-          // Auto-generate session name for upload
           const name = generateSessionName(inventoryType);
 
-          // Create session with uploaded items
           const session: ScanningSession = {
             id: generateSessionId(),
             name: name,
@@ -193,15 +189,7 @@ export function CreateSessionDialog({ open, onOpenChange, onSessionCreated }: Cr
             scannedItemIds: []
           };
 
-          onSessionCreated(session);
-
-          // Reset form
-          setFile(null);
-          setCsvPreview([]);
-          setSessionName('');
-          setInventoryType('FG');
-          setSubInventory('all');
-          onOpenChange(false);
+          handleSessionCreated(session);
           setLoading(false);
         },
         error: (err) => {
@@ -225,7 +213,6 @@ export function CreateSessionDialog({ open, onOpenChange, onSessionCreated }: Cr
     setError(null);
 
     try {
-      // Fetch items for this session
       let query = supabase
         .from('inventory_items')
         .select('*')
@@ -249,7 +236,6 @@ export function CreateSessionDialog({ open, onOpenChange, onSessionCreated }: Cr
         return;
       }
 
-      // Create session
       const session: ScanningSession = {
         id: generateSessionId(),
         name: sessionName,
@@ -260,13 +246,7 @@ export function CreateSessionDialog({ open, onOpenChange, onSessionCreated }: Cr
         scannedItemIds: []
       };
 
-      onSessionCreated(session);
-
-      // Reset form
-      setSessionName('');
-      setInventoryType('FG');
-      setSubInventory('all');
-      onOpenChange(false);
+      handleSessionCreated(session);
     } catch (err) {
       setError(`Failed to create session: ${err instanceof Error ? err.message : 'Unknown error'}`);
     } finally {
@@ -275,12 +255,18 @@ export function CreateSessionDialog({ open, onOpenChange, onSessionCreated }: Cr
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Start Scanning Session</DialogTitle>
-        </DialogHeader>
+    <div className="min-h-screen bg-background">
+      <AppHeader
+        title="Start Scanning Session"
+        onSettingsClick={onSettingsClick}
+        actions={
+          <Button variant="ghost" size="icon" onClick={() => onViewChange('inventory')}>
+            <ArrowLeft />
+          </Button>
+        }
+      />
 
+      <div className="p-4">
         <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'existing' | 'upload')} className="w-full">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="existing">From Existing</TabsTrigger>
@@ -288,92 +274,85 @@ export function CreateSessionDialog({ open, onOpenChange, onSessionCreated }: Cr
           </TabsList>
 
           {/* From Existing Tab */}
-          <TabsContent value="existing" className="space-y-4">
-          {/* Session Name */}
-          <div className="space-y-2">
-            <Label htmlFor="session-name">Session Name</Label>
-            <Input
-              id="session-name"
-              type="text"
-              placeholder="e.g., Sanity Check - FG"
-              value={sessionName}
-              onChange={(e) => setSessionName(e.target.value)}
-              disabled={loading}
-            />
-          </div>
-
-          {/* Inventory Type */}
-          <div className="space-y-2">
-            <Label htmlFor="inventory-type">Inventory Type</Label>
-            <Select value={inventoryType} onValueChange={(value) => setInventoryType(value as InventoryType)}>
-              <SelectTrigger id="inventory-type">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="ASIS">ASIS (As-Is Returns)</SelectItem>
-                <SelectItem value="BackHaul">Back Haul</SelectItem>
-                <SelectItem value="Salvage">Salvage</SelectItem>
-                <SelectItem value="Staged">Staged (Routes)</SelectItem>
-                <SelectItem value="Inbound">Inbound</SelectItem>
-                <SelectItem value="FG">FG (Finished Goods)</SelectItem>
-                <SelectItem value="LocalStock">Local Stock</SelectItem>
-                <SelectItem value="Parts">Parts</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Sub-Inventory Filter (if available) */}
-          {subInventories.length > 0 && (
+          <TabsContent value="existing" className="space-y-4 mt-4">
             <div className="space-y-2">
-              <Label htmlFor="sub-inventory">Filter by Route/Location (Optional)</Label>
-              <Select value={subInventory} onValueChange={setSubInventory}>
-                <SelectTrigger id="sub-inventory">
+              <Label htmlFor="session-name">Session Name</Label>
+              <Input
+                id="session-name"
+                type="text"
+                placeholder="e.g., Sanity Check - FG"
+                value={sessionName}
+                onChange={(e) => setSessionName(e.target.value)}
+                disabled={loading}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="inventory-type">Inventory Type</Label>
+              <Select value={inventoryType} onValueChange={(value) => setInventoryType(value as InventoryType)}>
+                <SelectTrigger id="inventory-type">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Items</SelectItem>
-                  {subInventories.map(sub => (
-                    <SelectItem key={sub} value={sub}>{sub}</SelectItem>
-                  ))}
+                  <SelectItem value="ASIS">ASIS (As-Is Returns)</SelectItem>
+                  <SelectItem value="BackHaul">Back Haul</SelectItem>
+                  <SelectItem value="Staged">Staged (Routes)</SelectItem>
+                  <SelectItem value="Inbound">Inbound</SelectItem>
+                  <SelectItem value="FG">FG (Finished Goods)</SelectItem>
+                  <SelectItem value="LocalStock">Local Stock</SelectItem>
+                  <SelectItem value="Parts">Parts</SelectItem>
                 </SelectContent>
               </Select>
             </div>
-          )}
 
-          {/* Preview Count */}
-          <div className="bg-primary/10 border border-primary/20 rounded-md p-3">
-            <p className="text-sm text-foreground">
-              <span className="font-semibold">{previewCount} items</span> will be included in this session
-            </p>
-          </div>
+            {subInventories.length > 0 && (
+              <div className="space-y-2">
+                <Label htmlFor="sub-inventory">Filter by Route/Location (Optional)</Label>
+                <Select value={subInventory} onValueChange={setSubInventory}>
+                  <SelectTrigger id="sub-inventory">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Items</SelectItem>
+                    {subInventories.map(sub => (
+                      <SelectItem key={sub} value={sub}>{sub}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
 
-          {/* Error */}
-          {error && (
-            <Alert variant="destructive">
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
+            <div className="bg-primary/10 border border-primary/20 rounded-md p-3">
+              <p className="text-sm text-foreground">
+                <span className="font-semibold">{previewCount} items</span> will be included in this session
+              </p>
+            </div>
 
-          <DialogFooter>
-            <Button variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>
-              Cancel
-            </Button>
-            <Button onClick={handleCreate} disabled={loading || previewCount === 0}>
-              {loading ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Creating...
-                </>
-              ) : (
-                `Scan`
-              )}
-            </Button>
-          </DialogFooter>
+            {error && (
+              <Alert variant="destructive">
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+
+            <div className="flex justify-end gap-2 pt-4">
+              <Button variant="outline" onClick={() => onViewChange('inventory')} disabled={loading}>
+                Cancel
+              </Button>
+              <Button onClick={handleCreate} disabled={loading || previewCount === 0}>
+                {loading ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Creating...
+                  </>
+                ) : (
+                  'Start Scanning'
+                )}
+              </Button>
+            </div>
           </TabsContent>
 
           {/* Upload New Tab */}
-          <TabsContent value="upload" className="space-y-4">
-            {/* Inventory Type Selection */}
+          <TabsContent value="upload" className="space-y-4 mt-4">
             <div className="space-y-2">
               <Label htmlFor="upload-inventory-type">Inventory Type</Label>
               <Select value={inventoryType} onValueChange={(value) => setInventoryType(value as InventoryType)}>
@@ -383,7 +362,6 @@ export function CreateSessionDialog({ open, onOpenChange, onSessionCreated }: Cr
                 <SelectContent>
                   <SelectItem value="ASIS">ASIS (As-Is Returns)</SelectItem>
                   <SelectItem value="BackHaul">Back Haul</SelectItem>
-                  <SelectItem value="Salvage">Salvage</SelectItem>
                   <SelectItem value="Staged">Staged (Routes)</SelectItem>
                   <SelectItem value="Inbound">Inbound</SelectItem>
                   <SelectItem value="FG">FG (Finished Goods)</SelectItem>
@@ -397,7 +375,6 @@ export function CreateSessionDialog({ open, onOpenChange, onSessionCreated }: Cr
               </p>
             </div>
 
-            {/* File Upload */}
             <div className="space-y-2">
               <Label htmlFor="csv-file">CSV File</Label>
               <Input
@@ -412,7 +389,6 @@ export function CreateSessionDialog({ open, onOpenChange, onSessionCreated }: Cr
               </p>
             </div>
 
-            {/* Preview */}
             {csvPreview.length > 0 && (
               <div className="space-y-2">
                 <Label>Preview (first 5 rows)</Label>
@@ -443,15 +419,14 @@ export function CreateSessionDialog({ open, onOpenChange, onSessionCreated }: Cr
               </div>
             )}
 
-            {/* Error Message */}
             {error && (
               <Alert variant="destructive">
                 <AlertDescription>{error}</AlertDescription>
               </Alert>
             )}
 
-            <DialogFooter>
-              <Button variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>
+            <div className="flex justify-end gap-2 pt-4">
+              <Button variant="outline" onClick={() => onViewChange('inventory')} disabled={loading}>
                 Cancel
               </Button>
               <Button onClick={handleUploadAndCreateSession} disabled={!file || loading}>
@@ -463,14 +438,14 @@ export function CreateSessionDialog({ open, onOpenChange, onSessionCreated }: Cr
                 ) : (
                   <>
                     <Upload className="h-4 w-4 mr-2" />
-                    Upload & Scan
+                    Upload & Start Scanning
                   </>
                 )}
               </Button>
-            </DialogFooter>
+            </div>
           </TabsContent>
         </Tabs>
-      </DialogContent>
-    </Dialog>
+      </div>
+    </div>
   );
 }

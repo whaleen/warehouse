@@ -44,7 +44,7 @@ export function CreateLoadView({ onSettingsClick, onViewChange }: CreateLoadView
       loadName.trim(),
       notes.trim() || undefined,
       undefined, // createdBy
-      category.trim() || undefined
+      category && category !== 'none' ? category.trim() : undefined
     );
 
     setLoading(false);
@@ -99,7 +99,7 @@ export function CreateLoadView({ onSettingsClick, onViewChange }: CreateLoadView
                   <SelectValue placeholder="Select category..." />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">None</SelectItem>
+                  <SelectItem value="none">None</SelectItem>
                   {inventoryType === 'ASIS' && (
                     <>
                       <SelectItem value="Regular">Regular</SelectItem>

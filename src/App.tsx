@@ -1,5 +1,6 @@
 import { LoadManagementView } from "@/components/Inventory/LoadManagementView";
 import { CreateLoadView } from "@/components/Inventory/CreateLoadView";
+import { CreateSessionView } from "@/components/Session/CreateSessionView";
 import { BottomNav } from "@/components/Navigation/BottomNav";
 import { ThemeProvider } from "@/components/theme-provider";
 import { useAuth } from "@/context/AuthContext";
@@ -17,14 +18,14 @@ function App() {
   const getInitialView = () => {
     const params = new URLSearchParams(window.location.search);
     const view = params.get('view');
-    if (view === 'inventory' || view === 'products' || view === 'settings' || view === 'loads' || view === 'create-load') {
+    if (view === 'inventory' || view === 'products' || view === 'settings' || view === 'loads' || view === 'create-load' || view === 'create-session') {
       return view;
     }
     return 'dashboard';
   };
 
   const [currentView, setCurrentView] = useState<
-    "dashboard" | "inventory" | "products" | "settings" | "loads" | "create-load"
+    "dashboard" | "inventory" | "products" | "settings" | "loads" | "create-load" | "create-session"
   >(getInitialView);
 
   // Update URL when view changes
@@ -74,6 +75,12 @@ function App() {
         )}
         {currentView === "create-load" && (
           <CreateLoadView
+            onSettingsClick={handleSettingsClick}
+            onViewChange={setCurrentView}
+          />
+        )}
+        {currentView === "create-session" && (
+          <CreateSessionView
             onSettingsClick={handleSettingsClick}
             onViewChange={setCurrentView}
           />
