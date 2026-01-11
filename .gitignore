@@ -34,7 +34,8 @@ dist-ssr
 .claude
 .claude/settings.local.json
 .github
-blue-jacket-supabase.sql
+.grok
+warehouse.sql
 seed.csv
 SCANNING_SESSIONS.md
 PRODUCT_ENRICHMENT.md
@@ -42,3 +43,4 @@ migrations/
 src/scripts
 GE_SCRAPER.md
 TEST_DATA.md
+dev-dist/
