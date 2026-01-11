@@ -78,18 +78,17 @@ export function LoadDetailDialog({ open, onOpenChange, load, onUpdate }: LoadDet
     return acc;
   }, {} as Record<string, number>);
 
-  const getStatusColor = (status: string) => {
+  const getStatusVariant = (status: string): 'default' | 'secondary' | 'destructive' | 'outline' => {
     switch (status?.toLowerCase()) {
       case 'picked':
-        return 'bg-blue-500';
-      case 'shipped':
-        return 'bg-purple-500';
       case 'delivered':
-        return 'bg-green-500';
+        return 'default'; // Primary color for active/positive statuses
+      case 'shipped':
+        return 'secondary';
       case 'pending':
-        return 'bg-yellow-500';
+        return 'outline';
       default:
-        return 'bg-gray-500';
+        return 'secondary';
     }
   };
 
@@ -103,7 +102,7 @@ export function LoadDetailDialog({ open, onOpenChange, load, onUpdate }: LoadDet
                 <DialogTitle>{load.sub_inventory_name}</DialogTitle>
                 <div className="flex items-center gap-2 mt-2">
                   <Badge variant="outline">{load.inventory_type}</Badge>
-                  <Badge className={getStatusColor(load.status)}>{load.status}</Badge>
+                  <Badge variant={getStatusVariant(load.status)}>{load.status}</Badge>
                 </div>
               </div>
               <div className="flex gap-2">
@@ -210,7 +209,7 @@ export function LoadDetailDialog({ open, onOpenChange, load, onUpdate }: LoadDet
                           </Badge>
                         )}
                         {item.status && (
-                          <Badge className={getStatusColor(item.status)}>{item.status}</Badge>
+                          <Badge variant={getStatusVariant(item.status)}>{item.status}</Badge>
                         )}
                       </div>
                     </div>

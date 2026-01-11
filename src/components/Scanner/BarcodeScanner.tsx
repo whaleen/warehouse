@@ -158,8 +158,8 @@ export function BarcodeScanner({ onScan, onClose, inventoryType }: BarcodeScanne
       {manualEntry && (
         <div className="flex flex-col items-center justify-center h-full p-6">
           <div className="bg-background rounded-lg p-6 w-full max-w-md space-y-4">
-            <h3 className="text-lg font-semibold text-gray-900">Manual Entry</h3>
-            <p className="text-sm text-gray-600">
+            <h3 className="text-lg font-semibold text-foreground">Manual Entry</h3>
+            <p className="text-sm text-muted-foreground">
               Enter the barcode value manually if the camera cannot scan it.
             </p>
             <Input

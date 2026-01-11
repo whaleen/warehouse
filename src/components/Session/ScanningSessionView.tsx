@@ -132,22 +132,22 @@ export function ScanningSessionView({ onExit }: ScanningSessionViewProps) {
   if (!session) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <p className="text-gray-500">No active session</p>
+        <p className="text-muted-foreground">No active session</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-muted">
       {/* Header */}
-      <div className="bg-background border-b border-gray-200 px-4 py-3 sticky top-0 z-10">
+      <div className="bg-background border-b border px-4 py-3 sticky top-0 z-10">
         <div className="flex items-center gap-3 mb-3">
           <Button variant="ghost" size="icon" onClick={handleExit}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <div className="flex-1">
-            <h1 className="text-lg font-semibold text-gray-900">{session.name}</h1>
-            <p className="text-sm text-gray-600">{session.inventoryType}</p>
+            <h1 className="text-lg font-semibold text-foreground">{session.name}</h1>
+            <p className="text-sm text-muted-foreground">{session.inventoryType}</p>
           </div>
           <Button
             variant="ghost"
@@ -166,8 +166,8 @@ export function ScanningSessionView({ onExit }: ScanningSessionViewProps) {
         {/* Progress Bar */}
         <div>
           <div className="flex items-center justify-between text-sm mb-1">
-            <span className="text-gray-600">Progress</span>
-            <span className="font-semibold text-gray-900">
+            <span className="text-muted-foreground">Progress</span>
+            <span className="font-semibold text-foreground">
               {progress.scanned} / {progress.total} scanned
             </span>
           </div>
@@ -189,7 +189,7 @@ export function ScanningSessionView({ onExit }: ScanningSessionViewProps) {
         {/* Unscanned Items */}
         {unscannedItems.length > 0 && (
           <div className="mb-6">
-            <h2 className="text-sm font-semibold text-gray-700 mb-2">
+            <h2 className="text-sm font-semibold text-muted-foreground mb-2">
               Pending ({unscannedItems.length})
             </h2>
             <div className="space-y-2">
@@ -198,20 +198,20 @@ export function ScanningSessionView({ onExit }: ScanningSessionViewProps) {
                   <div className="flex items-start justify-between">
                     <div className="flex-1 space-y-1">
                       <div className="flex items-center gap-2">
-                        <Circle className="h-5 w-5 text-gray-300" />
-                        <span className="font-semibold text-gray-900">{item.product_type}</span>
+                        <Circle className="h-5 w-5 text-muted-foreground" />
+                        <span className="font-semibold text-foreground">{item.product_type}</span>
                       </div>
                       <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm ml-7">
                         <div>
-                          <span className="text-gray-500">CSO:</span>{' '}
+                          <span className="text-muted-foreground">CSO:</span>{' '}
                           <span className="font-mono">{item.cso}</span>
                         </div>
                         <div>
-                          <span className="text-gray-500">Serial:</span>{' '}
+                          <span className="text-muted-foreground">Serial:</span>{' '}
                           <span className="font-mono">{item.serial || '-'}</span>
                         </div>
                         <div className="col-span-2">
-                          <span className="text-gray-500">Model:</span>{' '}
+                          <span className="text-muted-foreground">Model:</span>{' '}
                           <span className="font-mono text-xs">{item.model}</span>
                         </div>
                       </div>
@@ -226,25 +226,25 @@ export function ScanningSessionView({ onExit }: ScanningSessionViewProps) {
         {/* Scanned Items */}
         {scannedItems.length > 0 && (
           <div>
-            <h2 className="text-sm font-semibold text-gray-700 mb-2">
+            <h2 className="text-sm font-semibold text-muted-foreground mb-2">
               Scanned ({scannedItems.length})
             </h2>
             <div className="space-y-2">
               {scannedItems.map(item => (
-                <Card key={item.id} className="p-4 bg-green-50">
+                <Card key={item.id} className="p-4 bg-accent">
                   <div className="flex items-start justify-between">
                     <div className="flex-1 space-y-1">
                       <div className="flex items-center gap-2">
-                        <CheckCircle2 className="h-5 w-5 text-green-600" />
-                        <span className="font-semibold text-gray-900">{item.product_type}</span>
+                        <CheckCircle2 className="h-5 w-5 text-primary" />
+                        <span className="font-semibold text-foreground">{item.product_type}</span>
                       </div>
                       <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm ml-7">
                         <div>
-                          <span className="text-gray-500">CSO:</span>{' '}
+                          <span className="text-muted-foreground">CSO:</span>{' '}
                           <span className="font-mono">{item.cso}</span>
                         </div>
                         <div>
-                          <span className="text-gray-500">Serial:</span>{' '}
+                          <span className="text-muted-foreground">Serial:</span>{' '}
                           <span className="font-mono">{item.serial || '-'}</span>
                         </div>
                       </div>
@@ -258,12 +258,12 @@ export function ScanningSessionView({ onExit }: ScanningSessionViewProps) {
 
         {/* Complete Message */}
         {progress.scanned === progress.total && progress.total > 0 && (
-          <div className="mt-6 p-6 bg-green-50 border border-green-200 rounded-lg text-center">
-            <CheckCircle2 className="h-12 w-12 text-green-600 mx-auto mb-3" />
-            <h3 className="text-lg font-semibold text-green-900 mb-2">
+          <div className="mt-6 p-6 bg-accent border border-primary rounded-lg text-center">
+            <CheckCircle2 className="h-12 w-12 text-primary mx-auto mb-3" />
+            <h3 className="text-lg font-semibold text-primary mb-2">
               Session Complete!
             </h3>
-            <p className="text-sm text-green-700 mb-4">
+            <p className="text-sm text-primary mb-4">
               All {progress.total} items have been scanned
             </p>
             <Button onClick={handleExit}>Exit Session</Button>
