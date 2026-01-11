@@ -1,70 +1,56 @@
-# Appliance Inventory Scanner - Planning Document
+# Warehouse Inventory Scanner - Planning Document v2
 
 ## Project Overview
-A mobile-first PWA for scanning and tracking appliance inventory in a warehouse/logistics environment. The system provides a digital checklist to verify physical inventory against expected items, replacing manual paper-based tracking.
+
+A mobile-first PWA for warehouse inventory management, barcode scanning, and load tracking. The system provides digital inventory verification, load management, and product tracking to replace manual paper-based processes.
+
+**Current Status:** MVP Complete - Core scanning and inventory management functional
 
 ## Tech Stack
-- **Frontend**: Vite + React + TypeScript
-- **UI Library**: shadcn/ui (mobile-first design)
+
+- **Frontend**: Vite + React 19 + TypeScript
+- **UI Library**: shadcn/ui (Radix primitives) + Tailwind CSS v4
 - **Database**: Supabase (PostgreSQL)
-- **Hosting**: Netlify
-- **Version Control**: GitHub
+- **Barcode Scanning**: html5-qrcode
+- **Charts**: recharts
+- **CSV Parsing**: papaparse
 - **PWA**: vite-plugin-pwa
 
-## Core Functionality
+## Current Architecture
 
-### 1. Barcode Scanning
-- Camera-based barcode scanner using `html5-qrcode` library
-- Supports Code 128 format (primary format on inventory labels)
-- Full-screen camera view when scanning
-- Manual entry fallback for damaged/unreadable barcodes
-- Auto-focus on barcode input for keyboard wedge scanner compatibility (future-proofing)
+### Application Views
 
-### 2. Inventory Management
-- Upload spreadsheet (CSV) of expected inventory
-- Parse and store in Supabase
-- Track scan status per item
-- Support multiple sub-inventory types with different scan rules
+1. **Dashboard** - Metrics overview, load statistics, recent activity
+2. **Inventory** - Full inventory management with search, filters, and bulk operations
+3. **Products** - Product database search and enrichment
+4. **Settings** - User profile, preferences
 
-### 3. Visual Checklist
-- Mobile-optimized list view
-- Color-coded status indicators (scanned vs pending)
-- Progress counter (X of Y scanned)
-- Search functionality
-- Filter by sub-inventory type
-- Sort capabilities
+### Navigation
 
-## Sub-Inventory Types
-Each type has configurable scan priority rules (primary → fallback 1 → fallback 2):
+- Bottom navigation bar (mobile-optimized)
+- Header with user avatar, theme toggle, settings access
 
-1. **ASIS** 
-   - Primary: Serial Number
-   - Fallback 1: CSO Number
-   - Fallback 2: Model Number
+## Database Schema (Current)
 
-2. **Back Haul**
-   - (Configure rules in-app or during implementation)
+### inventory_items
+Primary table for tracking all inventory.
 
-3. **Salvage**
-   - (Configure rules in-app or during implementation)
-
-4. **Staged**
-   - (Configure rules in-app or during implementation)
-
-5. **Inbound**
-   - (Configure rules in-app or during implementation)
-
-## Data Schema
-
-### Appliances Table
 ```sql
-create table appliances (
-  id uuid primary key default uuid_generate_v4(),
-  serial_number text,
-  cso_number text,
-  model_number text,
-  sub_inventory text not null, -- ASIS, BackHaul, Salvage, Staged, Inbound
-  date_received date,
+create table inventory_items (
+  id uuid primary key default gen_random_uuid(),
+  date date,
+  route_id text,
+  stop integer,
+  cso text,                    -- Customer Service Order number
+  consumer_customer_name text,
+  model text,
+  qty integer default 1,
+  serial text,
+  product_type text,           -- WASHER, REFRIGERATOR, etc.
+  product_fk uuid references products(id),
+  status text,                 -- PICKED, DELIVERED, PENDING, SHIPPED
+  inventory_type text,         -- ASIS, FG, LocalStock, Parts, etc.
+  sub_inventory text,          -- Specific location/load name
   is_scanned boolean default false,
   scanned_at timestamp,
   scanned_by text,
@@ -73,406 +59,318 @@ create table appliances (
   updated_at timestamp default now()
 );
 
--- Indexes for fast lookups
-create index idx_serial on appliances(serial_number);
-create index idx_cso on appliances(cso_number);
-create index idx_model on appliances(model_number);
-create index idx_sub_inventory on appliances(sub_inventory);
-create index idx_scanned on appliances(is_scanned);
+create index idx_inventory_serial on inventory_items(serial);
+create index idx_inventory_cso on inventory_items(cso);
+create index idx_inventory_model on inventory_items(model);
+create index idx_inventory_type on inventory_items(inventory_type);
+create index idx_inventory_sub on inventory_items(sub_inventory);
+create index idx_inventory_scanned on inventory_items(is_scanned);
 ```
 
-### Scan Rules Table (for configurability)
+### products
+Product catalog with specifications.
+
 ```sql
-create table scan_rules (
-  id uuid primary key default uuid_generate_v4(),
-  sub_inventory text unique not null,
-  primary_field text not null, -- 'serial_number', 'cso_number', 'model_number'
-  fallback_1 text,
-  fallback_2 text,
+create table products (
+  id uuid primary key default gen_random_uuid(),
+  model text unique,
+  product_type text,
+  product_category text,       -- appliance, part, accessory
+  brand text,
+  description text,
+  image_url text,
+  product_url text,
+  price numeric,
+  msrp numeric,
+  color text,
+  capacity text,
+  availability text,
+  commercial_category text,
+  is_part boolean default false,
+  dimensions jsonb,            -- {width, height, depth}
+  specs jsonb,                 -- All product specifications
+  created_at timestamp default now(),
+  updated_at timestamp default now()
+);
+```
+
+### load_metadata
+Tracks loads/batches for inventory grouping.
+
+```sql
+create table load_metadata (
+  id uuid primary key default gen_random_uuid(),
+  inventory_type text not null,
+  sub_inventory_name text not null,
+  status text default 'active', -- active, staged, in_transit, delivered
+  category text,
+  notes text,
+  created_by text,
+  created_at timestamp default now(),
+  updated_at timestamp default now()
+);
+```
+
+### inventory_conversions
+Audit trail for inventory type changes.
+
+```sql
+create table inventory_conversions (
+  id uuid primary key default gen_random_uuid(),
+  inventory_item_id uuid references inventory_items(id),
+  from_inventory_type text,
+  to_inventory_type text,
+  from_sub_inventory text,
+  to_sub_inventory text,
+  converted_by text,
+  notes text,
   created_at timestamp default now()
 );
-
--- Default rules
-insert into scan_rules (sub_inventory, primary_field, fallback_1, fallback_2) values
-  ('ASIS', 'serial_number', 'cso_number', 'model_number'),
-  ('BackHaul', 'serial_number', 'cso_number', 'model_number'),
-  ('Salvage', 'serial_number', 'cso_number', 'model_number'),
-  ('Staged', 'serial_number', 'cso_number', 'model_number'),
-  ('Inbound', 'serial_number', 'cso_number', 'model_number');
 ```
 
-### Upload History Table (optional, for audit trail)
+### users
+Simple user authentication (development only - plaintext passwords).
+
 ```sql
-create table upload_history (
-  id uuid primary key default uuid_generate_v4(),
-  filename text,
-  row_count integer,
-  uploaded_by text,
-  uploaded_at timestamp default now()
+create table users (
+  id text primary key,
+  username text unique,
+  password text,               -- Plaintext for development
+  image text,                  -- Avatar URL in Supabase Storage
+  created_at timestamp default now()
 );
 ```
 
-## Mobile-First UI Structure
+## Inventory Types
 
-### Layout
+The system supports these inventory classifications:
+
+| Type | Description |
+|------|-------------|
+| ASIS | As-is/open-box items |
+| FG | Finished goods |
+| LocalStock | Local warehouse stock |
+| Parts | Replacement parts |
+| BackHaul | Items being returned |
+| Staged | Items staged for delivery |
+| Inbound | Incoming shipments |
+| WillCall | Customer pickup items |
+
+## Implemented Features
+
+### Core Functionality
+
+- [x] **Barcode Scanning**
+  - Camera-based scanner using html5-qrcode
+  - Adjustable scan area size (Small, Medium, Large, XL)
+  - Manual entry fallback for damaged barcodes
+  - Multi-field matching (serial → CSO → model)
+
+- [x] **Inventory Management**
+  - CSV upload and parsing (papaparse)
+  - Search by serial, CSO, model, customer name
+  - Filter by inventory type, product type, status
+  - Sort capabilities
+  - Bulk operations
+
+- [x] **Load Management**
+  - Create loads with metadata
+  - Rename loads
+  - Merge multiple loads
+  - Update load status (active → staged → in_transit → delivered)
+  - Move items between loads
+  - Add items to existing loads
+
+- [x] **Inventory Type Conversion**
+  - Convert items between inventory types
+  - Full audit trail of conversions
+  - Conversion history viewing
+
+- [x] **Scanning Sessions**
+  - Create scanning sessions
+  - Track scanned vs unscanned items
+  - Session persistence (localStorage)
+  - Progress tracking
+
+- [x] **Product Database**
+  - Product search and lookup
+  - Product enrichment UI
+  - View product details, images, specs
+
+- [x] **Dashboard**
+  - Inventory metrics overview
+  - Load statistics by status
+  - Recent activity feed
+  - Charts (recharts)
+
+- [x] **User Experience**
+  - Mobile-first responsive design
+  - Dark/light theme toggle
+  - Bottom navigation
+  - Large touch targets (44px+)
+
+### Authentication (Development Mode)
+
+- [x] Username/password login
+- [x] Avatar upload to Supabase Storage
+- [x] Session persistence (localStorage)
+- [x] User profile settings
+
+**Note:** Authentication uses plaintext passwords intentionally for rapid prototyping. See `IDGAF_About_Auth_Security.md` for details.
+
+## Component Structure
+
 ```
-┌─────────────────────────┐
-│  Header (Logo/Title)    │
-├─────────────────────────┤
-│  Search Bar             │
-├─────────────────────────┤
-│  Filter Chips           │
-│  [All][ASIS][Staged]... │
-├─────────────────────────┤
-│  Progress Bar           │
-│  45/120 scanned         │
-├─────────────────────────┤
-│                         │
-│  Scrollable List        │
-│  ┌───────────────────┐  │
-│  │ Serial: VA715942  │  │
-│  │ Model: GTD58...   │  │
-│  │ ✓ Scanned         │  │
-│  └───────────────────┘  │
-│  ┌───────────────────┐  │
-│  │ Serial: VA812345  │  │
-│  │ Model: GTE22...   │  │
-│  │ ○ Pending         │  │
-│  └───────────────────┘  │
-│                         │
-├─────────────────────────┤
-│  [  SCAN BARCODE  ]     │ ← Fixed bottom button
-└─────────────────────────┘
+src/components/
+├── Auth/
+│   ├── LoginCard.tsx         # Login form
+│   └── AvatarUploader.tsx    # Avatar upload
+├── Dashboard/
+│   └── DashboardView.tsx     # Main dashboard
+├── Inventory/
+│   ├── InventoryView.tsx     # Main inventory UI
+│   ├── CSVUpload.tsx         # CSV import
+│   ├── InventoryItemDetailDialog.tsx
+│   ├── CreateLoadDialog.tsx
+│   ├── LoadManagementDialog.tsx
+│   ├── LoadDetailDialog.tsx
+│   ├── AddItemsToLoadDialog.tsx
+│   ├── MoveItemsDialog.tsx
+│   ├── MergeLoadsDialog.tsx
+│   ├── RenameLoadDialog.tsx
+│   └── ConvertInventoryTypeDialog.tsx
+├── Navigation/
+│   ├── AppHeader.tsx
+│   └── BottomNav.tsx
+├── Products/
+│   ├── ProductEnrichment.tsx
+│   └── ProductDetailDialog.tsx
+├── Scanner/
+│   ├── BarcodeScanner.tsx    # Camera scanner
+│   └── ItemSelectionDialog.tsx
+├── Session/
+│   ├── CreateSessionDialog.tsx
+│   └── ScanningSessionView.tsx
+├── Settings/
+│   └── SettingsView.tsx
+└── ui/                       # shadcn/ui components
 ```
 
-### Scanner View (Full-Screen)
-```
-┌─────────────────────────┐
-│ [X]     ASIS      [⚙]   │ ← Close, Sub-Inv, Settings
-├─────────────────────────┤
-│                         │
-│                         │
-│    ┌─────────────┐      │
-│    │             │      │
-│    │   CAMERA    │      │
-│    │   VIEWFINDER│      │
-│    │             │      │
-│    └─────────────┘      │
-│                         │
-│  Scanning frame guide   │
-│                         │
-├─────────────────────────┤
-│  [Manual Entry]         │ ← Fallback option
-└─────────────────────────┘
-```
+## Utility Libraries
 
-## Key shadcn Components to Use
+| File | Purpose |
+|------|---------|
+| `scanMatcher.ts` | Barcode matching against inventory |
+| `sessionManager.ts` | localStorage session persistence |
+| `sessionScanner.ts` | Session-specific scanning logic |
+| `loadManager.ts` | Load CRUD operations |
+| `inventoryConverter.ts` | Inventory type conversion + audit |
+| `supabase.ts` | Supabase client configuration |
+| `htmlUtils.ts` | HTML entity decoding |
+| `utils.ts` | General utilities (cn, etc.) |
 
-### Main Views
-- `Card` - Appliance list items
-- `Badge` - Status indicators (Scanned/Pending)
-- `Button` - Large scan button, action buttons
-- `Input` - Search bar, manual entry
-- `Tabs` - Sub-inventory type switcher
-- `Progress` - Overall completion progress
+## Phase 2: Future Enhancements
 
-### Overlays & Interactions
-- `Sheet` - Bottom drawer for filters/settings
-- `Dialog` - CSV upload, confirmation dialogs
-- `Alert` - Success/error messages
-- `Select` - Dropdown for sub-inventory selection
-- `RadioGroup` - Scan rule configuration
+### High Priority
 
-### Mobile Optimizations
-- Minimum 44px touch targets
-- Large, readable text (16px base minimum)
-- High contrast for outdoor/warehouse visibility
-- Generous spacing between interactive elements
-- Pull-to-refresh gesture support
+- [ ] **Offline-First Sync** - Full offline capability with background sync
+- [ ] **Configurable Scan Rules** - UI for setting primary/fallback scan fields per inventory type
+- [ ] **Proper Authentication** - Token-based auth, password hashing, RLS policies
+- [ ] **Export Functionality** - Export scanned/filtered lists to CSV
+- [ ] **Duplicate Detection** - Warn on duplicate scans
 
-## Phase 1: MVP Features (Build Today)
+### Medium Priority
 
-### Must-Have
-1. CSV upload and parsing
-2. Camera barcode scanner
-3. Basic appliance list view
-4. Scan to mark as complete
-5. Progress counter
-6. Search by serial/CSO/model
-7. Filter by sub-inventory type
+- [ ] **Photo Capture** - Photograph items during scanning
+- [ ] **Notes/Condition Reporting** - Structured condition notes on items
+- [ ] **Upload History** - Track CSV uploads with audit trail
+- [ ] **Scan History UI** - View all scan activity with timestamps
 
-### Nice-to-Have (if time permits)
-1. Manual barcode entry
-2. Duplicate detection
-3. Export scanned list to CSV
-4. Scan timestamp tracking
+### Lower Priority
 
-## Phase 2: Future Enhancements (Post-POC)
+- [ ] **Multi-User Support** - User roles (scanner, supervisor, admin)
+- [ ] **Dashboard Analytics** - Advanced reporting and charts
+- [ ] **Native Mobile App** - Dedicated scanner SDK integration
+- [ ] **Hardware Scanner Support** - Bluetooth/USB barcode scanner integration
 
-### If POC is successful
-1. Configurable scan rules per sub-inventory (UI for editing)
-2. User authentication and multi-user support
-3. Offline-first with sync capability
-4. Photo capture of appliances
-5. Notes/condition reporting
-6. Scan history and audit trail
-7. Dashboard with analytics
-8. Native mobile app with dedicated scanner SDK integration
+## Known Issues / Tech Debt
 
-## Implementation Steps
+1. **Missing Scripts** - `seed` and `scrape:ge` package.json scripts reference non-existent files
+2. **Plaintext Passwords** - Intentional for development, must be fixed before production
+3. **RLS Policies** - Currently wide-open for prototyping
+4. **Offline Sync** - PWA shell exists but no true offline capability
+5. **Product Data** - GE product catalog not populated (scraper script missing)
 
-### 1. Project Setup
+## Development Commands
+
 ```bash
-npm create vite@latest appliance-scanner -- --template react-ts
-cd appliance-scanner
-npm install
-npx shadcn-ui@latest init
-```
-
-### 2. Install Dependencies
-```bash
-npm install @supabase/supabase-js
-npm install html5-qrcode
-npm install papaparse @types/papaparse
-npm install vite-plugin-pwa -D
-```
-
-### 3. Add shadcn Components
-```bash
-npx shadcn-ui@latest add button card input badge tabs sheet dialog alert select progress
-```
-
-### 4. Configure Supabase
-- Create Supabase project
-- Run schema SQL
-- Add environment variables to `.env`:
-  ```
-  VITE_SUPABASE_URL=your-project-url
-  VITE_SUPABASE_ANON_KEY=your-anon-key
-  ```
-
-### 5. Configure PWA
-Update `vite.config.ts`:
-```typescript
-import { VitePWA } from 'vite-plugin-pwa'
-
-export default defineConfig({
-  plugins: [
-    react(),
-    VitePWA({
-      registerType: 'autoUpdate',
-      manifest: {
-        name: 'Appliance Scanner',
-        short_name: 'Scanner',
-        description: 'Warehouse appliance inventory scanner',
-        theme_color: '#ffffff',
-        icons: [
-          {
-            src: 'icon-192.png',
-            sizes: '192x192',
-            type: 'image/png'
-          },
-          {
-            src: 'icon-512.png',
-            sizes: '512x512',
-            type: 'image/png'
-          }
-        ]
-      }
-    })
-  ]
-})
-```
-
-### 6. Build Core Features
-Priority order:
-1. Supabase client setup and database connection
-2. CSV upload and parsing functionality
-3. Basic list view with data from Supabase
-4. Search and filter implementation
-5. Barcode scanner component
-6. Scan matching logic (serial → CSO → model)
-7. Update scan status in database
-8. Progress tracking
-
-### 7. Mobile Testing
-- Test on actual Android phone at work
-- Test on iPhones
-- Verify camera permissions work
-- Test barcode detection with actual inventory labels
-- Verify touch targets are large enough
-- Test in various lighting conditions (warehouse environment)
-
-### 8. Deploy
-```bash
-# Push to GitHub
-git init
-git add .
-git commit -m "Initial commit"
-git remote add origin your-repo-url
-git push -u origin main
-
-# Connect to Netlify
-# - Import from GitHub
-# - Configure build: npm run build
-# - Publish directory: dist
-# - Add environment variables
+npm run dev      # Start development server
+npm run build    # Production build
+npm run lint     # ESLint validation
+npm run preview  # Preview production build
 ```
 
 ## CSV Upload Format
 
-Expected columns in spreadsheet:
+Expected columns for inventory import:
+
 ```csv
-serial_number,cso_number,model_number,sub_inventory,date_received
-VA715942,1064836060,GTD58EBSVWS,ASIS,2025-12-31
-VA812345,1064836061,GTE22EBSVWS,Staged,2025-12-31
+serial,cso,model,inventory_type,sub_inventory,date,consumer_customer_name
+VA715942,1064836060,GTD58EBSVWS,ASIS,Load-001,2025-12-31,John Smith
+VA812345,1064836061,GTE22EBSVWS,FG,Load-002,2025-12-31,Jane Doe
 ```
 
-Optional columns:
-- `tracking_number`
-- `quantity`
-- `notes`
-
-## Scanning Logic Pseudocode
+## Scanning Logic
 
 ```typescript
-async function processScan(scannedValue: string, subInventory: string) {
-  // 1. Get scan rules for this sub-inventory
-  const rules = await getScanRules(subInventory);
-  
-  // 2. Try to match against primary field
-  let appliance = await findAppliance(rules.primary_field, scannedValue);
-  
-  // 3. If not found, try fallback 1
-  if (!appliance && rules.fallback_1) {
-    appliance = await findAppliance(rules.fallback_1, scannedValue);
+async function processScan(scannedValue: string) {
+  // 1. Search by serial number
+  let matches = await findByField('serial', scannedValue);
+
+  // 2. Fallback to CSO number
+  if (matches.length === 0) {
+    matches = await findByField('cso', scannedValue);
   }
-  
-  // 4. If still not found, try fallback 2
-  if (!appliance && rules.fallback_2) {
-    appliance = await findAppliance(rules.fallback_2, scannedValue);
+
+  // 3. Fallback to model number
+  if (matches.length === 0) {
+    matches = await findByField('model', scannedValue);
   }
-  
-  // 5. If found, mark as scanned
-  if (appliance) {
-    await markAsScanned(appliance.id);
+
+  // 4. Handle results
+  if (matches.length === 1) {
+    await markAsScanned(matches[0].id);
     showSuccess();
+  } else if (matches.length > 1) {
+    showItemSelectionDialog(matches);
   } else {
-    showError("Item not found in inventory");
+    showError("Item not found");
   }
 }
 ```
 
-## Auth Strategy (Start Simple)
-
-### Option 1: No Auth (Simplest for POC)
-- Shared access via URL
-- Anyone with link can scan
-- Track by device/browser
-
-### Option 2: Simple Passcode (Recommended)
-- Single shared passcode for warehouse team
-- Store in localStorage after first entry
-- Supabase RLS: allow all operations with valid passcode
-
-### Option 3: Full Auth (Future)
-- Individual user accounts
-- Role-based permissions
-- Full audit trail of who scanned what
-
-**Recommendation**: Start with Option 1 or 2 for POC, upgrade to Option 3 if this becomes production tool.
-
-## Performance Considerations
-
-### Optimization Strategies
-1. **Virtual scrolling** for large inventory lists (use `@tanstack/react-virtual` if needed)
-2. **Debounced search** to avoid excessive database queries
-3. **Optimistic UI updates** - mark as scanned immediately, sync to database
-4. **Image optimization** - compress PWA icons
-5. **Code splitting** - lazy load scanner component
-6. **Service worker caching** - cache app shell for offline use
-
-### Expected Scale
-- Typical batch: 50-200 appliances
-- Multiple batches per day
-- Design for 500-1000 items in active inventory at once
-
 ## Success Criteria
 
-### POC is successful if:
-1. ✅ Can upload CSV and see items in list
-2. ✅ Camera scanner reliably detects barcodes on inventory labels
-3. ✅ Scanned items are marked and database updates correctly
-4. ✅ Progress tracking is accurate
-5. ✅ UI is easy to use on mobile phones
-6. ✅ Search and filter work smoothly
-7. ✅ Team finds it faster/easier than paper tracking
+### MVP Complete (Current State)
 
-### Move to native app if:
-- Scanner needs to work offline reliably
-- Want integration with dedicated hardware scanners
-- Need better camera performance
-- Want to add advanced features (photo capture, etc.)
+- [x] CSV upload and item display
+- [x] Camera barcode scanner works reliably
+- [x] Items marked as scanned with database update
+- [x] Progress tracking accurate
+- [x] Mobile-friendly UI
+- [x] Search and filter functional
+- [x] Load management operational
 
-## Questions to Resolve During Build
+### Production Readiness Checklist
 
-1. Should duplicate scans be prevented or allowed?
-2. Do you need to "unscan" items if scanned by mistake?
-3. Should there be different user roles (scanner vs. supervisor)?
-4. How long should inventory data persist in database?
-5. Do you need to export results for reporting?
-6. Should the app work completely offline or require internet?
-
-## Development Tips
-
-### For Claude CLI
-- Build incrementally: database → list view → upload → scanner → polish
-- Test each feature before moving to next
-- Use TypeScript for type safety
-- Keep components small and focused
-- Mobile test frequently during development
-- Use Supabase dashboard to verify data is saving correctly
-
-### Git Workflow
-```bash
-# Feature branches
-git checkout -b feature/csv-upload
-# ... build feature ...
-git add .
-git commit -m "Add CSV upload functionality"
-git push origin feature/csv-upload
-git checkout main
-git merge feature/csv-upload
-```
-
-### Debugging Tips
-- Use React DevTools for component inspection
-- Use Supabase logs for database query debugging
-- Test camera permissions in HTTPS environment only
-- Use Chrome DevTools device emulation for mobile testing
-
-## Resources
-
-### Documentation Links
-- [Vite](https://vitejs.dev/)
-- [shadcn/ui](https://ui.shadcn.com/)
-- [Supabase Docs](https://supabase.com/docs)
-- [html5-qrcode](https://github.com/mebjas/html5-qrcode)
-- [vite-plugin-pwa](https://vite-pwa-org.netlify.app/)
-- [Netlify Deployment](https://docs.netlify.com/)
-
-### Design Inspiration
-- Keep it brutally simple
-- Big buttons, clear actions
-- High contrast colors
-- Generous spacing
-- Immediate feedback on actions
-- Mobile-first always
+- [ ] Secure authentication implemented
+- [ ] RLS policies enforced
+- [ ] Offline sync working
+- [ ] Error handling comprehensive
+- [ ] Loading states consistent
+- [ ] Tested on actual warehouse devices
+- [ ] Performance validated with 500+ items
 
 ---
 
-## Ready to Build!
-
-This document provides everything needed to build the MVP. Start with the database schema, then the list view, then add the upload functionality, and finally integrate the scanner. Test on real devices with actual inventory labels as early as possible.
-
-Good luck! 🚀
+*Previous planning document archived at `.context/planning-doc-v1.md`*

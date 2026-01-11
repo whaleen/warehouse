@@ -1,205 +1,211 @@
-# "Warehouse" - Warehouse Inventory Management
+# Warehouse - Inventory Management System
 
-A React application for managing warehouse inventory and appliance product data with real-time data from Supabase.
+A mobile-first React PWA for warehouse inventory management, barcode scanning, load tracking, and product data management with real-time Supabase backend.
 
 ## Project Overview
 
-"Warehouse" is designed for warehouse inventory management including:
-- Inventory item tracking and management
+Warehouse is designed for warehouse inventory management including:
+- Barcode scanning (camera + manual entry)
+- Inventory item tracking with scan verification
+- Load/batch management (create, merge, rename, status tracking)
 - Customer order tracking (CSO)
-- Product database with comprehensive GE Appliances catalog
+- Product database with GE Appliances catalog support
 - Serial number tracking for appliances
-- Product categorization (appliances, parts, accessories)
-- Route and delivery status management
+- Inventory type conversion with audit trail
+- Scanning sessions with progress tracking
 
 ## Tech Stack
 
-- **Frontend**: React + TypeScript + Vite
-- **UI Framework**: shadcn/ui + Tailwind CSS
+- **Frontend**: React 19 + TypeScript + Vite
+- **UI Framework**: shadcn/ui (Radix primitives) + Tailwind CSS v4
 - **Database**: Supabase (PostgreSQL)
-- **Styling**: Tailwind CSS v4
+- **Barcode Scanning**: html5-qrcode
+- **Charts**: recharts
+- **CSV Parsing**: papaparse
+- **PWA**: vite-plugin-pwa
 
-## Database Schema
-
-### Tables
-
-#### `inventory_items`
-- `id` (uuid, primary key)
-- `date` (date) - Item date
-- `route_id` (text) - Route identifier
-- `stop` (integer) - Stop number on route
-- `cso` (text) - Customer Service Order number
-- `consumer_customer_name` (text) - Customer name
-- `model` (text) - Product model number
-- `qty` (integer) - Quantity
-- `serial` (text) - Serial number (for appliances only)
-- `product_type` (text) - WASHER, REFRIGERATOR, DISHWASHER, etc.
-- `product_fk` (uuid) - Foreign key to products table
-- `status` (text) - PICKED, DELIVERED, PENDING, SHIPPED, etc.
-- `inventory_type` (text) - WAREHOUSE, IN_TRANSIT, CUSTOMER
-- `sub_inventory` (text) - Specific location within warehouse
-- `is_scanned` (boolean) - Whether item has been scanned
-- `created_at` (timestamp)
-- `updated_at` (timestamp)
-
-#### `products`
-- `id` (uuid, primary key)
-- `model` (text, unique) - Product model number
-- `product_type` (text) - WASHER, REFRIGERATOR, DISHWASHER, etc.
-- `product_category` (text) - appliance, part, or accessory
-- `brand` (text) - Brand name (e.g., GE, Café, Monogram)
-- `description` (text) - Product description
-- `image_url` (text) - Product image URL
-- `product_url` (text) - Link to product page
-- `price` (numeric) - Current price
-- `msrp` (numeric) - Manufacturer's suggested retail price
-- `color` (text) - Product color/finish
-- `capacity` (text) - Capacity (for appliances)
-- `availability` (text) - Product availability status
-- `commercial_category` (text) - Commercial category hierarchy
-- `is_part` (boolean) - Whether item is a replacement part
-- `dimensions` (jsonb) - Width, height, depth in inches
-- `specs` (jsonb) - All product specifications
-- `created_at` (timestamp)
-- `updated_at` (timestamp)
-
-## Setup Instructions
+## Quick Start
 
 ### Prerequisites
 
 - Node.js 18+
-- npm or yarn
+- npm
 - Supabase account
 
 ### 1. Environment Setup
 
-Create a `.env.local` file in the root directory:
+Create a `.env.local` file:
 
 ```env
 VITE_SUPABASE_URL=your_supabase_project_url
 VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
 ```
 
-### 2. Install Dependencies
+### 2. Install & Run
 
 ```bash
 npm install
-```
-
-### 3. Supabase Setup
-
-1. Create a new Supabase project at [supabase.com](https://supabase.com)
-2. Copy your project URL and anon key to the `.env.local` file
-3. Run the database migrations (see SQL scripts in `/sql` directory)
-
-### 4. Database Migration
-
-Run the migrations in order from the `/migrations` directory in your Supabase SQL editor:
-
-1. `001_initial_schema.sql` - Creates initial products and inventory_items tables
-2. `002_add_product_category.sql` - Adds product categorization
-3. `003_expand_products_schema.sql` - Adds comprehensive product fields (images, pricing, specs)
-4. `004_add_product_category_type.sql` - Creates product_category enum type
-5. `005_add_is_part_field.sql` - Adds is_part boolean for distinguishing parts
-6. `006_recategorize_with_is_part.sql` - Re-categorizes products based on is_part field
-
-### 5. Scrape Product Data
-
-After running migrations, populate the products table with GE Appliances data:
-
-```bash
-npm run scrape-products
-```
-
-This will fetch up to 10,000 products from the GE Appliances API including:
-- Product specifications and dimensions
-- Images and product URLs
-- Pricing information (price, MSRP)
-- Product categorization (appliance, part, accessory)
-
-### 6. Seed Inventory Data (Optional)
-
-Generate test inventory data:
-
-```bash
-npm run seed-inventory
-```
-
-### 7. Development
-
-```bash
 npm run dev
 ```
+
+### 3. Database Setup
+
+Create the following tables in your Supabase project. See `planning-doc.md` for full schema details.
+
+**Required Tables:**
+- `inventory_items` - Main inventory tracking
+- `products` - Product catalog
+- `load_metadata` - Load/batch management
+- `inventory_conversions` - Conversion audit trail
+- `users` - User authentication (development mode)
 
 ## Project Structure
 
 ```
 src/
 ├── components/
-│   ├── ui/                 # shadcn/ui components
-│   ├── Dashboard/          # Dashboard view with metrics
-│   ├── Inventory/          # Inventory management components
-│   ├── Products/           # Product database and enrichment
-│   ├── Settings/           # Settings and configuration
-│   └── Navigation/         # App navigation components
+│   ├── ui/                 # shadcn/ui components (17 files)
+│   ├── Auth/               # Login, avatar upload
+│   ├── Dashboard/          # Metrics overview
+│   ├── Inventory/          # Inventory management (11 components)
+│   ├── Navigation/         # Header, bottom nav
+│   ├── Products/           # Product search and details
+│   ├── Scanner/            # Barcode scanning
+│   ├── Session/            # Scanning sessions
+│   └── Settings/           # User settings
+├── context/
+│   └── AuthContext.tsx     # Authentication state
 ├── lib/
-│   ├── supabase.ts         # Supabase client setup
-│   ├── utils.ts            # Utility functions
-│   └── htmlUtils.ts        # HTML entity decoding utilities
-├── scripts/
-│   ├── scrapeGEProducts.ts # GE product catalog scraper
-│   └── seed-inventory.ts   # Inventory data seeding
-├── migrations/             # Database migration files
-└── App.tsx
+│   ├── supabase.ts         # Supabase client
+│   ├── scanMatcher.ts      # Barcode matching logic
+│   ├── sessionManager.ts   # Session persistence (localStorage)
+│   ├── sessionScanner.ts   # Session scanning utilities
+│   ├── loadManager.ts      # Load CRUD operations
+│   ├── inventoryConverter.ts # Inventory type conversion
+│   ├── htmlUtils.ts        # HTML entity decoding
+│   └── utils.ts            # General utilities
+├── types/
+│   ├── inventory.ts        # Inventory & product types
+│   └── session.ts          # Session types
+├── App.tsx
+└── main.tsx
 ```
 
 ## Features
 
-- [x] **Dashboard** - Overview of warehouse metrics and inventory status
-- [x] **Inventory Management** - Track and manage inventory items across warehouse locations
-  - Filter by product type, status, inventory type, and product category
-  - Search by model, CSO, serial number, or customer name
-  - View comprehensive product details including images and specifications
-  - Support for appliances, parts, and accessories
-- [x] **Product Database** - Comprehensive GE Appliances product catalog
-  - 10,000+ products from GE Appliances API
-  - Product images, descriptions, and specifications
-  - Pricing information (price, MSRP)
-  - Dimensions and technical specs
-  - Product categorization (appliance/part/accessory)
-- [x] **Product Enrichment** - Search and add products to the database
-  - Live search with product images and details
-  - Create new product entries
-  - Link to official product pages
-- [x] **Customer Order Tracking** - Track items by CSO number
-- [x] **Serial Number Tracking** - Track serial numbers for appliances
-- [x] **Route Management** - Assign items to routes and track delivery stops
-- [x] **Status Tracking** - Monitor item status (picked, shipped, delivered, etc.)
-- [x] **Responsive PWA** - Mobile-first design with offline capabilities
+### Core Functionality
+
+- [x] **Barcode Scanning** - Camera-based scanner with adjustable scan area and manual fallback
+- [x] **Inventory Management** - Full CRUD with search, filter, and bulk operations
+- [x] **CSV Upload** - Import inventory from CSV files
+- [x] **Load Management** - Create, rename, merge loads; track status (active → staged → in_transit → delivered)
+- [x] **Inventory Conversion** - Convert items between types with full audit trail
+- [x] **Scanning Sessions** - Track scanning progress with session persistence
+- [x] **Product Database** - Search and enrich product catalog
+- [x] **Dashboard** - Metrics, load statistics, recent activity with charts
+
+### User Experience
+
+- [x] **Mobile-First Design** - Optimized for warehouse mobile devices
 - [x] **Dark Mode** - Theme switching support
+- [x] **Responsive PWA** - Installable progressive web app
+- [x] **Bottom Navigation** - Easy thumb-reach navigation
+
+### Authentication (Development Mode)
+
+- [x] Username/password login
+- [x] Avatar upload
+- [x] Session persistence
+
+> **Note:** Authentication uses plaintext passwords for rapid prototyping. See `IDGAF_About_Auth_Security.md` for details. Not suitable for production.
+
+## Database Schema
+
+### inventory_items
+
+| Column | Type | Description |
+|--------|------|-------------|
+| id | uuid | Primary key |
+| serial | text | Serial number |
+| cso | text | Customer Service Order |
+| model | text | Product model number |
+| inventory_type | text | ASIS, FG, LocalStock, Parts, BackHaul, Staged, Inbound, WillCall |
+| sub_inventory | text | Load/location name |
+| is_scanned | boolean | Scan status |
+| scanned_at | timestamp | When scanned |
+| scanned_by | text | Who scanned |
+| status | text | PICKED, DELIVERED, PENDING, SHIPPED |
+| product_fk | uuid | FK to products |
+
+### products
+
+| Column | Type | Description |
+|--------|------|-------------|
+| id | uuid | Primary key |
+| model | text | Unique model number |
+| product_type | text | WASHER, REFRIGERATOR, etc. |
+| product_category | text | appliance, part, accessory |
+| brand | text | Brand name |
+| image_url | text | Product image |
+| price / msrp | numeric | Pricing |
+| dimensions | jsonb | Width, height, depth |
+| specs | jsonb | All specifications |
+
+### load_metadata
+
+| Column | Type | Description |
+|--------|------|-------------|
+| id | uuid | Primary key |
+| inventory_type | text | Load type |
+| sub_inventory_name | text | Load name |
+| status | text | active, staged, in_transit, delivered |
+
+### inventory_conversions
+
+Audit trail for inventory type changes (from_type, to_type, converted_by, etc.)
+
+### users
+
+Development auth table (id, username, password, image)
+
+## Available Scripts
+
+```bash
+npm run dev      # Start development server
+npm run build    # Production build (TypeScript + Vite)
+npm run lint     # ESLint validation
+npm run preview  # Preview production build
+```
 
 ## Product Categorization
 
-The application automatically categorizes products into three types:
+Products are categorized into three types:
 
-1. **Appliances** - Full units that require serial numbers (washers, dryers, refrigerators, etc.)
-   - `is_part = false` AND not in "Parts & Accessories" category
+1. **Appliances** - Full units requiring serial numbers (washers, refrigerators, etc.)
+2. **Parts** - Replacement components (control boards, shelves, etc.)
+3. **Accessories** - Add-on items (filters, racks, kits, etc.)
 
-2. **Parts** - Replacement components that don't require serial numbers (control boards, shelves, tubes, etc.)
-   - `is_part = true`
+This helps warehouse staff understand which items need serial number tracking.
 
-3. **Accessories** - Add-on items that don't require serial numbers (filters, racks, kits, etc.)
-   - `is_part = false` AND in "Parts & Accessories" category
+## Inventory Types
 
-This categorization helps warehouse staff understand which items need serial number tracking.
+| Type | Description |
+|------|-------------|
+| ASIS | As-is/open-box items |
+| FG | Finished goods |
+| LocalStock | Local warehouse stock |
+| Parts | Replacement parts |
+| BackHaul | Items being returned |
+| Staged | Items staged for delivery |
+| Inbound | Incoming shipments |
+| WillCall | Customer pickup items |
 
-## Data Source
+## CSV Import Format
 
-Product data is sourced from the official GE Appliances SearchSpring API:
-- API endpoint: `https://q7rntw.a.searchspring.io/api/search/search.json`
-- Data includes: product specifications, images, pricing, dimensions, availability
-- The scraper respects rate limits (500ms between requests)
-- Data is stored locally in Supabase for fast access
+```csv
+serial,cso,model,inventory_type,sub_inventory,date,consumer_customer_name
+VA715942,1064836060,GTD58EBSVWS,ASIS,Load-001,2025-12-31,John Smith
+```
 
 ## Contributing
 
