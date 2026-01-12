@@ -25,7 +25,7 @@ import { PageContainer } from '@/components/Layout/PageContainer';
 import { usePartsListView } from '@/hooks/usePartsListView';
 import { PartsListViewToggle } from './PartsListViewToggle';
 import { getActiveSession } from '@/lib/sessionManager';
-import { Loader2, Search, ExternalLink, PackageOpen, ScanBarcode, ClipboardList, Package } from 'lucide-react';
+import { Loader2, Search, ExternalLink, PackageOpen, ScanBarcode, ClipboardList, Package, X } from 'lucide-react';
 
 type InventoryItemWithProduct = InventoryItem & {
   products: {
@@ -311,6 +311,42 @@ export function InventoryView({ onSettingsClick, onViewChange, onMenuClick }: In
     });
   }, [items, searchTerm, inventoryTypeFilter, subInventoryFilter, productCategoryFilter, brandFilter]);
 
+  const activeFilters = [
+    searchTerm && {
+      key: 'search',
+      label: `Search: ${searchTerm}`,
+      clear: () => setSearchTerm(''),
+    },
+    inventoryTypeFilter !== 'all' && {
+      key: 'type',
+      label: `Type: ${inventoryTypeFilter}`,
+      clear: () => setInventoryTypeFilter('all'),
+    },
+    subInventoryFilter !== 'all' && {
+      key: 'sub',
+      label: `Load: ${subInventoryFilter}`,
+      clear: () => setSubInventoryFilter('all'),
+    },
+    productCategoryFilter !== 'all' && {
+      key: 'category',
+      label: `Category: ${productCategoryFilter}`,
+      clear: () => setProductCategoryFilter('all'),
+    },
+    brandFilter !== 'all' && {
+      key: 'brand',
+      label: `Brand: ${brandFilter}`,
+      clear: () => setBrandFilter('all'),
+    },
+  ].filter(Boolean) as Array<{ key: string; label: string; clear: () => void }>;
+
+  const clearAllFilters = () => {
+    setSearchTerm('');
+    setInventoryTypeFilter('all');
+    setSubInventoryFilter('all');
+    setProductCategoryFilter('all');
+    setBrandFilter('all');
+  };
+
   if (activeSessionView) {
     return <ScanningSessionView onExit={handleSessionExit} />;
   }
@@ -430,6 +466,30 @@ export function InventoryView({ onSettingsClick, onViewChange, onMenuClick }: In
               </SelectContent>
             </Select>
           )}
+
+          {/* Filter chips and count */}
+          <div className="flex flex-wrap items-center gap-2 text-sm">
+            <span className="text-muted-foreground">
+              {filteredItems.length} of {items.length} items
+            </span>
+            {activeFilters.map((filter) => (
+              <Button
+                key={filter.key}
+                size="sm"
+                variant="outline"
+                className="h-7 px-2"
+                onClick={filter.clear}
+              >
+                <span className="truncate">{filter.label}</span>
+                <X className="ml-1 h-3 w-3" />
+              </Button>
+            ))}
+            {activeFilters.length > 0 && (
+              <Button size="sm" variant="ghost" onClick={clearAllFilters}>
+                Clear all
+              </Button>
+            )}
+          </div>
 
           {inventoryTypeFilter !== 'Parts' && (
             <div className="flex justify-end">
