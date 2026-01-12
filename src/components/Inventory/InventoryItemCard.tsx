@@ -25,6 +25,7 @@ interface InventoryItemCardProps<T extends InventoryItem = InventoryItem> {
   variant?: 'default' | 'pending' | 'scanned';
   selected?: boolean;
   badges?: React.ReactNode;
+  actions?: React.ReactNode;
   className?: string;
 }
 
@@ -144,6 +145,7 @@ export function InventoryItemCard({
   variant = 'default',
   selected = false,
   badges,
+  actions,
   className
 }: InventoryItemCardProps) {
   const productTypeLabel = item.products?.product_type ?? item.product_type;
@@ -179,18 +181,25 @@ export function InventoryItemCard({
           </div>
         )}
         <div className="flex-1 min-w-0 space-y-2">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="font-semibold text-foreground">{productTypeLabel}</span>
-            {showInventoryTypeBadge && (
-              <Badge variant="secondary">{item.inventory_type}</Badge>
+          <div className="flex flex-wrap items-start justify-between gap-2">
+            <div className="flex flex-wrap items-center gap-2 min-w-0">
+              <span className="font-semibold text-foreground">{productTypeLabel}</span>
+              {showInventoryTypeBadge && (
+                <Badge variant="secondary">{item.inventory_type}</Badge>
+              )}
+              {showScannedBadge && item.is_scanned && (
+                <Badge variant="outline">Scanned</Badge>
+              )}
+              {showRouteBadge && routeDisplay && (
+                <Badge variant="outline">{routeLabel} {routeDisplay}</Badge>
+              )}
+              {badges}
+            </div>
+            {actions && (
+              <div className="flex flex-wrap items-center gap-2">
+                {actions}
+              </div>
             )}
-            {showScannedBadge && item.is_scanned && (
-              <Badge variant="outline">Scanned</Badge>
-            )}
-            {showRouteBadge && routeDisplay && (
-              <Badge variant="outline">{routeLabel} {routeDisplay}</Badge>
-            )}
-            {badges}
           </div>
 
           {showProductMeta && item.products?.brand && (
