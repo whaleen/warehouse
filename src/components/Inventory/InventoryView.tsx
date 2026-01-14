@@ -113,6 +113,12 @@ const csvEscape = (value: unknown) => {
   return stringValue;
 };
 
+const normalizeInventoryItem = (item: any): InventoryItemWithProduct => ({
+  ...item,
+  qty: item.qty ?? 1,
+  products: Array.isArray(item.products) ? item.products[0] ?? null : item.products ?? null,
+});
+
 interface InventoryViewProps {
   onSettingsClick: () => void;
   onViewChange: (view: 'dashboard' | 'inventory' | 'products' | 'settings' | 'loads' | 'create-session') => void;
@@ -439,6 +445,7 @@ export function InventoryView({ onSettingsClick, onViewChange, onMenuClick }: In
           .select(
             `
             id,
+            qty,
             cso,
             serial,
             model,
@@ -469,7 +476,7 @@ export function InventoryView({ onSettingsClick, onViewChange, onMenuClick }: In
         const { data, error } = await query;
         if (error) throw error;
 
-        const batch = (data ?? []) as InventoryItemWithProduct[];
+        const batch = (data ?? []).map(normalizeInventoryItem);
         if (batch.length === 0) break;
 
         for (const item of batch) {
@@ -559,6 +566,7 @@ export function InventoryView({ onSettingsClick, onViewChange, onMenuClick }: In
         .select(
           `
           id,
+          qty,
           cso,
           serial,
           model,
@@ -590,7 +598,7 @@ export function InventoryView({ onSettingsClick, onViewChange, onMenuClick }: In
       if (requestId !== requestIdRef.current) return;
       if (error) throw error;
 
-      const nextItems = (data ?? []) as InventoryItemWithProduct[];
+      const nextItems = (data ?? []).map(normalizeInventoryItem);
       setItems(prev => (append ? [...prev, ...nextItems] : nextItems));
       setPage(pageIndex);
       if (typeof count === 'number') {
