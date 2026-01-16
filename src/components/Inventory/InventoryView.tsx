@@ -164,6 +164,35 @@ const chunkArray = <T,>(items: T[], size: number) => {
   return chunks;
 };
 
+const parseAsisTimestamp = (value: string) => {
+  if (!value) return 0;
+  const match = value.match(/^(\d{4})\/(\d{2})\/(\d{2})\s+(\d{2}):(\d{2}):(\d{2})$/);
+  if (!match) return 0;
+  const [, year, month, day, hour, minute, second] = match;
+  return new Date(`${year}-${month}-${day}T${hour}:${minute}:${second}`).getTime();
+};
+
+const dedupeBySerial = (items: InventoryItem[]) => {
+  const seen = new Map<string, InventoryItem>();
+  const output: InventoryItem[] = [];
+  let duplicates = 0;
+
+  items.forEach(item => {
+    const serial = item.serial?.trim();
+    if (!serial) {
+      output.push(item);
+      return;
+    }
+    if (seen.has(serial)) {
+      duplicates += 1;
+    }
+    seen.set(serial, { ...item, serial });
+  });
+
+  output.push(...seen.values());
+  return { items: output, duplicates };
+};
+
 interface InventoryViewProps {
   onMenuClick?: () => void;
 }
@@ -782,7 +811,15 @@ export function InventoryView({ onMenuClick }: InventoryViewProps) {
         })
         .filter(Boolean) as InventoryItem[];
 
-      const payload = inventoryItems.map(item => ({
+      const { items: dedupedItems, duplicates } = dedupeBySerial(inventoryItems);
+      if (duplicates > 0) {
+        toast({
+          title: 'Duplicate serials collapsed',
+          description: `${duplicates} duplicate serials were merged before import.`,
+        });
+      }
+
+      const payload = dedupedItems.map(item => ({
         ...item,
         company_id: companyId,
         location_id: locationId,
@@ -797,7 +834,7 @@ export function InventoryView({ onMenuClick }: InventoryViewProps) {
 
       toast({
         title: 'ASIS products imported',
-        description: `${inventoryItems.length} items processed.`,
+        description: `${dedupedItems.length} items processed.`,
       });
       refreshInventoryList();
     } catch (err) {
@@ -872,6 +909,12 @@ export function InventoryView({ onMenuClick }: InventoryViewProps) {
 
       const loadItemRows: Array<{ row: AsisLoadItemRow; load: NormalizedAsisLoad }> = [];
       const loadErrors: string[] = [];
+      const loadIndexByNumber = new Map<string, number>();
+      const loadTimestampByNumber = new Map<string, number>();
+      normalizedLoads.forEach((load, index) => {
+        loadIndexByNumber.set(load.loadNumber, index);
+        loadTimestampByNumber.set(load.loadNumber, parseAsisTimestamp(load.scannedAt));
+      });
       for (const load of normalizedLoads) {
         try {
           const rows = await fetchAsisCsvRows<AsisLoadItemRow>(`${load.loadNumber}.csv`);
@@ -886,30 +929,84 @@ export function InventoryView({ onMenuClick }: InventoryViewProps) {
         .filter(Boolean);
       const productLookup = await buildProductLookup(loadModels);
 
-      const inventoryItems = loadItemRows
-        .map(({ row, load }) => {
-          const model = String(row.MODELS ?? '').trim();
-          if (!model) return null;
-          const serialValue = String(row.SERIALS ?? '').trim();
-          const qtyValue = typeof row.QTY === 'number' ? row.QTY : parseInt(String(row.QTY).trim(), 10);
-          const product = productLookup.get(model);
-          return {
-            cso: String(row.ORDC ?? '').trim() || 'ASIS',
-            model,
-            qty: Number.isFinite(qtyValue) && qtyValue > 0 ? qtyValue : 1,
-            serial: serialValue || undefined,
-            product_type: product?.product_type ?? 'UNKNOWN',
-            product_fk: product?.id,
-            status: load.status || undefined,
-            notes: load.notes || undefined,
-            inventory_type: 'ASIS' as const,
-            sub_inventory: load.loadNumber,
-            is_scanned: false,
-          };
-        })
-        .filter(Boolean) as InventoryItem[];
+      const serialCandidates = new Map<
+        string,
+        Array<{
+          item: InventoryItem;
+          loadNumber: string;
+          loadIndex: number;
+          loadTimestamp: number;
+        }>
+      >();
+      const noSerialItems: InventoryItem[] = [];
+      const conflictRows: Array<{ serial: string; loadNumber: string; conflictingLoad: string }> = [];
+      loadItemRows.forEach(({ row, load }) => {
+        const model = String(row.MODELS ?? '').trim();
+        if (!model) return;
+        const serialValue = String(row.SERIALS ?? '').trim();
+        const qtyValue = typeof row.QTY === 'number' ? row.QTY : parseInt(String(row.QTY).trim(), 10);
+        const product = productLookup.get(model);
+        const item: InventoryItem = {
+          cso: String(row.ORDC ?? '').trim() || 'ASIS',
+          model,
+          qty: Number.isFinite(qtyValue) && qtyValue > 0 ? qtyValue : 1,
+          serial: serialValue || undefined,
+          product_type: product?.product_type ?? 'UNKNOWN',
+          product_fk: product?.id,
+          status: load.status || undefined,
+          notes: load.notes || undefined,
+          inventory_type: 'ASIS',
+          sub_inventory: load.loadNumber,
+          is_scanned: false,
+        };
 
-      const payload = inventoryItems.map(item => ({
+        if (!serialValue) {
+          noSerialItems.push(item);
+          return;
+        }
+
+        const candidates = serialCandidates.get(serialValue) ?? [];
+        candidates.push({
+          item,
+          loadNumber: load.loadNumber,
+          loadIndex: loadIndexByNumber.get(load.loadNumber) ?? 0,
+          loadTimestamp: loadTimestampByNumber.get(load.loadNumber) ?? 0,
+        });
+        serialCandidates.set(serialValue, candidates);
+      });
+
+      const dedupedItems: InventoryItem[] = [...noSerialItems];
+      serialCandidates.forEach((candidates, serial) => {
+        let canonical = candidates[0];
+        candidates.forEach(candidate => {
+          if (candidate.loadTimestamp > canonical.loadTimestamp) {
+            canonical = candidate;
+            return;
+          }
+          if (
+            candidate.loadTimestamp === canonical.loadTimestamp &&
+            candidate.loadIndex > canonical.loadIndex
+          ) {
+            canonical = candidate;
+          }
+        });
+
+        dedupedItems.push(canonical.item);
+        const uniqueLoads = new Set(candidates.map(candidate => candidate.loadNumber));
+        if (uniqueLoads.size > 1) {
+          candidates.forEach(candidate => {
+            if (candidate.loadNumber !== canonical.loadNumber) {
+              conflictRows.push({
+                serial,
+                loadNumber: candidate.loadNumber,
+                conflictingLoad: canonical.loadNumber,
+              });
+            }
+          });
+        }
+      });
+
+      const payload = dedupedItems.map(item => ({
         ...item,
         company_id: companyId,
         location_id: locationId,
@@ -922,10 +1019,46 @@ export function InventoryView({ onMenuClick }: InventoryViewProps) {
         if (error) throw error;
       }
 
+      if (loadNumbers.length) {
+        const { error } = await supabase
+          .from('load_conflicts')
+          .delete()
+          .eq('location_id', locationId)
+          .eq('inventory_type', 'ASIS')
+          .in('load_number', loadNumbers);
+        if (error) throw error;
+      }
+
+      if (conflictRows.length > 0) {
+        const conflictPayload = conflictRows.map(conflict => ({
+          company_id: companyId,
+          location_id: locationId,
+          inventory_type: 'ASIS',
+          load_number: conflict.loadNumber,
+          serial: conflict.serial,
+          conflicting_load: conflict.conflictingLoad,
+          status: 'open',
+        }));
+        for (const chunk of chunkArray(conflictPayload, IMPORT_BATCH_SIZE)) {
+          const { error } = await supabase
+            .from('load_conflicts')
+            .upsert(chunk, { onConflict: 'location_id,load_number,serial' });
+          if (error) throw error;
+        }
+      }
+
       toast({
         title: 'ASIS loads imported',
-        description: `${normalizedLoads.length} loads, ${inventoryItems.length} items processed.`,
+        description: `${normalizedLoads.length} loads, ${dedupedItems.length} items processed.`,
       });
+
+      if (conflictRows.length > 0) {
+        toast({
+          variant: 'destructive',
+          title: 'Serial conflicts detected',
+          description: `${conflictRows.length} conflict${conflictRows.length === 1 ? '' : 's'} logged.`,
+        });
+      }
 
       if (loadErrors.length) {
         toast({

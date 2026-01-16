@@ -1,5 +1,5 @@
 import supabase from './supabase';
-import type { LoadMetadata, LoadWithItems, InventoryType, LoadStatus, InventoryItem } from '@/types/inventory';
+import type { LoadMetadata, LoadWithItems, InventoryType, LoadStatus, InventoryItem, LoadConflict } from '@/types/inventory';
 import { getActiveLocationContext } from '@/lib/tenant';
 
 /**
@@ -265,6 +265,38 @@ export async function getLoadItemCount(
     .eq('sub_inventory', subInventoryName);
 
   return { count: count || 0, error };
+}
+
+export async function getLoadConflictCount(
+  inventoryType: InventoryType,
+  loadNumber: string
+): Promise<{ count: number; error: any }> {
+  const { locationId } = getActiveLocationContext();
+  const { count, error } = await supabase
+    .from('load_conflicts')
+    .select('*', { count: 'exact', head: true })
+    .eq('location_id', locationId)
+    .eq('inventory_type', inventoryType)
+    .eq('load_number', loadNumber)
+    .eq('status', 'open');
+
+  return { count: count || 0, error };
+}
+
+export async function getLoadConflicts(
+  inventoryType: InventoryType,
+  loadNumber: string
+): Promise<{ data: LoadConflict[]; error: any }> {
+  const { locationId } = getActiveLocationContext();
+  const { data, error } = await supabase
+    .from('load_conflicts')
+    .select('*')
+    .eq('location_id', locationId)
+    .eq('inventory_type', inventoryType)
+    .eq('load_number', loadNumber)
+    .order('detected_at', { ascending: false });
+
+  return { data: data ?? [], error };
 }
 
 /**

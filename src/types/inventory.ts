@@ -109,6 +109,19 @@ export interface LoadMetadata {
   notes?: string;
 }
 
+export interface LoadConflict {
+  id?: string;
+  company_id?: string;
+  location_id?: string;
+  inventory_type: InventoryType;
+  load_number: string;
+  serial: string;
+  conflicting_load: string;
+  status?: 'open' | 'resolved';
+  notes?: string;
+  detected_at?: string;
+}
+
 export interface LoadWithItems {
   metadata: LoadMetadata;
   items: InventoryItem[];

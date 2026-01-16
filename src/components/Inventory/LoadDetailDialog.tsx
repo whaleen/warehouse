@@ -4,8 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Loader2, Search, ArrowRightLeft, Plus } from 'lucide-react';
-import { getLoadWithItems } from '@/lib/loadManager';
-import type { LoadMetadata, InventoryItem } from '@/types/inventory';
+import { getLoadWithItems, getLoadConflicts } from '@/lib/loadManager';
+import type { LoadMetadata, InventoryItem, LoadConflict } from '@/types/inventory';
 import { AddItemsToLoadDialog } from './AddItemsToLoadDialog';
 import { decodeHTMLEntities } from '@/lib/htmlUtils';
 import { ChangeItemAssignmentDialog } from './ChangeItemAssignmentDialog';
@@ -21,6 +21,7 @@ interface LoadDetailDialogProps {
 
 export function LoadDetailDialog({ open, onOpenChange, load, onUpdate }: LoadDetailDialogProps) {
   const [items, setItems] = useState<InventoryItem[]>([]);
+  const [conflicts, setConflicts] = useState<LoadConflict[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
@@ -29,10 +30,12 @@ export function LoadDetailDialog({ open, onOpenChange, load, onUpdate }: LoadDet
 
   const fetchItems = async () => {
     setLoading(true);
-    const { data } = await getLoadWithItems(load.inventory_type, load.sub_inventory_name);
-    if (data) {
-      setItems(data.items);
-    }
+    const [{ data }, { data: conflictData }] = await Promise.all([
+      getLoadWithItems(load.inventory_type, load.sub_inventory_name),
+      getLoadConflicts(load.inventory_type, load.sub_inventory_name),
+    ]);
+    if (data) setItems(data.items);
+    setConflicts(conflictData);
     setLoading(false);
   };
 
@@ -143,6 +146,29 @@ export function LoadDetailDialog({ open, onOpenChange, load, onUpdate }: LoadDet
               </div>
             </div>
           </div>
+          {conflicts.length > 0 && (
+            <div className="rounded-lg border border-destructive/40 bg-destructive/5 p-3 text-sm">
+              <div className="font-semibold text-destructive">
+                {conflicts.length} serial conflict{conflicts.length === 1 ? '' : 's'}
+              </div>
+              <p className="text-muted-foreground">
+                These serials also appear in another load.
+              </p>
+              <div className="mt-2 space-y-1">
+                {conflicts.slice(0, 6).map(conflict => (
+                  <div key={conflict.id ?? `${conflict.serial}-${conflict.load_number}`}>
+                    <span className="font-medium">{conflict.serial}</span> already in{' '}
+                    <span className="font-medium">{conflict.conflicting_load}</span>
+                  </div>
+                ))}
+                {conflicts.length > 6 && (
+                  <div className="text-xs text-muted-foreground">
+                    +{conflicts.length - 6} more
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
 
           {/* Search and selection */}
           <div className="flex items-center gap-2 border-b pb-3">

@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Loader2, Plus, Edit, Merge, Trash2, ChevronRight } from 'lucide-react';
-import { getAllLoads, getLoadItemCount, updateLoadStatus, deleteLoad } from '@/lib/loadManager';
+import { getAllLoads, getLoadItemCount, getLoadConflictCount, updateLoadStatus, deleteLoad } from '@/lib/loadManager';
 import type { LoadMetadata, InventoryType, LoadStatus } from '@/types/inventory';
 import { RenameLoadDialog } from './RenameLoadDialog';
 import { MergeLoadsDialog } from './MergeLoadsDialog';
@@ -17,6 +17,7 @@ import { PageContainer } from '@/components/Layout/PageContainer';
 
 interface LoadWithCount extends LoadMetadata {
   item_count: number;
+  conflict_count: number;
 }
 
 interface LoadManagementViewProps {
@@ -51,8 +52,11 @@ export function LoadManagementView({ onViewChange, onMenuClick }: LoadManagement
       // Fetch item counts for each load
       const loadsWithCounts = await Promise.all(
         data.map(async (load) => {
-          const { count } = await getLoadItemCount(load.inventory_type, load.sub_inventory_name);
-          return { ...load, item_count: count };
+          const [{ count: itemCount }, { count: conflictCount }] = await Promise.all([
+            getLoadItemCount(load.inventory_type, load.sub_inventory_name),
+            getLoadConflictCount(load.inventory_type, load.sub_inventory_name),
+          ]);
+          return { ...load, item_count: itemCount, conflict_count: conflictCount };
         })
       );
       setLoads(loadsWithCounts);
@@ -317,6 +321,11 @@ export function LoadManagementView({ onViewChange, onMenuClick }: LoadManagement
                               <Badge className={getStatusColor(load.status)}>
                                 {getStatusLabel(load.status)}
                               </Badge>
+                              {load.conflict_count > 0 && (
+                                <Badge variant="destructive">
+                                  {load.conflict_count} conflict{load.conflict_count === 1 ? '' : 's'}
+                                </Badge>
+                              )}
                             </div>
                             <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
                               <span>{load.item_count} items</span>
