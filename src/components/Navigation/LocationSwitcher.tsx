@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { Building2, ChevronsUpDown, Settings2 } from "lucide-react"
+import { ChevronsUpDown, Settings2 } from "lucide-react"
 
 import {
   DropdownMenu,
@@ -34,6 +34,7 @@ interface LocationSwitcherProps {
 }
 
 export function LocationSwitcher({ onManageLocations }: LocationSwitcherProps) {
+  const tenantLogoUrl = "/blue-jacket.png"
   const { isMobile } = useSidebar()
   const [locations, setLocations] = useState<LocationOption[]>([])
   const [activeLocation, setActiveLocation] = useState<LocationOption | null>(null)
@@ -99,8 +100,8 @@ export function LocationSwitcher({ onManageLocations }: LocationSwitcherProps) {
       <SidebarMenu>
         <SidebarMenuItem>
           <SidebarMenuButton size="lg" disabled>
-            <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
-              <Building2 className="size-4" />
+            <div className="bg-sidebar-primary/10 flex aspect-square size-8 items-center justify-center rounded-lg overflow-hidden">
+              <img src={tenantLogoUrl} alt="Tenant logo" className="h-full w-full object-cover" />
             </div>
             <div className="grid flex-1 text-left text-sm leading-tight">
               <span className="truncate font-medium">Loading locations…</span>
@@ -117,8 +118,8 @@ export function LocationSwitcher({ onManageLocations }: LocationSwitcherProps) {
       <SidebarMenu>
         <SidebarMenuItem>
           <SidebarMenuButton size="lg" disabled>
-            <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
-              <Building2 className="size-4" />
+            <div className="bg-sidebar-primary/10 flex aspect-square size-8 items-center justify-center rounded-lg overflow-hidden">
+              <img src={tenantLogoUrl} alt="Tenant logo" className="h-full w-full object-cover" />
             </div>
             <div className="grid flex-1 text-left text-sm leading-tight">
               <span className="truncate font-medium">No locations</span>
@@ -143,8 +144,8 @@ export function LocationSwitcher({ onManageLocations }: LocationSwitcherProps) {
               size="lg"
               className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
             >
-              <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
-                <Building2 className="size-4" />
+              <div className="bg-sidebar-primary/10 flex aspect-square size-8 items-center justify-center rounded-lg overflow-hidden">
+                <img src={tenantLogoUrl} alt="Tenant logo" className="h-full w-full object-cover" />
               </div>
               <div className="grid flex-1 text-left text-sm leading-tight">
                 <span className="truncate font-medium">{activeLocation.name}</span>
@@ -172,8 +173,8 @@ export function LocationSwitcher({ onManageLocations }: LocationSwitcherProps) {
                   onClick={() => handleSelect(location)}
                   className="gap-2 p-2"
                 >
-                  <div className="flex size-6 items-center justify-center rounded-md border">
-                    <Building2 className="size-3.5 shrink-0" />
+                  <div className="flex size-6 items-center justify-center rounded-md border overflow-hidden bg-background">
+                    <img src={tenantLogoUrl} alt="Tenant logo" className="h-full w-full object-cover" />
                   </div>
                   <div className="flex flex-col">
                     <span className="text-sm">{label}</span>

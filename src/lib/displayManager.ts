@@ -36,10 +36,10 @@ function toSummary(record: DisplayRecord): FloorDisplaySummary {
   return {
     id: record.id,
     name: record.name,
-    pairingCode: record.pairing_code,
     paired: record.paired,
     lastHeartbeat: record.last_heartbeat ?? undefined,
     createdAt: record.created_at,
+    stateJson: record.state_json ?? {},
   };
 }
 
@@ -47,11 +47,30 @@ function generatePairingCode(): string {
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
+const defaultDisplayState: DisplayState = {
+  theme: 'light',
+  refreshInterval: 30000,
+  loadBoard: {
+    statusFilter: 'both',
+    pageSize: 8,
+    autoRotate: false,
+    rotateIntervalSec: 12,
+  },
+  layout: {
+    columns: 2,
+    rows: 1,
+    widgets: [
+      { id: '1', type: 'asis-overview', title: 'ASIS Overview' },
+      { id: '2', type: 'asis-loads', title: 'ASIS Loads' },
+    ],
+  },
+};
+
 export async function getAllDisplays(): Promise<{ data: FloorDisplaySummary[] | null; error: unknown }> {
   const { locationId } = getActiveLocationContext();
   const { data, error } = await supabase
     .from(TABLE)
-    .select('id, name, pairing_code, paired, last_heartbeat, created_at')
+    .select('id, name, paired, last_heartbeat, created_at, state_json')
     .eq('location_id', locationId)
     .order('created_at', { ascending: false });
 
@@ -123,20 +142,7 @@ export async function createDisplay(input: {
       name: input.name ?? 'Floor Display',
       pairing_code: pairingCode,
       paired: false,
-      state_json: {
-        theme: 'dark',
-        refreshInterval: 30000,
-        layout: {
-          columns: 2,
-          rows: 2,
-          widgets: [
-            { id: '1', type: 'loads-summary', title: 'Active Loads' },
-            { id: '2', type: 'parts-alerts', title: 'Parts Alerts' },
-            { id: '3', type: 'active-sessions', title: 'Scanning Sessions' },
-            { id: '4', type: 'clock', title: 'Time' },
-          ],
-        },
-      },
+      state_json: defaultDisplayState,
       updated_at: new Date().toISOString(),
     })
     .select('*')
@@ -150,6 +156,7 @@ export async function createDisplay(input: {
 }
 
 export async function pairDisplay(pairingCode: string): Promise<{ data: FloorDisplay | null; error: unknown }> {
+  const { locationId, companyId } = getActiveLocationContext();
   const { data, error } = await supabase
     .from(TABLE)
     .update({
@@ -158,15 +165,39 @@ export async function pairDisplay(pairingCode: string): Promise<{ data: FloorDis
       updated_at: new Date().toISOString(),
     })
     .eq('pairing_code', pairingCode)
+    .eq('location_id', locationId)
     .eq('paired', false)
+    .select('*')
+    .maybeSingle();
+
+  if (error) {
+    return { data: null, error };
+  }
+
+  if (data) {
+    return { data: toDisplay(data as DisplayRecord), error: null };
+  }
+
+  const { data: inserted, error: insertError } = await supabase
+    .from(TABLE)
+    .insert({
+      company_id: companyId,
+      location_id: locationId,
+      name: 'Floor Display',
+      pairing_code: pairingCode,
+      paired: true,
+      state_json: defaultDisplayState,
+      last_heartbeat: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    })
     .select('*')
     .single();
 
-  if (error || !data) {
-    return { data: null, error: error ?? new Error('Display not found or already paired') };
+  if (insertError || !inserted) {
+    return { data: null, error: insertError ?? new Error('Display not found or already paired') };
   }
 
-  return { data: toDisplay(data as DisplayRecord), error: null };
+  return { data: toDisplay(inserted as DisplayRecord), error: null };
 }
 
 export async function updateDisplayState(
@@ -239,7 +270,8 @@ export async function deleteDisplay(displayId: string): Promise<{ success: boole
 
 export function subscribeToDisplay(
   displayId: string,
-  callback: (display: FloorDisplay) => void
+  callback: (display: FloorDisplay) => void,
+  onStatus?: (status: string) => void
 ): () => void {
   const channel = supabase
     .channel(`display:${displayId}`)
@@ -257,7 +289,9 @@ export function subscribeToDisplay(
         }
       }
     )
-    .subscribe();
+    .subscribe((status) => {
+      onStatus?.(status);
+    });
 
   return () => {
     supabase.removeChannel(channel);

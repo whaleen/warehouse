@@ -1,10 +1,11 @@
 import { Button } from "@/components/ui/button";
 import { ScanBarcode, Database, LayoutDashboard, TruckIcon } from "lucide-react";
 import { PageContainer } from "@/components/Layout/PageContainer";
+import type { AppView } from "@/lib/routes";
 
 interface BottomNavProps {
-  currentView: 'dashboard' | 'inventory' | 'products' | 'settings' | 'loads';
-  onViewChange: (view: 'dashboard' | 'inventory' | 'products' | 'settings' | 'loads') => void;
+  currentView: AppView;
+  onViewChange: (view: AppView) => void;
 }
 
 export function BottomNav({ currentView, onViewChange }: BottomNavProps) {

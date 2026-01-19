@@ -1,20 +1,17 @@
 import { useEffect, useState, useCallback } from 'react';
 import {
   getDisplayByIdPublic,
-  pairDisplay,
+  getDisplayByCode,
   subscribeToDisplay,
   recordHeartbeat,
 } from '@/lib/displayManager';
-import type { FloorDisplay, DisplayState } from '@/types/display';
-import { LoadsSummaryWidget } from './widgets/LoadsSummaryWidget';
-import { PartsAlertsWidget } from './widgets/PartsAlertsWidget';
-import { ActiveSessionsWidget } from './widgets/ActiveSessionsWidget';
-import { ClockWidget } from './widgets/ClockWidget';
-import { TextWidget } from './widgets/TextWidget';
+import type { FloorDisplay } from '@/types/display';
+import { AsisOverviewWidget } from './widgets/AsisOverviewWidget';
+import { AsisLoadsWidget } from './widgets/AsisLoadsWidget';
 import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import supabase from '@/lib/supabase';
+import { useTheme } from '@/components/theme-provider';
 
 type Props = {
   displayId: string | null;
@@ -24,14 +21,33 @@ export function FloorDisplayView({ displayId }: Props) {
   const [display, setDisplay] = useState<FloorDisplay | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [pairingCode, setPairingCode] = useState('');
-  const [pairing, setPairing] = useState(false);
+  const [pendingCode, setPendingCode] = useState<string | null>(null);
+  const { setTheme } = useTheme();
+  const [locationLabel, setLocationLabel] = useState<{
+    locationName: string;
+    companyName?: string | null;
+  } | null>(null);
+  const [liveStatus, setLiveStatus] = useState<'live' | 'connecting' | 'offline'>('connecting');
+
+  const generatePairingCode = useCallback(() => {
+    return Math.floor(100000 + Math.random() * 900000).toString();
+  }, []);
+
+  const initializePairingCode = useCallback(() => {
+    const storedCode = localStorage.getItem('floor_display_pairing_code');
+    const nextCode = storedCode ?? generatePairingCode();
+    localStorage.setItem('floor_display_pairing_code', nextCode);
+    setPendingCode(nextCode);
+  }, [generatePairingCode]);
 
   const loadDisplay = useCallback(async (id: string) => {
     setLoading(true);
     const { data, error } = await getDisplayByIdPublic(id);
     if (error || !data) {
       setError('Display not found');
+      localStorage.removeItem('floor_display_id');
+      setDisplay(null);
+      initializePairingCode();
       setLoading(false);
       return;
     }
@@ -39,7 +55,7 @@ export function FloorDisplayView({ displayId }: Props) {
     setLoading(false);
 
     localStorage.setItem('floor_display_id', id);
-  }, []);
+  }, [initializePairingCode]);
 
   useEffect(() => {
     const storedId = localStorage.getItem('floor_display_id');
@@ -48,19 +64,58 @@ export function FloorDisplayView({ displayId }: Props) {
     if (idToLoad) {
       loadDisplay(idToLoad);
     } else {
+      initializePairingCode();
       setLoading(false);
     }
-  }, [displayId, loadDisplay]);
+  }, [displayId, initializePairingCode, loadDisplay]);
 
   useEffect(() => {
     if (!display) return;
 
-    const unsubscribe = subscribeToDisplay(display.id, (updatedDisplay) => {
-      setDisplay(updatedDisplay);
-    });
+    setLiveStatus('connecting');
+
+    const unsubscribe = subscribeToDisplay(
+      display.id,
+      (updatedDisplay) => {
+        setDisplay(updatedDisplay);
+      },
+      (status) => {
+        if (status === 'SUBSCRIBED') {
+          setLiveStatus('live');
+        } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
+          setLiveStatus('offline');
+        } else {
+          setLiveStatus('connecting');
+        }
+      }
+    );
 
     return unsubscribe;
   }, [display?.id]);
+
+  useEffect(() => {
+    const nextTheme = display?.stateJson?.theme ?? 'light';
+    setTheme(nextTheme);
+  }, [display?.stateJson?.theme, setTheme]);
+
+  useEffect(() => {
+    if (display || !pendingCode) return;
+    let cancelled = false;
+    const interval = setInterval(async () => {
+      const { data } = await getDisplayByCode(pendingCode);
+      if (!cancelled && data?.paired) {
+        setDisplay(data);
+        localStorage.setItem('floor_display_id', data.id);
+        localStorage.removeItem('floor_display_pairing_code');
+        setPendingCode(null);
+      }
+    }, 3000);
+
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+  }, [display, pendingCode]);
 
   useEffect(() => {
     if (!display) return;
@@ -74,32 +129,40 @@ export function FloorDisplayView({ displayId }: Props) {
     return () => clearInterval(interval);
   }, [display?.id]);
 
-  const handlePair = async () => {
-    if (!pairingCode || pairingCode.length !== 6) {
-      setError('Please enter a 6-digit code');
+  useEffect(() => {
+    if (!display?.locationId) {
+      setLocationLabel(null);
       return;
     }
 
-    setPairing(true);
-    setError(null);
+    let cancelled = false;
 
-    const { data, error } = await pairDisplay(pairingCode);
-    if (error || !data) {
-      setError('Invalid pairing code or display already paired');
-      setPairing(false);
-      return;
-    }
+    const loadLocation = async () => {
+      const { data, error } = await supabase
+        .from('locations')
+        .select('name, companies:company_id (name)')
+        .eq('id', display.locationId)
+        .maybeSingle();
 
-    setDisplay(data);
-    localStorage.setItem('floor_display_id', data.id);
-    setPairing(false);
-  };
+      if (cancelled) return;
 
-  const handleUnpair = () => {
-    localStorage.removeItem('floor_display_id');
-    setDisplay(null);
-    setPairingCode('');
-  };
+      if (error || !data) {
+        setLocationLabel(null);
+        return;
+      }
+
+      setLocationLabel({
+        locationName: data.name,
+        companyName: data.companies?.name ?? null,
+      });
+    };
+
+    loadLocation();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [display?.locationId]);
 
   // Loading state
   if (loading) {
@@ -125,110 +188,77 @@ export function FloorDisplayView({ displayId }: Props) {
             </div>
             <h1 className="text-2xl font-bold">Floor Display</h1>
             <p className="text-sm text-muted-foreground text-center">
-              Enter the 6-digit pairing code from your mobile device
+              Enter this code in the app to complete pairing.
             </p>
           </div>
 
-          <div className="space-y-2">
-            <Label>Pairing Code</Label>
-            <Input
-              type="text"
-              inputMode="numeric"
-              maxLength={6}
-              value={pairingCode}
-              onChange={(e) => setPairingCode(e.target.value.replace(/\D/g, ''))}
-              placeholder="000000"
-              className="text-center text-2xl font-mono tracking-widest"
-            />
-          </div>
+          {pendingCode && (
+            <div className="space-y-2">
+              <Label>Pairing Code</Label>
+              <div className="rounded-md border border-border bg-muted px-6 py-4 text-center text-4xl font-mono tracking-widest text-foreground">
+                {pendingCode}
+              </div>
+            </div>
+          )}
 
           {error && <p className="text-sm text-destructive text-center">{error}</p>}
-
-          <Button
-            className="w-full"
-            onClick={handlePair}
-            disabled={pairing || pairingCode.length !== 6}
-          >
-            {pairing ? 'Pairing...' : 'Pair Display'}
-          </Button>
         </Card>
       </div>
     );
   }
 
-  // Main display view
-  const state: DisplayState = display.stateJson ?? {};
-  const layout = state.layout ?? { columns: 2, rows: 2, widgets: [] };
-  const widgets = layout.widgets ?? [];
-  const columns = layout.columns ?? 2;
+  const tenantLogoUrl = '/blue-jacket.png';
+  const companyName = locationLabel?.companyName ?? 'Company';
+  const locationName = locationLabel?.locationName ?? display.name ?? 'Location';
+  const displayLabel = display.name ?? locationLabel?.locationName ?? 'Floor Display';
+  const liveLabel = liveStatus === 'live' ? 'Live' : liveStatus === 'connecting' ? 'Connecting' : 'Offline';
+  const liveDotClass =
+    liveStatus === 'live'
+      ? 'bg-primary animate-pulse'
+      : liveStatus === 'connecting'
+      ? 'bg-muted-foreground/40'
+      : 'bg-muted-foreground/30';
 
   return (
-    <div className="min-h-screen bg-background p-4">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-4">
-        <h1 className="text-2xl font-bold text-foreground">
-          {state.title || display.name}
-        </h1>
-        <Button variant="ghost" size="sm" onClick={handleUnpair}>
-          Unpair
-        </Button>
-      </div>
+    <div className="min-h-screen bg-background flex flex-col">
+      <header className="px-6 py-5 border-b border-border">
+        <div className="flex items-center justify-between gap-6">
+          <div className="flex items-center gap-4 min-w-0">
+            <div className="h-14 w-14 rounded-xl border border-border bg-muted overflow-hidden">
+              <img src={tenantLogoUrl} alt={`${companyName} logo`} className="h-full w-full object-cover" />
+            </div>
+            <div className="min-w-0">
+              <div className="text-2xl font-semibold text-foreground truncate">{companyName}</div>
+              <div className="text-base text-muted-foreground truncate">{locationName}</div>
+            </div>
+          </div>
+          <div className="text-right min-w-0 space-y-2">
+            <div className="flex items-center justify-end gap-2 text-xs uppercase tracking-wide text-muted-foreground">
+              <span className={`h-2 w-2 rounded-full ${liveDotClass}`} />
+              <span>{liveLabel}</span>
+            </div>
+            <div>
+              <div className="text-xs uppercase tracking-wide text-muted-foreground">Display</div>
+              <div className="text-base font-medium text-foreground truncate">{displayLabel}</div>
+            </div>
+          </div>
+        </div>
+      </header>
 
-      {/* Widget Grid */}
-      <div
-        className="grid gap-4"
-        style={{
-          gridTemplateColumns: `repeat(${columns}, 1fr)`,
-          height: 'calc(100vh - 80px)',
-        }}
-      >
-        {widgets.map((widget) => {
-          switch (widget.type) {
-            case 'loads-summary':
-              return (
-                <LoadsSummaryWidget
-                  key={widget.id}
-                  title={widget.title}
-                  config={widget.config}
-                />
-              );
-            case 'parts-alerts':
-              return (
-                <PartsAlertsWidget
-                  key={widget.id}
-                  title={widget.title}
-                  config={widget.config}
-                />
-              );
-            case 'active-sessions':
-              return (
-                <ActiveSessionsWidget
-                  key={widget.id}
-                  title={widget.title}
-                  config={widget.config}
-                />
-              );
-            case 'clock':
-              return (
-                <ClockWidget
-                  key={widget.id}
-                  title={widget.title}
-                  config={widget.config}
-                />
-              );
-            case 'text':
-              return (
-                <TextWidget
-                  key={widget.id}
-                  title={widget.title}
-                  config={widget.config}
-                />
-              );
-            default:
-              return null;
-          }
-        })}
-      </div>
+      <main className="flex-1 flex flex-col gap-4 px-6 py-4 min-h-0">
+        <AsisOverviewWidget
+          title="ASIS Overview"
+          locationId={display.locationId}
+          variant="compact"
+          className="shrink-0"
+        />
+        <AsisLoadsWidget
+          title="ASIS Load Board"
+          locationId={display.locationId}
+          config={display.stateJson?.loadBoard}
+          className="flex-1 min-h-0"
+        />
+      </main>
     </div>
   );
 }

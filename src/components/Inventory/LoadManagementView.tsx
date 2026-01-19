@@ -14,6 +14,7 @@ import { PageContainer } from '@/components/Layout/PageContainer';
 import supabase from '@/lib/supabase';
 import { fetchAsisCsvRows, fetchAsisXlsRows } from '@/lib/asisImport';
 import { getActiveLocationContext } from '@/lib/tenant';
+import type { AppView } from '@/lib/routes';
 
 interface LoadWithCount extends LoadMetadata {
   item_count: number;
@@ -84,7 +85,7 @@ const parseAsisTimestamp = (value: string) => {
 };
 
 interface LoadManagementViewProps {
-  onViewChange: (view: 'dashboard' | 'inventory' | 'products' | 'settings' | 'loads' | 'create-load') => void;
+  onViewChange: (view: AppView) => void;
   onMenuClick?: () => void;
 }
 

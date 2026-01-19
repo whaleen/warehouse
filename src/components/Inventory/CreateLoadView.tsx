@@ -9,9 +9,10 @@ import { createLoad } from '@/lib/loadManager';
 import type { InventoryType } from '@/types/inventory';
 import { AppHeader } from '@/components/Navigation/AppHeader';
 import { PageContainer } from '@/components/Layout/PageContainer';
+import type { AppView } from '@/lib/routes';
 
 interface CreateLoadViewProps {
-  onViewChange: (view: 'dashboard' | 'inventory' | 'products' | 'settings' | 'loads' | 'create-load') => void;
+  onViewChange: (view: AppView) => void;
   onMenuClick?: () => void;
 }
 

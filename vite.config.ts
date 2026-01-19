@@ -6,7 +6,12 @@ import { defineConfig } from "vite"
 import { VitePWA } from "vite-plugin-pwa"
 import { qrcode } from "vite-plugin-qrcode"
 
-export default defineConfig({
+export default defineConfig(({ mode }) => {
+  const isDev = mode === 'development';
+  const appName = isDev ? 'Warehouse (Dev)' : 'Warehouse Inventory Scanner';
+  const appShortName = isDev ? 'Warehouse Dev' : 'Warehouse';
+
+  return {
   server: {
     host: true, // <- key: exposes to LAN + prints Network URL
   },
@@ -37,11 +42,12 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'mask-icon.svg'],
       manifest: {
-        name: 'Warehouse Inventory Scanner',
-        short_name: 'Warehouse',
+        id: '/?pwa=warehouse',
+        name: appName,
+        short_name: appShortName,
         description: 'Warehouse appliance inventory scanning and delivery management',
-        theme_color: '#3B82F6',
-        background_color: '#ffffff',
+        theme_color: '#0f172a',
+        background_color: '#0f172a',
         display: 'standalone',
         orientation: 'portrait',
         scope: '/',
@@ -102,4 +108,5 @@ export default defineConfig({
     },
     dedupe: ["react", "react-dom"],
   },
+  }
 })

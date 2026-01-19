@@ -22,6 +22,7 @@ import { DisplayManager } from "@/components/FloorDisplay/DisplayManager"
 
 interface SettingsViewProps {
   onMenuClick?: () => void
+  section?: SettingsSection
 }
 
 type LocationRow = {
@@ -57,6 +58,14 @@ type UserRow = {
 
 const SUPER_ADMIN_STORAGE_KEY = "super_admin_unlocked"
 
+type SettingsSection =
+  | "locations"
+  | "company"
+  | "users"
+  | "displays-setup"
+  | "displays-list"
+  | "displays-settings"
+
 const slugify = (value: string) => {
   return value
     .toLowerCase()
@@ -65,8 +74,18 @@ const slugify = (value: string) => {
     .replace(/(^-|-$)+/g, "")
 }
 
-export function SettingsView({ onMenuClick }: SettingsViewProps) {
+export function SettingsView({ onMenuClick, section }: SettingsViewProps) {
   const { user, updateUser } = useAuth()
+  const resolvedSection: SettingsSection = section ?? "locations"
+  const sectionTitles: Record<SettingsSection, string> = {
+    locations: "Locations",
+    company: "Company",
+    users: "Users",
+    "displays-setup": "Display Setup",
+    "displays-list": "Displays",
+    "displays-settings": "Display Settings",
+  }
+  const pageTitle = section ? `Settings / ${sectionTitles[resolvedSection]}` : "Settings"
   const [activeLocationKey, setActiveLocationKey] = useState<string | null>(() => {
     return (
       getStoredActiveLocationId() ??
@@ -683,636 +702,678 @@ export function SettingsView({ onMenuClick }: SettingsViewProps) {
     await fetchUsers()
   }
 
+  const renderLocationSection = () => (
+    <>
+      <Card className="p-6 space-y-6">
+        <div className="flex items-center gap-3 pb-4 border-b border-border">
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+            <SettingsIcon className="h-6 w-6 text-primary" />
+          </div>
+          <div>
+            <h2 className="text-xl font-semibold text-foreground">Location Context</h2>
+            <p className="text-sm text-muted-foreground">
+              Current active location and source.
+            </p>
+          </div>
+        </div>
+
+        <div className="space-y-3 text-sm text-muted-foreground">
+          <div>Active location key: {activeLocationKey || "not set"}</div>
+          <div>Active source: {activeLocationSource}</div>
+          <div>Resolved location ID: {locationId || "not loaded"}</div>
+          <div>Resolved company ID: {locationCompanyId || "not loaded"}</div>
+        </div>
+      </Card>
+
+      <Card className="p-6 space-y-6">
+        <div className="flex items-center gap-3 pb-4 border-b border-border">
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+            <SettingsIcon className="h-6 w-6 text-primary" />
+          </div>
+          <div>
+            <h2 className="text-xl font-semibold text-foreground">Location Manager</h2>
+            <p className="text-sm text-muted-foreground">
+              Choose the active location and manage locations.
+            </p>
+          </div>
+        </div>
+
+        <div className="space-y-3">
+          <Label>Locations</Label>
+          {locationsLoading ? (
+            <div className="text-sm text-muted-foreground">Loading locations…</div>
+          ) : locations.length === 0 ? (
+            <div className="text-sm text-muted-foreground">
+              No locations yet. Create one below.
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {locations.map((location) => {
+                const isActive = location.id === locationId
+                return (
+                  <div
+                    key={location.id}
+                    className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border/60 bg-background/60 px-3 py-2"
+                  >
+                    <div className="min-w-0">
+                      <div className="text-sm font-medium text-foreground">
+                        {location.name}
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        {location.slug} • {location.companies?.name ?? "Unknown company"}
+                      </div>
+                    </div>
+                    <Button
+                      size="sm"
+                      variant={isActive ? "default" : "outline"}
+                      disabled={isActive}
+                      onClick={() => handleSetActiveLocation(location)}
+                    >
+                      {isActive ? "Active" : "Set Active"}
+                    </Button>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+          {locationsError && (
+            <div className="text-sm text-destructive">{locationsError}</div>
+          )}
+        </div>
+
+        {superAdminUnlocked ? (
+          <>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="new-location-company">Company</Label>
+                {companiesLoading ? (
+                  <div className="text-sm text-muted-foreground">Loading companies…</div>
+                ) : companies.length === 0 ? (
+                  <div className="text-sm text-muted-foreground">
+                    Create a company first to add locations.
+                  </div>
+                ) : (
+                  <Select value={newLocationCompanyId} onValueChange={setNewLocationCompanyId}>
+                    <SelectTrigger id="new-location-company">
+                      <SelectValue placeholder="Select company" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {companies.map((company) => (
+                        <SelectItem key={company.id} value={company.id}>
+                          {company.name} ({company.slug})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="new-location-name">New Location Name</Label>
+                <Input
+                  id="new-location-name"
+                  value={newLocationName}
+                  onChange={(e) => setNewLocationName(e.target.value)}
+                  placeholder="e.g. Sacramento Warehouse"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="new-location-slug">New Location Slug</Label>
+                <Input
+                  id="new-location-slug"
+                  value={newLocationSlug}
+                  onChange={(e) => {
+                    setNewLocationSlugTouched(true)
+                    setNewLocationSlug(e.target.value)
+                  }}
+                  placeholder="e.g. sacramento-01"
+                />
+              </div>
+            </div>
+
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="text-sm">
+                {locationManagerError && <span className="text-destructive">{locationManagerError}</span>}
+                {!locationManagerError && locationManagerSuccess && (
+                  <span className="text-emerald-600">{locationManagerSuccess}</span>
+                )}
+              </div>
+              <Button onClick={handleCreateLocation} disabled={locationManagerSaving || companies.length === 0}>
+                {locationManagerSaving ? "Creating…" : "Create Location"}
+              </Button>
+            </div>
+          </>
+        ) : (
+          <div className="text-sm text-muted-foreground">
+            Unlock super admin in Company settings to create or edit locations.
+          </div>
+        )}
+      </Card>
+
+      <Card className="p-6 space-y-6">
+        <div className="flex items-center gap-3 pb-4 border-b border-border">
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+            <SettingsIcon className="h-6 w-6 text-primary" />
+          </div>
+          <div>
+            <h2 className="text-xl font-semibold text-foreground">Location Profile</h2>
+            <p className="text-sm text-muted-foreground">
+              Update the location name used across the app.
+            </p>
+          </div>
+        </div>
+
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="location-name">Location Name</Label>
+            <Input
+              id="location-name"
+              value={locationName}
+              onChange={(e) => setLocationName(e.target.value)}
+              disabled={locationLoading}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="location-slug">Location Slug</Label>
+            <Input
+              id="location-slug"
+              value={locationSlug}
+              onChange={(e) => setLocationSlug(e.target.value)}
+              disabled={locationLoading}
+            />
+          </div>
+        </div>
+      </Card>
+
+      <Card className="p-6 space-y-6">
+        <div className="flex items-center gap-3 pb-4 border-b border-border">
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+            <SettingsIcon className="h-6 w-6 text-primary" />
+          </div>
+          <div>
+            <h2 className="text-xl font-semibold text-foreground">DMS SSO Credentials</h2>
+            <p className="text-sm text-muted-foreground">
+              Stored for this location and used by the sync function later.
+            </p>
+          </div>
+        </div>
+
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="sso-username">SSO Username</Label>
+            <Input
+              id="sso-username"
+              value={ssoUsername}
+              onChange={(e) => setSsoUsername(e.target.value)}
+              disabled={locationLoading}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="sso-password">SSO Password</Label>
+            <Input
+              id="sso-password"
+              type="password"
+              value={ssoPassword}
+              onChange={(e) => setSsoPassword(e.target.value)}
+              disabled={locationLoading}
+            />
+          </div>
+        </div>
+      </Card>
+
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="text-sm">
+          {locationError && <span className="text-destructive">{locationError}</span>}
+          {!locationError && locationSuccess && (
+            <span className="text-emerald-600">{locationSuccess}</span>
+          )}
+        </div>
+        <Button onClick={handleLocationSave} disabled={locationSaving || locationLoading || !locationId}>
+          {locationSaving ? "Saving…" : "Save Location Settings"}
+        </Button>
+      </div>
+    </>
+  )
+
+  const renderCompanySection = () => (
+    <>
+      <Card className="p-6 space-y-6">
+        <div className="flex items-center gap-3 pb-4 border-b border-border">
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+            <SettingsIcon className="h-6 w-6 text-primary" />
+          </div>
+          <div>
+            <h2 className="text-xl font-semibold text-foreground">Super Admin Access</h2>
+            <p className="text-sm text-muted-foreground">
+              Unlock to manage companies and locations.
+            </p>
+          </div>
+        </div>
+
+        {superAdminUnlocked ? (
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="text-sm text-muted-foreground">Super admin unlocked.</div>
+            <Button variant="outline" onClick={handleLockSuperAdmin}>
+              Lock
+            </Button>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="super-admin-username">Username</Label>
+                <Input
+                  id="super-admin-username"
+                  value={superAdminUsername}
+                  onChange={(e) => setSuperAdminUsername(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="super-admin-password">Password</Label>
+                <Input
+                  id="super-admin-password"
+                  type="password"
+                  value={superAdminPassword}
+                  onChange={(e) => setSuperAdminPassword(e.target.value)}
+                />
+              </div>
+            </div>
+            {superAdminError && (
+              <div className="text-sm text-destructive">{superAdminError}</div>
+            )}
+            <div className="flex justify-end">
+              <Button onClick={handleUnlockSuperAdmin}>Unlock</Button>
+            </div>
+          </div>
+        )}
+      </Card>
+
+      {superAdminUnlocked && (
+        <Card className="p-6 space-y-6">
+          <div className="flex items-center gap-3 pb-4 border-b border-border">
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+              <SettingsIcon className="h-6 w-6 text-primary" />
+            </div>
+            <div>
+              <h2 className="text-xl font-semibold text-foreground">Company Manager</h2>
+              <p className="text-sm text-muted-foreground">
+                Create and edit companies for your locations.
+              </p>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <h3 className="text-sm font-semibold text-foreground">Create Company</h3>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="new-company-name">Company Name</Label>
+                <Input
+                  id="new-company-name"
+                  value={newCompanyName}
+                  onChange={(e) => setNewCompanyName(e.target.value)}
+                  placeholder="e.g. Northwest Appliances"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="new-company-slug">Company Slug</Label>
+                <Input
+                  id="new-company-slug"
+                  value={newCompanySlug}
+                  onChange={(e) => {
+                    setNewCompanySlugTouched(true)
+                    setNewCompanySlug(e.target.value)
+                  }}
+                  placeholder="e.g. northwest-appliances"
+                />
+              </div>
+            </div>
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="text-sm">
+                {companyManagerError && (
+                  <span className="text-destructive">{companyManagerError}</span>
+                )}
+                {!companyManagerError && companyManagerSuccess && (
+                  <span className="text-emerald-600">{companyManagerSuccess}</span>
+                )}
+              </div>
+              <Button onClick={handleCreateCompany} disabled={newCompanySaving}>
+                {newCompanySaving ? "Creating…" : "Create Company"}
+              </Button>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-semibold text-foreground">Existing Companies</h3>
+              <Button variant="outline" size="sm" onClick={fetchCompanies}>
+                Refresh
+              </Button>
+            </div>
+
+            {companiesLoading ? (
+              <div className="text-sm text-muted-foreground">Loading companies…</div>
+            ) : companies.length === 0 ? (
+              <div className="text-sm text-muted-foreground">No companies found.</div>
+            ) : (
+              <div className="space-y-3">
+                {companies.map((company) => (
+                  <div
+                    key={company.id}
+                    className="rounded-lg border border-border/60 bg-background/60 p-3 space-y-3"
+                  >
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <div className="space-y-2">
+                        <Label>Name</Label>
+                        <Input
+                          value={company.name}
+                          onChange={(e) => updateCompanyField(company.id, "name", e.target.value)}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Slug</Label>
+                        <Input
+                          value={company.slug}
+                          onChange={(e) => updateCompanyField(company.id, "slug", e.target.value)}
+                        />
+                      </div>
+                    </div>
+                    <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-muted-foreground">
+                      <span>ID: {company.id}</span>
+                      <Button
+                        size="sm"
+                        onClick={() => handleSaveCompanyRow(company)}
+                        disabled={companySavingId === company.id}
+                      >
+                        {companySavingId === company.id ? "Saving…" : "Save"}
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {companiesError && (
+              <div className="text-sm text-destructive">{companiesError}</div>
+            )}
+          </div>
+        </Card>
+      )}
+    </>
+  )
+
+  const renderUsersSection = () => (
+    <>
+      <Card className="p-6 space-y-6">
+        <div className="flex items-center gap-3 pb-4 border-b border-border">
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+            <SettingsIcon className="h-6 w-6 text-primary" />
+          </div>
+          <div>
+            <h2 className="text-xl font-semibold text-foreground">User Settings</h2>
+            <p className="text-sm text-muted-foreground">Update your local login details.</p>
+          </div>
+        </div>
+
+        <div className="space-y-4">
+          <AvatarUploader />
+
+          <div className="space-y-2">
+            <Label htmlFor="user-name">User Name</Label>
+            <Input
+              id="user-name"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              disabled={!user}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="user-password">Password</Label>
+            <Input
+              id="user-password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              disabled={!user}
+            />
+          </div>
+        </div>
+      </Card>
+
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="text-sm">
+          {userError && <span className="text-destructive">{userError}</span>}
+          {!userError && userSuccess && <span className="text-emerald-600">{userSuccess}</span>}
+        </div>
+        <Button onClick={handleUserSave} disabled={userSaving || !user}>
+          {userSaving ? "Saving…" : "Save User Settings"}
+        </Button>
+      </div>
+
+      <Card className="p-6 space-y-6">
+        <div className="flex items-center gap-3 pb-4 border-b border-border">
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+            <SettingsIcon className="h-6 w-6 text-primary" />
+          </div>
+          <div>
+            <h2 className="text-xl font-semibold text-foreground">User Manager</h2>
+            <p className="text-sm text-muted-foreground">
+              Create and manage users with admin or user roles.
+            </p>
+          </div>
+        </div>
+
+        <div className="space-y-4">
+          <h3 className="text-sm font-semibold text-foreground">Create User</h3>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="new-user-name">Username</Label>
+              <Input
+                id="new-user-name"
+                value={newUserName}
+                onChange={(e) => setNewUserName(e.target.value)}
+                placeholder="e.g. josh"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="new-user-role">Role</Label>
+              <Select value={newUserRole} onValueChange={(value) => setNewUserRole(value as "admin" | "user")}>
+                <SelectTrigger id="new-user-role">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {roles.map((role) => (
+                    <SelectItem key={role} value={role}>
+                      {role}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2 sm:col-span-2">
+              <Label htmlFor="new-user-password">Password</Label>
+              <Input
+                id="new-user-password"
+                type="password"
+                value={newUserPassword}
+                onChange={(e) => setNewUserPassword(e.target.value)}
+              />
+            </div>
+          </div>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="text-sm">
+              {newUserError && <span className="text-destructive">{newUserError}</span>}
+            </div>
+            <Button onClick={handleCreateUser} disabled={newUserSaving}>
+              {newUserSaving ? "Creating…" : "Create User"}
+            </Button>
+          </div>
+        </div>
+
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-semibold text-foreground">Existing Users</h3>
+            <Button variant="outline" size="sm" onClick={fetchUsers}>
+              Refresh
+            </Button>
+          </div>
+
+          {usersLoading ? (
+            <div className="text-sm text-muted-foreground">Loading users…</div>
+          ) : users.length === 0 ? (
+            <div className="text-sm text-muted-foreground">No users found.</div>
+          ) : (
+            <div className="space-y-3">
+              {users.map((row) => {
+                const rowId = row.id
+                return (
+                  <div
+                    key={String(rowId)}
+                    className="rounded-lg border border-border/60 bg-background/60 p-3 space-y-3"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="h-10 w-10 rounded-full overflow-hidden bg-primary/10 flex items-center justify-center">
+                        {row.image ? (
+                          <img
+                            src={row.image}
+                            alt={row.username ?? "User"}
+                            className="h-full w-full object-cover"
+                          />
+                        ) : (
+                          <SettingsIcon className="h-4 w-4 text-primary" />
+                        )}
+                      </div>
+                      <div>
+                        <div className="text-sm font-semibold text-foreground">
+                          {row.username ?? "User"}
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          Role: {row.role ?? "user"}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="grid gap-3 sm:grid-cols-3">
+                      <div className="space-y-2">
+                        <Label>Username</Label>
+                        <Input
+                          value={row.username ?? ""}
+                          onChange={(e) => updateUserField(rowId, "username", e.target.value)}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Role</Label>
+                        <Select
+                          value={(row.role ?? "user") as string}
+                          onValueChange={(value) => updateUserField(rowId, "role", value)}
+                        >
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {roles.map((role) => (
+                              <SelectItem key={role} value={role}>
+                                {role}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Password</Label>
+                        <Input
+                          type="password"
+                          value={row.password ?? ""}
+                          onChange={(e) => updateUserField(rowId, "password", e.target.value)}
+                        />
+                      </div>
+                    </div>
+                    <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-muted-foreground">
+                      <span>ID: {String(rowId)}</span>
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          onClick={() => handleSaveUserRow(row)}
+                          disabled={usersSavingId === rowId}
+                        >
+                          {usersSavingId === rowId ? "Saving…" : "Save"}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          onClick={() => handleDeleteUserRow(row)}
+                          disabled={usersSavingId === rowId}
+                        >
+                          Delete
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+
+          <div className="text-sm">
+            {usersError && <span className="text-destructive">{usersError}</span>}
+            {!usersError && usersSuccess && <span className="text-emerald-600">{usersSuccess}</span>}
+          </div>
+        </div>
+      </Card>
+    </>
+  )
+
+  const renderDisplaySetupSection = () => <DisplayManager section="setup" />
+  const renderDisplayListSection = () => <DisplayManager section="list" />
+  const renderDisplaySettingsSection = () => <DisplayManager section="settings" />
+
+  const renderSection = (value: SettingsSection) => {
+    switch (value) {
+      case "company":
+        return renderCompanySection()
+      case "users":
+        return renderUsersSection()
+      case "displays-setup":
+        return renderDisplaySetupSection()
+      case "displays-list":
+        return renderDisplayListSection()
+      case "displays-settings":
+        return renderDisplaySettingsSection()
+      case "locations":
+      default:
+        return renderLocationSection()
+    }
+  }
+
   return (
     <div className="min-h-screen bg-background">
-      <AppHeader title="Settings" onMenuClick={onMenuClick} />
+      <AppHeader title={pageTitle} onMenuClick={onMenuClick} />
 
       <PageContainer className="py-6 pb-24">
         <div className="max-w-2xl mx-auto space-y-6">
-          <Tabs defaultValue="location">
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="location">Locations</TabsTrigger>
-              <TabsTrigger value="user">User</TabsTrigger>
-              <TabsTrigger value="displays">Displays</TabsTrigger>
-            </TabsList>
+          {section ? (
+            renderSection(resolvedSection)
+          ) : (
+            <Tabs defaultValue="locations">
+              <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="locations">Locations</TabsTrigger>
+                <TabsTrigger value="company">Company</TabsTrigger>
+                <TabsTrigger value="users">Users</TabsTrigger>
+              </TabsList>
 
-            <TabsContent value="location" className="space-y-6 mt-6">
-              <Card className="p-6 space-y-6">
-                <div className="flex items-center gap-3 pb-4 border-b border-border">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
-                    <SettingsIcon className="h-6 w-6 text-primary" />
-                  </div>
-                  <div>
-                    <h2 className="text-xl font-semibold text-foreground">Location Context</h2>
-                    <p className="text-sm text-muted-foreground">
-                      Current active location and source.
-                    </p>
-                  </div>
-                </div>
+              <TabsContent value="locations" className="space-y-6 mt-6">
+                {renderLocationSection()}
+              </TabsContent>
 
-                <div className="space-y-3 text-sm text-muted-foreground">
-                  <div>Active location key: {activeLocationKey || "not set"}</div>
-                  <div>Active source: {activeLocationSource}</div>
-                  <div>Resolved location ID: {locationId || "not loaded"}</div>
-                  <div>Resolved company ID: {locationCompanyId || "not loaded"}</div>
-                </div>
-              </Card>
+              <TabsContent value="company" className="space-y-6 mt-6">
+                {renderCompanySection()}
+              </TabsContent>
 
-              <Card className="p-6 space-y-6">
-                <div className="flex items-center gap-3 pb-4 border-b border-border">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
-                    <SettingsIcon className="h-6 w-6 text-primary" />
-                  </div>
-                  <div>
-                    <h2 className="text-xl font-semibold text-foreground">Super Admin Access</h2>
-                    <p className="text-sm text-muted-foreground">
-                      Unlock to manage locations and active tenancy.
-                    </p>
-                  </div>
-                </div>
-
-                {superAdminUnlocked ? (
-                  <div className="flex flex-wrap items-center justify-between gap-3">
-                    <div className="text-sm text-muted-foreground">Super admin unlocked.</div>
-                    <Button variant="outline" onClick={handleLockSuperAdmin}>
-                      Lock
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    <div className="grid gap-3 sm:grid-cols-2">
-                      <div className="space-y-2">
-                        <Label htmlFor="super-admin-username">Username</Label>
-                        <Input
-                          id="super-admin-username"
-                          value={superAdminUsername}
-                          onChange={(e) => setSuperAdminUsername(e.target.value)}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="super-admin-password">Password</Label>
-                        <Input
-                          id="super-admin-password"
-                          type="password"
-                          value={superAdminPassword}
-                          onChange={(e) => setSuperAdminPassword(e.target.value)}
-                        />
-                      </div>
-                    </div>
-                    {superAdminError && (
-                      <div className="text-sm text-destructive">{superAdminError}</div>
-                    )}
-                    <div className="flex justify-end">
-                      <Button onClick={handleUnlockSuperAdmin}>Unlock</Button>
-                    </div>
-                  </div>
-                )}
-              </Card>
-
-              {superAdminUnlocked && (
-                <Card className="p-6 space-y-6">
-                  <div className="flex items-center gap-3 pb-4 border-b border-border">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
-                      <SettingsIcon className="h-6 w-6 text-primary" />
-                    </div>
-                    <div>
-                      <h2 className="text-xl font-semibold text-foreground">Company Manager</h2>
-                      <p className="text-sm text-muted-foreground">
-                        Create and edit companies for your locations.
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="space-y-4">
-                    <h3 className="text-sm font-semibold text-foreground">Create Company</h3>
-                    <div className="grid gap-3 sm:grid-cols-2">
-                      <div className="space-y-2">
-                        <Label htmlFor="new-company-name">Company Name</Label>
-                        <Input
-                          id="new-company-name"
-                          value={newCompanyName}
-                          onChange={(e) => setNewCompanyName(e.target.value)}
-                          placeholder="e.g. Northwest Appliances"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="new-company-slug">Company Slug</Label>
-                        <Input
-                          id="new-company-slug"
-                          value={newCompanySlug}
-                          onChange={(e) => {
-                            setNewCompanySlugTouched(true)
-                            setNewCompanySlug(e.target.value)
-                          }}
-                          placeholder="e.g. northwest-appliances"
-                        />
-                      </div>
-                    </div>
-                    <div className="flex flex-wrap items-center justify-between gap-3">
-                      <div className="text-sm">
-                        {companyManagerError && (
-                          <span className="text-destructive">{companyManagerError}</span>
-                        )}
-                        {!companyManagerError && companyManagerSuccess && (
-                          <span className="text-emerald-600">{companyManagerSuccess}</span>
-                        )}
-                      </div>
-                      <Button onClick={handleCreateCompany} disabled={newCompanySaving}>
-                        {newCompanySaving ? "Creating…" : "Create Company"}
-                      </Button>
-                    </div>
-                  </div>
-
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <h3 className="text-sm font-semibold text-foreground">Existing Companies</h3>
-                      <Button variant="outline" size="sm" onClick={fetchCompanies}>
-                        Refresh
-                      </Button>
-                    </div>
-
-                    {companiesLoading ? (
-                      <div className="text-sm text-muted-foreground">Loading companies…</div>
-                    ) : companies.length === 0 ? (
-                      <div className="text-sm text-muted-foreground">No companies found.</div>
-                    ) : (
-                      <div className="space-y-3">
-                        {companies.map((company) => (
-                          <div
-                            key={company.id}
-                            className="rounded-lg border border-border/60 bg-background/60 p-3 space-y-3"
-                          >
-                            <div className="grid gap-3 sm:grid-cols-2">
-                              <div className="space-y-2">
-                                <Label>Name</Label>
-                                <Input
-                                  value={company.name}
-                                  onChange={(e) => updateCompanyField(company.id, "name", e.target.value)}
-                                />
-                              </div>
-                              <div className="space-y-2">
-                                <Label>Slug</Label>
-                                <Input
-                                  value={company.slug}
-                                  onChange={(e) => updateCompanyField(company.id, "slug", e.target.value)}
-                                />
-                              </div>
-                            </div>
-                            <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-muted-foreground">
-                              <span>ID: {company.id}</span>
-                              <Button
-                                size="sm"
-                                onClick={() => handleSaveCompanyRow(company)}
-                                disabled={companySavingId === company.id}
-                              >
-                                {companySavingId === company.id ? "Saving…" : "Save"}
-                              </Button>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-
-                    {companiesError && (
-                      <div className="text-sm text-destructive">{companiesError}</div>
-                    )}
-                  </div>
-                </Card>
-              )}
-
-              <Card className="p-6 space-y-6">
-                <div className="flex items-center gap-3 pb-4 border-b border-border">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
-                    <SettingsIcon className="h-6 w-6 text-primary" />
-                  </div>
-                  <div>
-                    <h2 className="text-xl font-semibold text-foreground">Location Manager</h2>
-                    <p className="text-sm text-muted-foreground">
-                      Choose the active location and manage locations.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="space-y-3">
-                  <Label>Locations</Label>
-                  {locationsLoading ? (
-                    <div className="text-sm text-muted-foreground">Loading locations…</div>
-                  ) : locations.length === 0 ? (
-                    <div className="text-sm text-muted-foreground">
-                      No locations yet. Create one below.
-                    </div>
-                  ) : (
-                    <div className="space-y-2">
-                      {locations.map((location) => {
-                        const isActive = location.id === locationId
-                        return (
-                          <div
-                            key={location.id}
-                            className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border/60 bg-background/60 px-3 py-2"
-                          >
-                            <div className="min-w-0">
-                              <div className="text-sm font-medium text-foreground">
-                                {location.name}
-                              </div>
-                              <div className="text-xs text-muted-foreground">
-                                {location.slug} • {location.companies?.name ?? "Unknown company"}
-                              </div>
-                            </div>
-                            <Button
-                              size="sm"
-                              variant={isActive ? "default" : "outline"}
-                              disabled={isActive}
-                              onClick={() => handleSetActiveLocation(location)}
-                            >
-                              {isActive ? "Active" : "Set Active"}
-                            </Button>
-                          </div>
-                        )
-                      })}
-                    </div>
-                  )}
-                  {locationsError && (
-                    <div className="text-sm text-destructive">{locationsError}</div>
-                  )}
-                </div>
-
-                {superAdminUnlocked ? (
-                  <>
-                    <div className="space-y-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="new-location-company">Company</Label>
-                        {companiesLoading ? (
-                          <div className="text-sm text-muted-foreground">Loading companies…</div>
-                        ) : companies.length === 0 ? (
-                          <div className="text-sm text-muted-foreground">
-                            Create a company first to add locations.
-                          </div>
-                        ) : (
-                          <Select value={newLocationCompanyId} onValueChange={setNewLocationCompanyId}>
-                            <SelectTrigger id="new-location-company">
-                              <SelectValue placeholder="Select company" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {companies.map((company) => (
-                                <SelectItem key={company.id} value={company.id}>
-                                  {company.name} ({company.slug})
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        )}
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="new-location-name">New Location Name</Label>
-                        <Input
-                          id="new-location-name"
-                          value={newLocationName}
-                          onChange={(e) => setNewLocationName(e.target.value)}
-                          placeholder="e.g. Sacramento Warehouse"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="new-location-slug">New Location Slug</Label>
-                        <Input
-                          id="new-location-slug"
-                          value={newLocationSlug}
-                          onChange={(e) => {
-                            setNewLocationSlugTouched(true)
-                            setNewLocationSlug(e.target.value)
-                          }}
-                          placeholder="e.g. sacramento-01"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="flex flex-wrap items-center justify-between gap-3">
-                      <div className="text-sm">
-                        {locationManagerError && <span className="text-destructive">{locationManagerError}</span>}
-                        {!locationManagerError && locationManagerSuccess && (
-                          <span className="text-emerald-600">{locationManagerSuccess}</span>
-                        )}
-                      </div>
-                      <Button onClick={handleCreateLocation} disabled={locationManagerSaving || companies.length === 0}>
-                        {locationManagerSaving ? "Creating…" : "Create Location"}
-                      </Button>
-                    </div>
-                  </>
-                ) : (
-                  <div className="text-sm text-muted-foreground">
-                    Unlock super admin to create or edit locations.
-                  </div>
-                )}
-              </Card>
-
-              <Card className="p-6 space-y-6">
-                <div className="flex items-center gap-3 pb-4 border-b border-border">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
-                    <SettingsIcon className="h-6 w-6 text-primary" />
-                  </div>
-                  <div>
-                    <h2 className="text-xl font-semibold text-foreground">Location Profile</h2>
-                    <p className="text-sm text-muted-foreground">
-                      Update the location name used across the app.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="location-name">Location Name</Label>
-                    <Input
-                      id="location-name"
-                      value={locationName}
-                      onChange={(e) => setLocationName(e.target.value)}
-                      disabled={locationLoading}
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="location-slug">Location Slug</Label>
-                    <Input
-                      id="location-slug"
-                      value={locationSlug}
-                      onChange={(e) => setLocationSlug(e.target.value)}
-                      disabled={locationLoading}
-                    />
-                  </div>
-                </div>
-              </Card>
-
-              <Card className="p-6 space-y-6">
-                <div className="flex items-center gap-3 pb-4 border-b border-border">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
-                    <SettingsIcon className="h-6 w-6 text-primary" />
-                  </div>
-                  <div>
-                    <h2 className="text-xl font-semibold text-foreground">DMS SSO Credentials</h2>
-                    <p className="text-sm text-muted-foreground">
-                      Stored for this location and used by the sync function later.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="sso-username">SSO Username</Label>
-                    <Input
-                      id="sso-username"
-                      value={ssoUsername}
-                      onChange={(e) => setSsoUsername(e.target.value)}
-                      disabled={locationLoading}
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="sso-password">SSO Password</Label>
-                    <Input
-                      id="sso-password"
-                      type="password"
-                      value={ssoPassword}
-                      onChange={(e) => setSsoPassword(e.target.value)}
-                      disabled={locationLoading}
-                    />
-                  </div>
-                </div>
-              </Card>
-
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <div className="text-sm">
-                  {locationError && <span className="text-destructive">{locationError}</span>}
-                  {!locationError && locationSuccess && (
-                    <span className="text-emerald-600">{locationSuccess}</span>
-                  )}
-                </div>
-                <Button onClick={handleLocationSave} disabled={locationSaving || locationLoading || !locationId}>
-                  {locationSaving ? "Saving…" : "Save Location Settings"}
-                </Button>
-              </div>
-            </TabsContent>
-
-            <TabsContent value="user" className="space-y-6 mt-6">
-              <Card className="p-6 space-y-6">
-                <div className="flex items-center gap-3 pb-4 border-b border-border">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
-                    <SettingsIcon className="h-6 w-6 text-primary" />
-                  </div>
-                  <div>
-                    <h2 className="text-xl font-semibold text-foreground">User Settings</h2>
-                    <p className="text-sm text-muted-foreground">Update your local login details.</p>
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  <AvatarUploader />
-
-                  <div className="space-y-2">
-                    <Label htmlFor="user-name">User Name</Label>
-                    <Input
-                      id="user-name"
-                      value={username}
-                      onChange={(e) => setUsername(e.target.value)}
-                      disabled={!user}
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="user-password">Password</Label>
-                    <Input
-                      id="user-password"
-                      type="password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      disabled={!user}
-                    />
-                  </div>
-                </div>
-              </Card>
-
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <div className="text-sm">
-                  {userError && <span className="text-destructive">{userError}</span>}
-                  {!userError && userSuccess && <span className="text-emerald-600">{userSuccess}</span>}
-                </div>
-                <Button onClick={handleUserSave} disabled={userSaving || !user}>
-                  {userSaving ? "Saving…" : "Save User Settings"}
-                </Button>
-              </div>
-
-              <Card className="p-6 space-y-6">
-                <div className="flex items-center gap-3 pb-4 border-b border-border">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
-                    <SettingsIcon className="h-6 w-6 text-primary" />
-                  </div>
-                  <div>
-                    <h2 className="text-xl font-semibold text-foreground">User Manager</h2>
-                    <p className="text-sm text-muted-foreground">
-                      Create and manage users with admin or user roles.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  <h3 className="text-sm font-semibold text-foreground">Create User</h3>
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    <div className="space-y-2">
-                      <Label htmlFor="new-user-name">Username</Label>
-                      <Input
-                        id="new-user-name"
-                        value={newUserName}
-                        onChange={(e) => setNewUserName(e.target.value)}
-                        placeholder="e.g. josh"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="new-user-role">Role</Label>
-                      <Select value={newUserRole} onValueChange={(value) => setNewUserRole(value as "admin" | "user")}>
-                        <SelectTrigger id="new-user-role">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {roles.map((role) => (
-                            <SelectItem key={role} value={role}>
-                              {role}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-2 sm:col-span-2">
-                      <Label htmlFor="new-user-password">Password</Label>
-                      <Input
-                        id="new-user-password"
-                        type="password"
-                        value={newUserPassword}
-                        onChange={(e) => setNewUserPassword(e.target.value)}
-                      />
-                    </div>
-                  </div>
-                  <div className="flex flex-wrap items-center justify-between gap-3">
-                    <div className="text-sm">
-                      {newUserError && <span className="text-destructive">{newUserError}</span>}
-                    </div>
-                    <Button onClick={handleCreateUser} disabled={newUserSaving}>
-                      {newUserSaving ? "Creating…" : "Create User"}
-                    </Button>
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-sm font-semibold text-foreground">Existing Users</h3>
-                    <Button variant="outline" size="sm" onClick={fetchUsers}>
-                      Refresh
-                    </Button>
-                  </div>
-
-                  {usersLoading ? (
-                    <div className="text-sm text-muted-foreground">Loading users…</div>
-                  ) : users.length === 0 ? (
-                    <div className="text-sm text-muted-foreground">No users found.</div>
-                  ) : (
-                    <div className="space-y-3">
-                      {users.map((row) => {
-                        const rowId = row.id
-                        return (
-                          <div
-                            key={String(rowId)}
-                            className="rounded-lg border border-border/60 bg-background/60 p-3 space-y-3"
-                          >
-                            <div className="flex items-center gap-3">
-                              <div className="h-10 w-10 rounded-full overflow-hidden bg-primary/10 flex items-center justify-center">
-                                {row.image ? (
-                                  <img
-                                    src={row.image}
-                                    alt={row.username ?? "User"}
-                                    className="h-full w-full object-cover"
-                                  />
-                                ) : (
-                                  <SettingsIcon className="h-4 w-4 text-primary" />
-                                )}
-                              </div>
-                              <div>
-                                <div className="text-sm font-semibold text-foreground">
-                                  {row.username ?? "User"}
-                                </div>
-                                <div className="text-xs text-muted-foreground">
-                                  Role: {row.role ?? "user"}
-                                </div>
-                              </div>
-                            </div>
-                            <div className="grid gap-3 sm:grid-cols-3">
-                              <div className="space-y-2">
-                                <Label>Username</Label>
-                                <Input
-                                  value={row.username ?? ""}
-                                  onChange={(e) => updateUserField(rowId, "username", e.target.value)}
-                                />
-                              </div>
-                              <div className="space-y-2">
-                                <Label>Role</Label>
-                                <Select
-                                  value={(row.role ?? "user") as string}
-                                  onValueChange={(value) => updateUserField(rowId, "role", value)}
-                                >
-                                  <SelectTrigger>
-                                    <SelectValue />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    {roles.map((role) => (
-                                      <SelectItem key={role} value={role}>
-                                        {role}
-                                      </SelectItem>
-                                    ))}
-                                  </SelectContent>
-                                </Select>
-                              </div>
-                              <div className="space-y-2">
-                                <Label>Password</Label>
-                                <Input
-                                  type="password"
-                                  value={row.password ?? ""}
-                                  onChange={(e) => updateUserField(rowId, "password", e.target.value)}
-                                />
-                              </div>
-                            </div>
-                            <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-muted-foreground">
-                              <span>ID: {String(rowId)}</span>
-                              <div className="flex gap-2">
-                                <Button
-                                  size="sm"
-                                  onClick={() => handleSaveUserRow(row)}
-                                  disabled={usersSavingId === rowId}
-                                >
-                                  {usersSavingId === rowId ? "Saving…" : "Save"}
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="destructive"
-                                  onClick={() => handleDeleteUserRow(row)}
-                                  disabled={usersSavingId === rowId}
-                                >
-                                  Delete
-                                </Button>
-                              </div>
-                            </div>
-                          </div>
-                        )
-                      })}
-                    </div>
-                  )}
-
-                  <div className="text-sm">
-                    {usersError && <span className="text-destructive">{usersError}</span>}
-                    {!usersError && usersSuccess && <span className="text-emerald-600">{usersSuccess}</span>}
-                  </div>
-                </div>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="displays" className="space-y-6 mt-6">
-              <DisplayManager />
-            </TabsContent>
-          </Tabs>
+              <TabsContent value="users" className="space-y-6 mt-6">
+                {renderUsersSection()}
+              </TabsContent>
+            </Tabs>
+          )}
         </div>
       </PageContainer>
     </div>

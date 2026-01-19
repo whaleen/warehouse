@@ -31,6 +31,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "html5-qrcode": "^2.3.8",
+    "input-otp": "^1.4.2",
     "jsbarcode": "^3.11.6",
     "lucide-react": "^0.545.0",
     "papaparse": "^5.5.3",

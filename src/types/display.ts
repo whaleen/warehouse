@@ -1,6 +1,13 @@
 export type DisplayWidget = {
   id: string;
-  type: 'loads-summary' | 'parts-alerts' | 'active-sessions' | 'clock' | 'text';
+  type:
+    | 'loads-summary'
+    | 'parts-alerts'
+    | 'active-sessions'
+    | 'clock'
+    | 'text'
+    | 'asis-overview'
+    | 'asis-loads';
   title?: string;
   config?: Record<string, unknown>;
 };
@@ -11,11 +18,19 @@ export type DisplayLayout = {
   widgets: DisplayWidget[];
 };
 
+export type LoadBoardConfig = {
+  statusFilter?: 'for-sale' | 'sold-picked' | 'both';
+  pageSize?: number;
+  autoRotate?: boolean;
+  rotateIntervalSec?: number;
+};
+
 export type DisplayState = {
   layout?: DisplayLayout;
   theme?: 'dark' | 'light';
   refreshInterval?: number;
   title?: string;
+  loadBoard?: LoadBoardConfig;
 };
 
 export type FloorDisplay = {
@@ -34,8 +49,8 @@ export type FloorDisplay = {
 export type FloorDisplaySummary = {
   id: string;
   name: string;
-  pairingCode: string;
   paired: boolean;
   lastHeartbeat?: string;
   createdAt: string;
+  stateJson?: DisplayState;
 };

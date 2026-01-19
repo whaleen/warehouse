@@ -3,7 +3,12 @@ export type AppView =
   | 'inventory'
   | 'parts'
   | 'products'
-  | 'settings'
+  | 'settings-locations'
+  | 'settings-company'
+  | 'settings-users'
+  | 'settings-displays-setup'
+  | 'settings-displays-list'
+  | 'settings-displays-settings'
   | 'loads'
   | 'create-load'
   | 'create-session'
@@ -39,8 +44,18 @@ export function getPathForView(view: AppView, sessionId?: string | null, display
       return '/products';
     case 'loads':
       return '/loads';
-    case 'settings':
-      return '/settings';
+    case 'settings-locations':
+      return '/settings/locations';
+    case 'settings-company':
+      return '/settings/company';
+    case 'settings-users':
+      return '/settings/users';
+    case 'settings-displays-setup':
+      return '/settings/displays/setup';
+    case 'settings-displays-list':
+      return '/settings/displays/list';
+    case 'settings-displays-settings':
+      return '/settings/displays/settings';
     default:
       return '/';
   }
@@ -54,7 +69,7 @@ export function parseRoute(pathname: string): RouteState {
     return { view: 'dashboard' };
   }
 
-  const [first, second] = segments;
+  const [first, second, third] = segments;
 
   switch (first) {
     case 'dashboard':
@@ -74,7 +89,29 @@ export function parseRoute(pathname: string): RouteState {
     case 'sessions':
       return { view: 'create-session', sessionId: second ?? null };
     case 'settings':
-      return { view: 'settings' };
+      switch (second) {
+        case 'company':
+          return { view: 'settings-company' };
+        case 'users':
+          return { view: 'settings-users' };
+        case 'displays':
+          switch (third) {
+            case 'setup':
+              return { view: 'settings-displays-setup' };
+            case 'settings':
+              return { view: 'settings-displays-settings' };
+            case 'list':
+            case undefined:
+              return { view: 'settings-displays-list' };
+            default:
+              return { view: 'settings-displays-list' };
+          }
+        case 'locations':
+        case undefined:
+          return { view: 'settings-locations' };
+        default:
+          return { view: 'settings-locations' };
+      }
     case 'display':
       return { view: 'floor-display', displayId: second ?? null };
     default:

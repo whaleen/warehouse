@@ -25,9 +25,29 @@ function App() {
     if (
       route.view === 'dashboard' &&
       legacyView &&
-      ['inventory', 'parts', 'products', 'settings', 'loads', 'create-load', 'create-session'].includes(legacyView)
+      [
+        'inventory',
+        'parts',
+        'products',
+        'settings',
+        'settings-locations',
+        'settings-company',
+        'settings-users',
+        'settings-displays',
+        'settings-displays-setup',
+        'settings-displays-list',
+        'settings-displays-settings',
+        'loads',
+        'create-load',
+        'create-session',
+      ].includes(legacyView)
     ) {
-      return { view: legacyView as AppView, sessionId: null };
+      const mappedView = legacyView === 'settings'
+        ? 'settings-locations'
+        : legacyView === 'settings-displays'
+        ? 'settings-displays-list'
+        : legacyView;
+      return { view: mappedView as AppView, sessionId: null };
     }
     return route;
   }, []);
@@ -94,7 +114,7 @@ function App() {
   // Public route: floor display (no auth required)
   if (isPublicRoute(window.location.pathname)) {
     return (
-      <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+      <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme-display">
         <FloorDisplayView displayId={displayId} />
       </ThemeProvider>
     );
@@ -140,8 +160,23 @@ function App() {
                 onSessionChange={handleSessionChange}
               />
             )}
-            {currentView === "settings" && (
-              <SettingsView />
+            {currentView === "settings-locations" && (
+              <SettingsView section="locations" />
+            )}
+            {currentView === "settings-company" && (
+              <SettingsView section="company" />
+            )}
+            {currentView === "settings-users" && (
+              <SettingsView section="users" />
+            )}
+            {currentView === "settings-displays-setup" && (
+              <SettingsView section="displays-setup" />
+            )}
+            {currentView === "settings-displays-list" && (
+              <SettingsView section="displays-list" />
+            )}
+            {currentView === "settings-displays-settings" && (
+              <SettingsView section="displays-settings" />
             )}
           </div>
         </SidebarInset>

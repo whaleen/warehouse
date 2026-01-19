@@ -20,9 +20,10 @@ import { PageContainer } from '@/components/Layout/PageContainer';
 import { ScanningSessionView } from '@/components/Session/ScanningSessionView';
 import { useAuth } from '@/context/AuthContext';
 import { getActiveLocationContext } from '@/lib/tenant';
+import type { AppView } from '@/lib/routes';
 
 interface CreateSessionViewProps {
-  onViewChange: (view: 'dashboard' | 'inventory' | 'products' | 'settings' | 'loads' | 'create-load' | 'create-session') => void;
+  onViewChange: (view: AppView) => void;
   onMenuClick?: () => void;
   sessionId?: string | null;
   onSessionChange?: (sessionId: string | null) => void;

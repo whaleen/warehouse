@@ -28,7 +28,7 @@ export function LoginCard() {
     <div className="min-h-screen flex items-center justify-center bg-background">
       <Card className="w-full max-w-sm p-6 space-y-4">
         <div className="flex flex-col items-center justify-center gap-2 pb-2">
-          <img src="/warehouse.png" alt="Warehouse" className="h-16 w-16 rounded-full object-cover" />
+          <img src="/blue-jacket.png" alt="Blue Jacket" className="h-16 w-16 rounded-full object-cover" />
           <h1 className="text-2xl font-bold">Warehouse</h1>
         </div>
 

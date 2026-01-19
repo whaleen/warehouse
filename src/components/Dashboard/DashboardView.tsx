@@ -12,10 +12,11 @@ import { ReorderAlertsCard } from './ReorderAlertsCard';
 import { useAuth } from '@/context/AuthContext';
 import { PageContainer } from '@/components/Layout/PageContainer';
 import { getPathForView } from '@/lib/routes';
+import type { AppView } from '@/lib/routes';
 import { getActiveLocationContext } from '@/lib/tenant';
 
 interface DashboardViewProps {
-  onViewChange?: (view: 'dashboard' | 'inventory' | 'products' | 'settings' | 'loads') => void;
+  onViewChange?: (view: AppView) => void;
   onMenuClick?: () => void;
 }
 

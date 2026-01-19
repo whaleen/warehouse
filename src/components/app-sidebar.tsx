@@ -2,14 +2,17 @@ import { useEffect, useMemo, useState, type ComponentProps } from "react"
 import type { ComponentType } from "react"
 import {
   AlertTriangle,
+  Building2,
   ClipboardList,
   Database,
   History,
   LayoutDashboard,
+  MapPin,
+  Monitor,
   Package,
   ScanBarcode,
-  Settings,
   TruckIcon,
+  Users,
 } from "lucide-react"
 
 import type { AppView } from "@/lib/routes"
@@ -151,11 +154,46 @@ const navSections: NavSection[] = [
     title: "Settings",
     items: [
       {
-        label: "Settings",
-        icon: Settings,
-        view: "settings",
+        label: "Locations",
+        icon: MapPin,
+        view: "settings-locations",
         applyParams: clearPartsParams,
-        isActive: (currentView) => currentView === "settings",
+        isActive: (currentView) => currentView === "settings-locations",
+      },
+      {
+        label: "Company",
+        icon: Building2,
+        view: "settings-company",
+        applyParams: clearPartsParams,
+        isActive: (currentView) => currentView === "settings-company",
+      },
+      {
+        label: "Users",
+        icon: Users,
+        view: "settings-users",
+        applyParams: clearPartsParams,
+        isActive: (currentView) => currentView === "settings-users",
+      },
+      {
+        label: "Display Setup",
+        icon: Monitor,
+        view: "settings-displays-setup",
+        applyParams: clearPartsParams,
+        isActive: (currentView) => currentView === "settings-displays-setup",
+      },
+      {
+        label: "Display List",
+        icon: Monitor,
+        view: "settings-displays-list",
+        applyParams: clearPartsParams,
+        isActive: (currentView) => currentView === "settings-displays-list",
+      },
+      {
+        label: "Display Settings",
+        icon: Monitor,
+        view: "settings-displays-settings",
+        applyParams: clearPartsParams,
+        isActive: (currentView) => currentView === "settings-displays-settings",
       },
     ],
   },
@@ -189,7 +227,7 @@ export function AppSidebar({ currentView, onViewChange, ...props }: AppSidebarPr
   const handleOpenSettings = () => {
     const nextParams = new URLSearchParams(window.location.search)
     clearPartsParams(nextParams)
-    onViewChange("settings", { params: nextParams })
+    onViewChange("settings-locations", { params: nextParams })
     if (isMobile) {
       setOpenMobile(false)
     }
