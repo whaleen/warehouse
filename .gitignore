@@ -47,14 +47,15 @@ dev-dist
 .vercel
 
 
-# Devlelopment
+# Development
 
 agent-instructions
 migrations
 IDGAF_About_Auth_Security.md
 warehouse.sql
-fetch_all_asis_load_data.sh
-fetch_all_asis_load_report_history_data.sh
-cookies.txt
-asis.md
-csv-to-json.sh
+
+# GE DMS Research (sensitive/large files)
+research/ge-dms/cookies.txt
+research/ge-dms/output/
+research/ge-dms/docs/ge-dms-docs/
+research/ge-dms/docs/ge-dms-filtered-docs/

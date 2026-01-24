@@ -5,10 +5,43 @@
  * - Preserves custom fields (is_scanned, scanned_at, scanned_by)
  * - Sets sub_inventory based on load assignments
  * - Detects orphans (items in DB but not in GE)
+ * - Logs all changes to ge_changes table for auditing
  */
 
 import { SupabaseClient } from '@supabase/supabase-js';
-import type { InventoryItem } from '@/types/inventory';
+import type { InventoryItem, InventoryType } from '@/types/inventory';
+
+// GE Change tracking types
+export type GEChangeType =
+  | 'item_appeared'
+  | 'item_disappeared'
+  | 'item_status_changed'
+  | 'item_reserved'
+  | 'item_load_changed'
+  | 'item_qty_changed'
+  | 'load_appeared'
+  | 'load_disappeared'
+  | 'load_sold'
+  | 'load_cso_assigned'
+  | 'load_cso_status_changed'
+  | 'load_units_changed';
+
+export interface GEChange {
+  company_id: string;
+  location_id: string;
+  inventory_type: InventoryType;
+  serial?: string;
+  model?: string;
+  load_number?: string;
+  cso?: string;
+  change_type: GEChangeType;
+  field_changed?: string;
+  old_value?: string;
+  new_value?: string;
+  previous_state?: Record<string, unknown>;
+  current_state?: Record<string, unknown>;
+  source: string;
+}
 
 // GE JSON file types
 interface GEInventoryItem {
@@ -72,6 +105,7 @@ export interface GESyncResult {
   itemsToUpsert: Partial<InventoryItem>[];
   orphanIds: string[];
   loadInfo: GELoadInfo[];
+  changes: GEChange[];
 }
 
 const GE_BASE_URL = '/ASIS';
@@ -215,10 +249,10 @@ export async function prepareGESync(
 ): Promise<GESyncResult> {
   const { inventory, serialToLoad, loadInfo } = await fetchGEData();
 
-  // Fetch existing ASIS items from DB
+  // Fetch existing ASIS items from DB with ge_* fields for change detection
   const { data: existingItems, error } = await supabase
     .from('inventory_items')
-    .select('id, serial, sub_inventory, is_scanned, scanned_at, scanned_by, notes, status')
+    .select('id, serial, model, sub_inventory, is_scanned, scanned_at, scanned_by, notes, status, ge_availability_status, ge_availability_message, ge_inv_qty, ge_orphaned')
     .eq('company_id', companyId)
     .eq('location_id', locationId)
     .eq('inventory_type', 'ASIS');
@@ -228,16 +262,39 @@ export async function prepareGESync(
   }
 
   // Build map of existing items keyed by serial (single record per serial)
-  const existingBySerial = new Map<string, string>();
+  // Store full item data for change detection
+  interface ExistingItemData {
+    id: string;
+    serial: string;
+    model?: string;
+    sub_inventory?: string;
+    ge_availability_status?: string;
+    ge_availability_message?: string;
+    ge_inv_qty?: number;
+    ge_orphaned?: boolean;
+  }
+  const existingBySerial = new Map<string, ExistingItemData>();
   const existingIds = new Set<string>();
 
   for (const item of existingItems || []) {
     if (!item.serial || !item.id) continue;
     if (!existingBySerial.has(item.serial)) {
-      existingBySerial.set(item.serial, item.id);
+      existingBySerial.set(item.serial, {
+        id: item.id,
+        serial: item.serial,
+        model: item.model,
+        sub_inventory: item.sub_inventory,
+        ge_availability_status: item.ge_availability_status,
+        ge_availability_message: item.ge_availability_message,
+        ge_inv_qty: item.ge_inv_qty,
+        ge_orphaned: item.ge_orphaned,
+      });
     }
     existingIds.add(item.id);
   }
+
+  // Track changes
+  const changes: GEChange[] = [];
 
   // Build upsert payload
   const itemsToUpsert: Partial<InventoryItem>[] = [];
@@ -253,22 +310,114 @@ export async function prepareGESync(
     const model = geItem['Model #']?.trim() || '';
     const product = productLookup.get(model);
     const loadNumber = serialToLoad.get(serial);
-    const existingId = existingBySerial.get(serial);
+    const existing = existingBySerial.get(serial);
 
     if (loadNumber) {
       itemsInLoads++;
     }
 
-    if (existingId) {
-      matchedIds.add(existingId);
+    const qtyValue = parseInt(geItem['Inv Qty'], 10);
+    const newAvailabilityStatus = geItem['Availability Status']?.trim() || undefined;
+    const newAvailabilityMessage = geItem['Availability Message']?.trim() || undefined;
+
+    if (existing) {
+      matchedIds.add(existing.id);
       updatedItems++;
+
+      // Detect changes for existing items
+      // Check availability status change
+      if (existing.ge_availability_status !== newAvailabilityStatus) {
+        changes.push({
+          company_id: companyId,
+          location_id: locationId,
+          inventory_type: 'ASIS',
+          serial,
+          model,
+          load_number: loadNumber,
+          change_type: newAvailabilityStatus === 'Reserved' ? 'item_reserved' : 'item_status_changed',
+          field_changed: 'availability_status',
+          old_value: existing.ge_availability_status || undefined,
+          new_value: newAvailabilityStatus,
+          source: 'ASIS',
+        });
+      }
+
+      // Check load assignment change
+      if (existing.sub_inventory !== loadNumber) {
+        changes.push({
+          company_id: companyId,
+          location_id: locationId,
+          inventory_type: 'ASIS',
+          serial,
+          model,
+          load_number: loadNumber,
+          change_type: 'item_load_changed',
+          field_changed: 'sub_inventory',
+          old_value: existing.sub_inventory || undefined,
+          new_value: loadNumber || undefined,
+          source: 'ASISLoadDetail',
+        });
+      }
+
+      // Check qty change (for non-serialized items this matters)
+      const existingQty = existing.ge_inv_qty;
+      if (existingQty !== undefined && existingQty !== qtyValue && Number.isFinite(qtyValue)) {
+        changes.push({
+          company_id: companyId,
+          location_id: locationId,
+          inventory_type: 'ASIS',
+          serial,
+          model,
+          load_number: loadNumber,
+          change_type: 'item_qty_changed',
+          field_changed: 'inv_qty',
+          old_value: String(existingQty),
+          new_value: String(qtyValue),
+          source: 'ASIS',
+        });
+      }
+
+      // Check if item was previously orphaned and is now back
+      if (existing.ge_orphaned === true) {
+        changes.push({
+          company_id: companyId,
+          location_id: locationId,
+          inventory_type: 'ASIS',
+          serial,
+          model,
+          load_number: loadNumber,
+          change_type: 'item_appeared',
+          field_changed: 'ge_orphaned',
+          old_value: 'true',
+          new_value: 'false',
+          previous_state: { orphaned: true },
+          current_state: { availability_status: newAvailabilityStatus, load_number: loadNumber },
+          source: 'ASIS',
+        });
+      }
     } else {
+      // New item
       newItems++;
+      changes.push({
+        company_id: companyId,
+        location_id: locationId,
+        inventory_type: 'ASIS',
+        serial,
+        model,
+        load_number: loadNumber,
+        change_type: 'item_appeared',
+        current_state: {
+          availability_status: newAvailabilityStatus,
+          availability_message: newAvailabilityMessage,
+          inv_qty: qtyValue,
+          load_number: loadNumber,
+        },
+        source: 'ASIS',
+      });
     }
 
-    const qtyValue = parseInt(geItem['Inv Qty'], 10);
     itemsToUpsert.push({
-      id: existingId,
+      id: existing?.id,
       company_id: companyId,
       location_id: locationId,
       serial,
@@ -290,8 +439,8 @@ export async function prepareGESync(
       ge_orphaned: false,
       ge_orphaned_at: undefined,
       // GE-sourced fields
-      ge_availability_status: geItem['Availability Status']?.trim() || undefined,
-      ge_availability_message: geItem['Availability Message']?.trim() || undefined,
+      ge_availability_status: newAvailabilityStatus,
+      ge_availability_message: newAvailabilityMessage,
     });
   }
 
@@ -300,6 +449,28 @@ export async function prepareGESync(
   for (const id of existingIds) {
     if (!matchedIds.has(id)) {
       orphanIds.push(id);
+
+      // Find the existing item data for this orphan to log the change
+      for (const [serial, existing] of existingBySerial) {
+        if (existing.id === id && !existing.ge_orphaned) {
+          changes.push({
+            company_id: companyId,
+            location_id: locationId,
+            inventory_type: 'ASIS',
+            serial,
+            model: existing.model,
+            load_number: existing.sub_inventory,
+            change_type: 'item_disappeared',
+            previous_state: {
+              availability_status: existing.ge_availability_status,
+              sub_inventory: existing.sub_inventory,
+              inv_qty: existing.ge_inv_qty,
+            },
+            source: 'ASIS',
+          });
+          break;
+        }
+      }
     }
   }
 
@@ -322,6 +493,7 @@ export async function prepareGESync(
     itemsToUpsert,
     orphanIds,
     loadInfo,
+    changes,
   };
 }
 
@@ -335,9 +507,29 @@ export async function executeGESync(
     batchSize?: number;
     markOrphans?: boolean;
     orphanStatus?: string;
+    logChanges?: boolean;
   } = {}
-): Promise<void> {
-  const { batchSize = 500, markOrphans = false, orphanStatus = 'NOT_IN_GE' } = options;
+): Promise<{ changesLogged: number }> {
+  const { batchSize = 500, markOrphans = false, orphanStatus = 'NOT_IN_GE', logChanges = true } = options;
+
+  let changesLogged = 0;
+
+  // Log changes to ge_changes table first
+  if (logChanges && syncResult.changes.length > 0) {
+    for (let i = 0; i < syncResult.changes.length; i += batchSize) {
+      const chunk = syncResult.changes.slice(i, i + batchSize);
+      const { error } = await supabase
+        .from('ge_changes')
+        .insert(chunk);
+
+      if (error) {
+        console.error(`Failed to log changes batch ${i / batchSize + 1}:`, error.message);
+        // Don't throw - we still want to proceed with the sync even if logging fails
+      } else {
+        changesLogged += chunk.length;
+      }
+    }
+  }
 
   const itemsWithId = syncResult.itemsToUpsert.filter((item) => item.id);
   const itemsWithoutId = syncResult.itemsToUpsert
@@ -381,4 +573,6 @@ export async function executeGESync(
       }
     }
   }
+
+  return { changesLogged };
 }
