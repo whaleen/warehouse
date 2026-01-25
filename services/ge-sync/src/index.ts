@@ -57,7 +57,15 @@ app.get('/health', (_req, res) => {
 // Check auth status
 app.get('/auth/status', async (_req, res) => {
   try {
-    const status: AuthStatus = await getAuthStatus();
+    const locationId =
+      (typeof _req.query.locationId === 'string' && _req.query.locationId) ||
+      (typeof _req.headers['x-location-id'] === 'string' && _req.headers['x-location-id']);
+
+    if (!locationId) {
+      return res.status(400).json({ error: 'locationId is required' });
+    }
+
+    const status: AuthStatus = await getAuthStatus(locationId);
     res.json(status);
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error';

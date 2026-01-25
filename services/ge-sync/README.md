@@ -66,7 +66,10 @@ npm run dev
 Health check endpoint.
 
 ### `GET /auth/status`
-Check if GE DMS authentication is valid.
+Check if GE DMS authentication is valid for a specific location.
+
+Request (required):
+- `locationId` query param (`/auth/status?locationId=...`) or `x-location-id` header.
 
 Response:
 ```json
@@ -123,6 +126,28 @@ Response:
 Notes:
 - ASIS data is sourced from report history + per-load CSVs and merged with ERP inventory export.
 - CSO comes from report history (`ASISReportHistoryData.xls`).
+
+## Scaling Notes (for beta+)
+
+Current behavior:
+- Syncs run inline in the request handler (no queue).
+- No per-location lock or global concurrency cap yet.
+- Each sync may spin up a Playwright browser as needed.
+
+Implications:
+- If two syncs for the same location overlap, results are undefined and may duplicate work.
+- If many syncs fire at once across locations, Playwright processes can exhaust CPU/RAM.
+
+Planned mitigations:
+- Per-location lock to prevent overlapping syncs for the same location.
+- Global concurrency cap (DB-backed semaphore) to limit Playwright load.
+- Job queue + worker for async syncs and progress tracking.
+
+Operational guidance (beta):
+- Run one sync per location at a time.
+- Keep total concurrent syncs low (1–2) to avoid Playwright resource spikes.
+- If a sync fails mid-run, wait ~60 seconds before retrying to avoid overlapping auth/browser sessions.
+- Prefer manual syncs during beta; avoid cron/scheduled syncs until locks are added.
 
 ## Railway Deployment
 

@@ -99,6 +99,11 @@ npx playwright install chromium
 npm run dev
 ```
 
+Scaling notes (beta+):
+- Syncs run inline (no queue) and there is no per-location lock or global cap yet.
+- Avoid overlapping syncs for the same location; heavy parallel syncs can exhaust Playwright resources.
+- See `services/ge-sync/README.md` for planned queue/lock details and beta operational guidance.
+
 ### 3. Database Setup
 
 Run the SQL in `migrations/` in order, or use `warehouse.sql` as a reference schema.

@@ -5,15 +5,30 @@ import type { AuthStatus } from '../types/index.js';
 const GE_DMS_BASE = 'https://dms-erp-aws-prd.geappliances.com';
 const GE_ASIS_URL = `${GE_DMS_BASE}/dms/newasis`;
 
-// In-memory cookie storage (will be persisted to DB in production)
-let cachedCookies: Cookie[] | null = null;
-let lastAuthAt: Date | null = null;
+// In-memory cookie storage keyed by location (persisted to DB as backup)
+const cachedCookiesByLocation = new Map<string, Cookie[]>();
+const lastAuthAtByLocation = new Map<string, Date>();
+
+const getCachedCookies = (locationId: string) => cachedCookiesByLocation.get(locationId) ?? null;
+const setCachedCookies = (locationId: string, cookies: Cookie[]) => {
+  cachedCookiesByLocation.set(locationId, cookies);
+  lastAuthAtByLocation.set(locationId, new Date());
+};
+const getLastAuthAt = (locationId: string) => lastAuthAtByLocation.get(locationId);
 
 /**
  * Check if current cookies are valid by making a test request
  */
-export async function getAuthStatus(): Promise<AuthStatus> {
-  if (!cachedCookies || cachedCookies.length === 0) {
+export async function getAuthStatus(locationId: string): Promise<AuthStatus> {
+  let cookies = getCachedCookies(locationId);
+  if (!cookies) {
+    cookies = await loadCookiesFromDb(locationId);
+    if (cookies) {
+      cachedCookiesByLocation.set(locationId, cookies);
+    }
+  }
+
+  if (!cookies || cookies.length === 0) {
     return {
       authenticated: false,
       cookiesValid: false,
@@ -22,7 +37,7 @@ export async function getAuthStatus(): Promise<AuthStatus> {
 
   // Try a simple fetch to check if cookies work
   try {
-    const cookieHeader = cachedCookies
+    const cookieHeader = cookies
       .map(c => `${c.name}=${c.value}`)
       .join('; ');
 
@@ -40,13 +55,13 @@ export async function getAuthStatus(): Promise<AuthStatus> {
     return {
       authenticated: isValid,
       cookiesValid: isValid,
-      lastAuthAt: lastAuthAt?.toISOString(),
+      lastAuthAt: getLastAuthAt(locationId)?.toISOString(),
     };
   } catch {
     return {
       authenticated: false,
       cookiesValid: false,
-      lastAuthAt: lastAuthAt?.toISOString(),
+      lastAuthAt: getLastAuthAt(locationId)?.toISOString(),
     };
   }
 }
@@ -190,8 +205,7 @@ export async function refreshAuth(locationId: string): Promise<AuthStatus> {
     );
     console.log(`Filtered to ${dmsCookies.length} GE-related cookies`);
 
-    cachedCookies = dmsCookies;
-    lastAuthAt = new Date();
+    setCachedCookies(locationId, dmsCookies);
 
     // Store cookies in database for persistence across restarts
     await storeCookiesInDb(locationId, dmsCookies);
@@ -201,7 +215,7 @@ export async function refreshAuth(locationId: string): Promise<AuthStatus> {
     return {
       authenticated: true,
       cookiesValid: true,
-      lastAuthAt: lastAuthAt.toISOString(),
+      lastAuthAt: getLastAuthAt(locationId)?.toISOString(),
     };
   } finally {
     if (context) await context.close();
@@ -213,24 +227,20 @@ export async function refreshAuth(locationId: string): Promise<AuthStatus> {
  * Get cookies, refreshing if necessary
  */
 export async function getValidCookies(locationId: string): Promise<Cookie[]> {
-  // Try to load from DB if not in memory
-  if (!cachedCookies) {
-    cachedCookies = await loadCookiesFromDb(locationId);
-  }
-
   // Check if cookies are valid
-  const status = await getAuthStatus();
+  const status = await getAuthStatus(locationId);
 
   if (!status.cookiesValid) {
     console.log('Cookies invalid or expired, refreshing...');
     await refreshAuth(locationId);
   }
 
-  if (!cachedCookies) {
+  const cookies = getCachedCookies(locationId);
+  if (!cookies) {
     throw new Error('Failed to obtain valid cookies');
   }
 
-  return cachedCookies;
+  return cookies;
 }
 
 /**
@@ -239,7 +249,7 @@ export async function getValidCookies(locationId: string): Promise<Cookie[]> {
 export async function getCookieHeader(locationId: string): Promise<string> {
   const cookies = await getValidCookies(locationId);
   const header = cookies.map(c => `${c.name}=${c.value}`).join('; ');
-  console.log(`Cookie header (${cookies.length} cookies, ${header.length} chars): ${header.substring(0, 100)}...`);
+  console.log(`Cookie header (${cookies.length} cookies, ${header.length} chars) for ${locationId}: ${header.substring(0, 100)}...`);
   return header;
 }
 
@@ -293,5 +303,8 @@ async function loadCookiesFromDb(locationId: string): Promise<Cookie[] | null> {
   }
 
   console.log(`Loaded ${data.ge_cookies.length} cookies from DB for location ${locationId}`);
+  if (data.ge_cookies_updated_at) {
+    lastAuthAtByLocation.set(locationId, new Date(data.ge_cookies_updated_at));
+  }
   return data.ge_cookies as Cookie[];
 }
