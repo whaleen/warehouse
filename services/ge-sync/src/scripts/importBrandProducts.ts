@@ -305,7 +305,8 @@ async function scrapeBigCommerceProduct(
       null;
 
     const modelFromPage = await page.evaluate(() => {
-      const match = (document.body.textContent || '').match(/Model\\s*#:\\s*([A-Z0-9-]+)/i);
+      const text = (globalThis as any)?.document?.body?.textContent || '';
+      const match = text.match(/Model\\s*#:\\s*([A-Z0-9-]+)/i);
       return match?.[1] || null;
     });
 
@@ -313,9 +314,9 @@ async function scrapeBigCommerceProduct(
       'nav.breadcrumb, .breadcrumbs, [aria-label=\"breadcrumb\"], nav[aria-label=\"Breadcrumb\"]',
       (nodes) => {
         const items: string[] = [];
-        nodes.forEach((node) => {
-          const texts = Array.from(node.querySelectorAll('a, span, li'))
-            .map((el) => el.textContent?.trim())
+        (nodes as any[]).forEach((node) => {
+          const texts = Array.from((node as any).querySelectorAll('a, span, li'))
+            .map((el: any) => el.textContent?.trim())
             .filter(Boolean) as string[];
           items.push(...texts);
         });
