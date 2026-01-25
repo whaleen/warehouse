@@ -24,7 +24,6 @@ EXPOSE 3001
 
 # Set environment
 ENV NODE_ENV=production
-ENV PORT=3001
 
 # Run the service
 CMD ["npm", "start"]
