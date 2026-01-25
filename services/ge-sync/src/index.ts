@@ -25,6 +25,9 @@ const API_KEY = process.env.API_KEY;
 
 // Simple API key auth middleware
 function authenticate(req: express.Request, res: express.Response, next: express.NextFunction) {
+  if (req.path === '/health') {
+    return next();
+  }
   const key = req.headers['x-api-key'];
 
   if (!API_KEY) {

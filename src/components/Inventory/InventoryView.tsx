@@ -24,7 +24,6 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/components/ui/toast';
 import { fetchAsisXlsRows } from '@/lib/asisImport';
-import { calculateGESyncStats, prepareGESync, executeGESync } from '@/lib/geSync';
 
 type InventoryItemWithProduct = InventoryItem & {
   products: {
@@ -51,6 +50,9 @@ type ProductImportRow = {
 const PAGE_SIZE = 60;
 const EXPORT_BATCH_SIZE = 1000;
 const IMPORT_BATCH_SIZE = 500;
+const GE_SYNC_URL =
+  (import.meta.env.VITE_GE_SYNC_URL as string | undefined) ?? 'http://localhost:3001';
+const GE_SYNC_API_KEY = import.meta.env.VITE_GE_SYNC_API_KEY as string | undefined;
 
 type InventoryTypeFilter = 'all' | 'ASIS' | 'FG' | 'LocalStock';
 
@@ -837,52 +839,26 @@ export function InventoryView({ onMenuClick }: InventoryViewProps) {
     try {
       // For ASIS, use the GE sync logic (GE fields become source of truth)
       if (inventoryTypeFilter === 'ASIS') {
-        // First, build product lookup for all models in ASIS.json
-        const asIsRows = await fetchAsisXlsRows<ProductImportRow>('ASIS.json', '/ASIS');
-        const models = asIsRows
-          .map(row => String(row['Model #'] ?? '').trim())
-          .filter(Boolean);
-        const productLookup = await buildProductLookup(models);
-
-        // Prepare the sync (fetches GE data, existing DB items, builds reconciliation)
-        const syncResult = await prepareGESync(supabase, companyId, locationId, productLookup);
-
-        const incomingSerials = Array.from(
-          new Set(syncResult.itemsToUpsert.map(item => item.serial).filter(Boolean))
-        ) as string[];
-        const crossTypeSerials = await findCrossTypeSerials(incomingSerials, 'ASIS');
-        const filteredSyncResult = crossTypeSerials.size > 0
-          ? {
-              ...syncResult,
-              itemsToUpsert: syncResult.itemsToUpsert.filter(
-                (item) => !item.serial || !crossTypeSerials.has(item.serial)
-              ),
-            }
-          : syncResult;
-
-        // Execute the sync
-        await executeGESync(supabase, filteredSyncResult, {
-          batchSize: IMPORT_BATCH_SIZE,
-          markOrphans: true,
-          orphanStatus: 'NOT_IN_GE',
+        const response = await fetch(`${GE_SYNC_URL}/sync/asis`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(GE_SYNC_API_KEY ? { 'X-API-Key': GE_SYNC_API_KEY } : {}),
+          },
+          body: JSON.stringify({ locationId }),
         });
 
-        const { stats } = syncResult;
-        toast({
-          title: 'ASIS sync complete',
-          message: `${stats.totalGEItems} items synced. ${stats.newItems} new, ${stats.updatedItems} updated. ${stats.unassignedItems} not in loads. ${stats.orphanedItems} orphaned.`,
-        });
-
-        if (crossTypeSerials.size > 0) {
-          toast({
-            variant: 'error',
-            title: 'Cross-type conflicts',
-            message: `${crossTypeSerials.size} ASIS serial${crossTypeSerials.size === 1 ? '' : 's'} skipped because they exist in another inventory type.`,
-          });
+        const payload = await response.json().catch(() => null);
+        if (!response.ok || !payload?.success) {
+          const errorMessage = payload?.error || response.statusText || 'Failed to sync ASIS';
+          throw new Error(errorMessage);
         }
 
-        // Refresh GE stats after import
-        calculateGESyncStats().then(setGeSyncStats).catch(console.error);
+        const stats = payload.stats ?? {};
+        toast({
+          title: 'ASIS sync complete',
+          message: `${stats.totalGEItems ?? 0} items synced. ${stats.newItems ?? 0} new, ${stats.updatedItems ?? 0} updated. ${stats.unassignedItems ?? 0} not in loads.`,
+        });
       } else {
         // For FG/STA, import GE snapshot (GE fields become source of truth)
         const rows = await fetchAsisXlsRows<ProductImportRow>(source.fileName, source.baseUrl);
@@ -1063,9 +1039,55 @@ export function InventoryView({ onMenuClick }: InventoryViewProps) {
     fetchInventoryPage(page + 1, { append: true });
   }, [fetchInventoryPage, hasMore, loading, loadingMore, page]);
 
+  const fetchGeStats = useCallback(async () => {
+    const [{ count: totalItems }, { count: itemsInLoads }, { count: unassignedItems }] = await Promise.all([
+      supabase
+        .from('inventory_items')
+        .select('id', { count: 'exact', head: true })
+        .eq('location_id', locationId)
+        .eq('inventory_type', 'ASIS'),
+      supabase
+        .from('inventory_items')
+        .select('id', { count: 'exact', head: true })
+        .eq('location_id', locationId)
+        .eq('inventory_type', 'ASIS')
+        .not('sub_inventory', 'is', null),
+      supabase
+        .from('inventory_items')
+        .select('id', { count: 'exact', head: true })
+        .eq('location_id', locationId)
+        .eq('inventory_type', 'ASIS')
+        .is('sub_inventory', null),
+    ]);
+
+    const [{ count: forSaleLoads }, { count: pickedLoads }] = await Promise.all([
+      supabase
+        .from('load_metadata')
+        .select('id', { count: 'exact', head: true })
+        .eq('location_id', locationId)
+        .eq('inventory_type', 'ASIS')
+        .ilike('ge_source_status', 'for sale'),
+      supabase
+        .from('load_metadata')
+        .select('id', { count: 'exact', head: true })
+        .eq('location_id', locationId)
+        .eq('inventory_type', 'ASIS')
+        .ilike('ge_source_status', 'sold')
+        .ilike('ge_cso_status', 'picked'),
+    ]);
+
+    return {
+      totalItems: totalItems ?? 0,
+      itemsInLoads: itemsInLoads ?? 0,
+      unassignedItems: unassignedItems ?? 0,
+      forSaleLoads: forSaleLoads ?? 0,
+      pickedLoads: pickedLoads ?? 0,
+    };
+  }, [locationId]);
+
   useEffect(() => {
     setSubInventoryFilter('all');
-  }, [inventoryTypeFilter]);
+  }, [inventoryTypeFilter, fetchGeStats]);
 
   // Fetch GE sync stats when ASIS filter is active
   useEffect(() => {
@@ -1077,7 +1099,7 @@ export function InventoryView({ onMenuClick }: InventoryViewProps) {
     let cancelled = false;
     setLoadingGEStats(true);
 
-    calculateGESyncStats()
+    fetchGeStats()
       .then((stats) => {
         if (!cancelled) {
           setGeSyncStats(stats);
