@@ -134,6 +134,19 @@ Notes:
    - `API_KEY`
 4. Deploy
 
+## Frontend configuration (dev vs prod)
+
+The frontend reads the sync service URL at build time via Vite env vars.
+
+- **Local dev** (frontend):
+  - `VITE_GE_SYNC_URL=http://localhost:3001`
+  - `VITE_GE_SYNC_API_KEY=your_api_key`
+- **Production** (frontend):
+  - `VITE_GE_SYNC_URL=https://<your-railway-service>.up.railway.app`
+  - `VITE_GE_SYNC_API_KEY=<same API_KEY as Railway>`
+
+If you change these values, you must rebuild the frontend so Vite can bake them in.
+
 ## Environment Variables
 
 | Variable | Required | Description |

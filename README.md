@@ -76,6 +76,11 @@ VITE_GE_SYNC_URL=http://localhost:3001
 VITE_GE_SYNC_API_KEY=your_api_key
 ```
 
+#### GE Sync environments (dev vs prod)
+
+- **Local dev**: keep `VITE_GE_SYNC_URL=http://localhost:3001` in `.env.local` and run the service locally (`services/ge-sync`).
+- **Production**: set `VITE_GE_SYNC_URL` and `VITE_GE_SYNC_API_KEY` in your hosted frontend environment (the values are baked at build time). Use your Railway service URL.
+
 ### 2. Install & Run
 
 ```bash
