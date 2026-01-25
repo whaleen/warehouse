@@ -12,10 +12,11 @@ app.use((req, res, next) => {
   res.setHeader('Access-Control-Allow-Origin', CORS_ORIGIN);
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, X-API-Key');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  if (req.method === 'OPTIONS') {
-    return res.sendStatus(204);
-  }
   next();
+});
+
+app.options('*', (_req, res) => {
+  res.sendStatus(204);
 });
 
 app.use(express.json());
@@ -25,6 +26,9 @@ const API_KEY = process.env.API_KEY;
 
 // Simple API key auth middleware
 function authenticate(req: express.Request, res: express.Response, next: express.NextFunction) {
+  if (req.method === 'OPTIONS') {
+    return next();
+  }
   if (req.path === '/health') {
     return next();
   }
