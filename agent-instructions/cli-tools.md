@@ -61,8 +61,29 @@ source .env && supabase db diff -f <migration_name> --db-url "postgresql://postg
 # List all tables with sizes
 source .env && supabase inspect db table-stats --db-url "postgresql://postgres:${SUPABASE_DB_PASSWORD}@db.wxfdrdqchfrcdgprdznr.supabase.co:5432/postgres"
 
+# Other inspect commands: vacuum-stats, index-stats, bloat, etc.
+```
+
+**Note:** `supabase db query` does NOT support `--db-url`. Use psql instead for arbitrary queries.
+
+---
+
+## psql (PostgreSQL client)
+
+For running arbitrary SQL queries against the database. Use this instead of `supabase db query` which doesn't support remote connections.
+
+```bash
+# Connection pattern
+source .env && /usr/local/opt/libpq/bin/psql "postgresql://postgres:${SUPABASE_DB_PASSWORD}@db.wxfdrdqchfrcdgprdznr.supabase.co:5432/postgres" -c "YOUR QUERY"
+
+# List all tables
+source .env && /usr/local/opt/libpq/bin/psql "postgresql://postgres:${SUPABASE_DB_PASSWORD}@db.wxfdrdqchfrcdgprdznr.supabase.co:5432/postgres" -c "\dt public.*"
+
+# Describe a table (columns, indexes, constraints)
+source .env && /usr/local/opt/libpq/bin/psql "postgresql://postgres:${SUPABASE_DB_PASSWORD}@db.wxfdrdqchfrcdgprdznr.supabase.co:5432/postgres" -c "\d table_name"
+
 # Run a query
-source .env && supabase db query "SELECT column_name, data_type FROM information_schema.columns WHERE table_name = 'your_table'" --db-url "postgresql://postgres:${SUPABASE_DB_PASSWORD}@db.wxfdrdqchfrcdgprdznr.supabase.co:5432/postgres"
+source .env && /usr/local/opt/libpq/bin/psql "postgresql://postgres:${SUPABASE_DB_PASSWORD}@db.wxfdrdqchfrcdgprdznr.supabase.co:5432/postgres" -c "SELECT * FROM users LIMIT 5"
 ```
 
 ---

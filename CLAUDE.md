@@ -40,6 +40,19 @@ For creating migrations (local only, no password needed):
 supabase migration new <name>   # Creates file in supabase/migrations/
 ```
 
+### psql (for arbitrary queries)
+
+Use psql for running SQL queries (supabase CLI doesn't support `db query` with `--db-url`):
+
+```bash
+source .env && /usr/local/opt/libpq/bin/psql "postgresql://postgres:${SUPABASE_DB_PASSWORD}@db.wxfdrdqchfrcdgprdznr.supabase.co:5432/postgres" -c "YOUR QUERY"
+
+# Examples:
+# List tables: -c "\dt public.*"
+# Describe table: -c "\d table_name"
+# Run query: -c "SELECT * FROM users LIMIT 5"
+```
+
 ### Netlify CLI
 
 For frontend deployments and environment variables:
