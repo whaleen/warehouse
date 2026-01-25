@@ -24,7 +24,7 @@ source .env
 
 The database URL pattern is:
 ```
-postgresql://postgres.wxfdrdqchfrcdgprdznr:${SUPABASE_DB_PASSWORD}@aws-1-us-west-1.pooler.supabase.com:6543/postgres
+postgresql://postgres:${SUPABASE_DB_PASSWORD}@db.wxfdrdqchfrcdgprdznr.supabase.co:5432/postgres
 ```
 
 ### Migrations (preferred workflow)
@@ -37,7 +37,7 @@ supabase migration new <migration_name>
 # This creates: supabase/migrations/<timestamp>_<migration_name>.sql
 
 # Edit the migration file, then push it (needs --db-url)
-source .env && supabase db push --db-url "postgresql://postgres.wxfdrdqchfrcdgprdznr:${SUPABASE_DB_PASSWORD}@aws-1-us-west-1.pooler.supabase.com:6543/postgres"
+source .env && supabase db push --db-url "postgresql://postgres:${SUPABASE_DB_PASSWORD}@db.wxfdrdqchfrcdgprdznr.supabase.co:5432/postgres"
 ```
 
 ### Other useful commands
@@ -46,23 +46,23 @@ All remote commands need `source .env &&` prefix and `--db-url` flag:
 
 ```bash
 # List migrations and their status
-source .env && supabase migration list --db-url "postgresql://postgres.wxfdrdqchfrcdgprdznr:${SUPABASE_DB_PASSWORD}@aws-1-us-west-1.pooler.supabase.com:6543/postgres"
+source .env && supabase migration list --db-url "postgresql://postgres:${SUPABASE_DB_PASSWORD}@db.wxfdrdqchfrcdgprdznr.supabase.co:5432/postgres"
 
 # Dump current schema
-source .env && supabase db dump -f schema.sql --db-url "postgresql://postgres.wxfdrdqchfrcdgprdznr:${SUPABASE_DB_PASSWORD}@aws-1-us-west-1.pooler.supabase.com:6543/postgres"
+source .env && supabase db dump -f schema.sql --db-url "postgresql://postgres:${SUPABASE_DB_PASSWORD}@db.wxfdrdqchfrcdgprdznr.supabase.co:5432/postgres"
 
 # Generate migration from schema diff
-source .env && supabase db diff -f <migration_name> --db-url "postgresql://postgres.wxfdrdqchfrcdgprdznr:${SUPABASE_DB_PASSWORD}@aws-1-us-west-1.pooler.supabase.com:6543/postgres"
+source .env && supabase db diff -f <migration_name> --db-url "postgresql://postgres:${SUPABASE_DB_PASSWORD}@db.wxfdrdqchfrcdgprdznr.supabase.co:5432/postgres"
 ```
 
 ### Inspecting the database
 
 ```bash
 # List all tables with sizes
-source .env && supabase inspect db table-stats --db-url "postgresql://postgres.wxfdrdqchfrcdgprdznr:${SUPABASE_DB_PASSWORD}@aws-1-us-west-1.pooler.supabase.com:6543/postgres"
+source .env && supabase inspect db table-stats --db-url "postgresql://postgres:${SUPABASE_DB_PASSWORD}@db.wxfdrdqchfrcdgprdznr.supabase.co:5432/postgres"
 
 # Run a query
-source .env && supabase db query "SELECT column_name, data_type FROM information_schema.columns WHERE table_name = 'your_table'" --db-url "postgresql://postgres.wxfdrdqchfrcdgprdznr:${SUPABASE_DB_PASSWORD}@aws-1-us-west-1.pooler.supabase.com:6543/postgres"
+source .env && supabase db query "SELECT column_name, data_type FROM information_schema.columns WHERE table_name = 'your_table'" --db-url "postgresql://postgres:${SUPABASE_DB_PASSWORD}@db.wxfdrdqchfrcdgprdznr.supabase.co:5432/postgres"
 ```
 
 ---

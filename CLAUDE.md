@@ -30,9 +30,9 @@ The Supabase CLI requires the database password for remote commands. Use the `--
 source .env
 
 # Then use --db-url for any remote database commands
-supabase inspect db table-stats --db-url "postgresql://postgres.wxfdrdqchfrcdgprdznr:${SUPABASE_DB_PASSWORD}@aws-1-us-west-1.pooler.supabase.com:6543/postgres"
-supabase migration list --db-url "postgresql://postgres.wxfdrdqchfrcdgprdznr:${SUPABASE_DB_PASSWORD}@aws-1-us-west-1.pooler.supabase.com:6543/postgres"
-supabase db push --db-url "postgresql://postgres.wxfdrdqchfrcdgprdznr:${SUPABASE_DB_PASSWORD}@aws-1-us-west-1.pooler.supabase.com:6543/postgres"
+supabase inspect db table-stats --db-url "postgresql://postgres:${SUPABASE_DB_PASSWORD}@db.wxfdrdqchfrcdgprdznr.supabase.co:5432/postgres"
+supabase migration list --db-url "postgresql://postgres:${SUPABASE_DB_PASSWORD}@db.wxfdrdqchfrcdgprdznr.supabase.co:5432/postgres"
+supabase db push --db-url "postgresql://postgres:${SUPABASE_DB_PASSWORD}@db.wxfdrdqchfrcdgprdznr.supabase.co:5432/postgres"
 ```
 
 For creating migrations (local only, no password needed):
