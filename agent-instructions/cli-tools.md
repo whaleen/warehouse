@@ -74,16 +74,16 @@ For running arbitrary SQL queries against the database. Use this instead of `sup
 
 ```bash
 # Connection pattern
-source .env && /usr/local/opt/libpq/bin/psql "postgresql://postgres:${SUPABASE_DB_PASSWORD}@db.wxfdrdqchfrcdgprdznr.supabase.co:5432/postgres" -c "YOUR QUERY"
+source .env && psql "postgresql://postgres:${SUPABASE_DB_PASSWORD}@db.wxfdrdqchfrcdgprdznr.supabase.co:5432/postgres" -c "YOUR QUERY"
 
 # List all tables
-source .env && /usr/local/opt/libpq/bin/psql "postgresql://postgres:${SUPABASE_DB_PASSWORD}@db.wxfdrdqchfrcdgprdznr.supabase.co:5432/postgres" -c "\dt public.*"
+source .env && psql "postgresql://postgres:${SUPABASE_DB_PASSWORD}@db.wxfdrdqchfrcdgprdznr.supabase.co:5432/postgres" -c "\dt public.*"
 
 # Describe a table (columns, indexes, constraints)
-source .env && /usr/local/opt/libpq/bin/psql "postgresql://postgres:${SUPABASE_DB_PASSWORD}@db.wxfdrdqchfrcdgprdznr.supabase.co:5432/postgres" -c "\d table_name"
+source .env && psql "postgresql://postgres:${SUPABASE_DB_PASSWORD}@db.wxfdrdqchfrcdgprdznr.supabase.co:5432/postgres" -c "\d table_name"
 
 # Run a query
-source .env && /usr/local/opt/libpq/bin/psql "postgresql://postgres:${SUPABASE_DB_PASSWORD}@db.wxfdrdqchfrcdgprdznr.supabase.co:5432/postgres" -c "SELECT * FROM users LIMIT 5"
+source .env && psql "postgresql://postgres:${SUPABASE_DB_PASSWORD}@db.wxfdrdqchfrcdgprdznr.supabase.co:5432/postgres" -c "SELECT * FROM users LIMIT 5"
 ```
 
 ---

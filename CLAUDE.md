@@ -45,7 +45,7 @@ supabase migration new <name>   # Creates file in supabase/migrations/
 Use psql for running SQL queries (supabase CLI doesn't support `db query` with `--db-url`):
 
 ```bash
-source .env && /usr/local/opt/libpq/bin/psql "postgresql://postgres:${SUPABASE_DB_PASSWORD}@db.wxfdrdqchfrcdgprdznr.supabase.co:5432/postgres" -c "YOUR QUERY"
+source .env && psql "postgresql://postgres:${SUPABASE_DB_PASSWORD}@db.wxfdrdqchfrcdgprdznr.supabase.co:5432/postgres" -c "YOUR QUERY"
 
 # Examples:
 # List tables: -c "\dt public.*"
