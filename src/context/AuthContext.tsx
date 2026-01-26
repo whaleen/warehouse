@@ -125,7 +125,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (error) {
       return {
         success: false,
-        error: { message: error.message, code: error.status }
+        error: { message: error.message, code: error.status?.toString() }
       }
     }
 
