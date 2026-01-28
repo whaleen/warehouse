@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -9,8 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { Progress } from '@/components/ui/progress';
-import { Loader2, Upload, ArrowLeft, Search } from 'lucide-react';
-import Papa from 'papaparse';
+import { Loader2, Search } from 'lucide-react';
 import type { InventoryType, InventoryItem } from '@/types/inventory';
 import type { ScanningSession, SessionSummary } from '@/types/session';
 import supabase from '@/lib/supabase';
@@ -40,19 +39,6 @@ const inventoryTypeLabels: Record<InventoryType, string> = {
   Parts: 'Parts',
   WillCall: 'WillCall'
 };
-
-interface CSVRow {
-  Date: string;
-  Truck_Id: string;
-  Stop: string;
-  CSO: string;
-  Consumer_Customer_Name: string;
-  Model: string;
-  Qty: string;
-  Serial: string;
-  Product_Type: string;
-  Status: string;
-}
 
 function generateSessionName(inventoryType: InventoryType, subInventory?: string): string {
   const date = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
@@ -87,8 +73,7 @@ function getInitials(name?: string) {
 export function CreateSessionView({ onViewChange, onMenuClick, sessionId, onSessionChange }: CreateSessionViewProps) {
   const { user } = useAuth();
   const userDisplayName = user?.username ?? user?.email ?? null;
-  const { locationId, companyId } = getActiveLocationContext();
-  const [activeTab, setActiveTab] = useState<'existing' | 'upload'>('existing');
+  const { locationId } = getActiveLocationContext();
   const [pageTab, setPageTab] = useState<'sessions' | 'new'>('sessions');
   const [sessionListTab, setSessionListTab] = useState<'active' | 'closed' | 'all'>('active');
   const [sessionSearch, setSessionSearch] = useState('');
@@ -107,10 +92,6 @@ export function CreateSessionView({ onViewChange, onMenuClick, sessionId, onSess
   const [creatorAvatars, setCreatorAvatars] = useState<Record<string, string | null>>({});
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [sessionToDelete, setSessionToDelete] = useState<SessionSummary | null>(null);
-
-  // CSV Upload state
-  const [file, setFile] = useState<File | null>(null);
-  const [csvPreview, setCsvPreview] = useState<CSVRow[]>([]);
 
   // Fetch available sub-inventories when inventory type changes
   useEffect(() => {
@@ -133,15 +114,12 @@ export function CreateSessionView({ onViewChange, onMenuClick, sessionId, onSess
 
   // Auto-generate session name when inventory type or sub-inventory changes
   useEffect(() => {
-    if (activeTab === 'existing') {
-      const name = generateSessionName(inventoryType, subInventory !== 'all' ? subInventory : undefined);
-      setSessionName(name);
-    }
-  }, [inventoryType, subInventory, activeTab]);
+    const name = generateSessionName(inventoryType, subInventory !== 'all' ? subInventory : undefined);
+    setSessionName(name);
+  }, [inventoryType, subInventory]);
 
   // Preview count
   useEffect(() => {
-    if (activeTab !== 'existing') return;
 
     const fetchPreview = async () => {
       let query = supabase
@@ -159,7 +137,7 @@ export function CreateSessionView({ onViewChange, onMenuClick, sessionId, onSess
     };
 
     fetchPreview();
-  }, [inventoryType, subInventory, activeTab, locationId]);
+  }, [inventoryType, subInventory, locationId]);
 
   const fetchSessions = useCallback(async () => {
     setSessionsLoading(true);
@@ -383,100 +361,6 @@ export function CreateSessionView({ onViewChange, onMenuClick, sessionId, onSess
       ? filteredClosedSessions
       : [];
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFile = e.target.files?.[0];
-    if (selectedFile) {
-      setFile(selectedFile);
-      setError(null);
-
-      Papa.parse(selectedFile, {
-        header: true,
-        preview: 5,
-        complete: (results) => {
-          setCsvPreview(results.data as CSVRow[]);
-        },
-        error: (err) => {
-          setError(`Failed to parse CSV: ${err.message}`);
-        }
-      });
-    }
-  };
-
-  const handleUploadAndCreateSession = async () => {
-    if (!file) return;
-
-    setLoading(true);
-    setError(null);
-
-    try {
-      Papa.parse(file, {
-        header: true,
-        skipEmptyLines: true,
-        complete: async (results) => {
-          const rows = results.data as CSVRow[];
-
-          const inventoryItems: InventoryItem[] = rows.map(row => ({
-            date: row.Date || undefined,
-            route_id: row.Truck_Id || undefined,
-            stop: parseInt(row.Stop) || undefined,
-            cso: row.CSO,
-            consumer_customer_name: row.Consumer_Customer_Name || undefined,
-            model: row.Model,
-            qty: parseInt(row.Qty) || 1,
-            serial: row.Serial || undefined,
-            product_type: row.Product_Type,
-            status: row.Status || undefined,
-            inventory_type: inventoryType,
-            sub_inventory: inventoryType === 'Staged' ? row.Truck_Id : undefined,
-            is_scanned: false
-          }));
-
-          const { data: insertedItems, error: insertError } = await supabase
-            .from('inventory_items')
-            .insert(
-              inventoryItems.map(item => ({
-                ...item,
-                company_id: companyId,
-                location_id: locationId,
-              }))
-            )
-            .select('*');
-
-          if (insertError) {
-            setError(`Failed to upload: ${insertError.message}`);
-            setLoading(false);
-            return;
-          }
-
-          const name = generateSessionName(inventoryType);
-
-          const { data: session, error: sessionError } = await createSession({
-            name,
-            inventoryType,
-            items: (insertedItems || []) as InventoryItem[],
-            createdBy: userDisplayName ?? undefined
-          });
-
-          if (sessionError || !session) {
-            setError(`Failed to create session: ${sessionError?.message || 'Unknown error'}`);
-            setLoading(false);
-            return;
-          }
-
-          handleSessionCreated(session);
-          setLoading(false);
-        },
-        error: (err) => {
-          setError(`Failed to parse CSV: ${err.message}`);
-          setLoading(false);
-        }
-      });
-    } catch (err) {
-      setError(`Upload failed: ${err instanceof Error ? err.message : 'Unknown error'}`);
-      setLoading(false);
-    }
-  };
-
   const handleCreate = async () => {
     if (!sessionName.trim()) {
       setError('Please enter a session name');
@@ -547,11 +431,6 @@ export function CreateSessionView({ onViewChange, onMenuClick, sessionId, onSess
       <AppHeader
         title="Scanning Sessions"
         onMenuClick={onMenuClick}
-        actions={
-          <Button variant="ghost" size="icon" onClick={() => onViewChange('inventory')}>
-            <ArrowLeft />
-          </Button>
-        }
       />
 
       <PageContainer className="py-4 pb-24">
@@ -567,46 +446,15 @@ export function CreateSessionView({ onViewChange, onMenuClick, sessionId, onSess
 
           <div className="grid gap-6 lg:grid-cols-[1.35fr_0.9fr]">
             <div className={`${pageTab === 'sessions' ? 'block' : 'hidden'} lg:block space-y-4`}>
-              <Card className="p-4 space-y-4">
-                <div className="flex flex-wrap items-start justify-between gap-3">
-                  <div>
-                    <h2 className="text-lg font-semibold">Sessions</h2>
-                    <p className="text-sm text-muted-foreground">
-                      Track open scanning work and review completed sessions.
-                    </p>
-                  </div>
-                  <Button
-                    variant="outline"
-                    size="responsive"
-                    onClick={fetchSessions}
-                    disabled={sessionsLoading}
-                  >
-                    {sessionsLoading ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      'Refresh'
-                    )}
-                  </Button>
+              <Card className="p-3 sm:p-4 space-y-3 sm:space-y-4">
+                <div>
+                  <h2 className="text-base sm:text-lg font-semibold">Sessions</h2>
+                  <p className="text-xs sm:text-sm text-muted-foreground">
+                    Track open scanning work and review completed sessions.
+                  </p>
                 </div>
 
-                <Tabs value={sessionListTab} onValueChange={(v) => setSessionListTab(v as 'active' | 'closed' | 'all')}>
-                  <TabsList className="grid w-full grid-cols-3">
-                    <TabsTrigger value="active">Open ({activeSessions.length})</TabsTrigger>
-                    <TabsTrigger value="closed">Closed ({closedSessions.length})</TabsTrigger>
-                    <TabsTrigger value="all">All ({sessions.length})</TabsTrigger>
-                  </TabsList>
-                </Tabs>
-
-                <div className="grid gap-3 sm:grid-cols-[1.5fr_1fr]">
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                    <Input
-                      placeholder="Search by name, type, or user"
-                      value={sessionSearch}
-                      onChange={(e) => setSessionSearch(e.target.value)}
-                      className="pl-9"
-                    />
-                  </div>
+                <div className="grid gap-3 grid-cols-2">
                   <Select
                     value={sessionTypeFilter}
                     onValueChange={(value) => setSessionTypeFilter(value as 'all' | InventoryType)}
@@ -623,6 +471,30 @@ export function CreateSessionView({ onViewChange, onMenuClick, sessionId, onSess
                       ))}
                     </SelectContent>
                   </Select>
+
+                  <Select
+                    value={sessionListTab}
+                    onValueChange={(value) => setSessionListTab(value as 'active' | 'closed' | 'all')}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="active">Open ({activeSessions.length})</SelectItem>
+                      <SelectItem value="closed">Closed ({closedSessions.length})</SelectItem>
+                      <SelectItem value="all">All ({sessions.length})</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    placeholder="Search by name, type, or user"
+                    value={sessionSearch}
+                    onChange={(e) => setSessionSearch(e.target.value)}
+                    className="pl-9"
+                  />
                 </div>
               </Card>
 
@@ -674,17 +546,11 @@ export function CreateSessionView({ onViewChange, onMenuClick, sessionId, onSess
                 <div>
                   <h2 className="text-lg font-semibold">New Session</h2>
                   <p className="text-sm text-muted-foreground">
-                    Start from existing inventory or upload a CSV.
+                    Create a new scanning session from existing inventory.
                   </p>
                 </div>
 
-                <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'existing' | 'upload')} className="w-full">
-                  <TabsList className="grid w-full grid-cols-1 sm:grid-cols-2">
-                    <TabsTrigger value="existing">From Existing</TabsTrigger>
-                    <TabsTrigger value="upload">Upload New</TabsTrigger>
-                  </TabsList>
-
-                  <TabsContent value="existing" className="space-y-4 mt-4">
+                <div className="space-y-4 mt-4">
                     <div className="space-y-2">
                       <Label htmlFor="session-name">Session Name</Label>
                       <Input
@@ -759,101 +625,7 @@ export function CreateSessionView({ onViewChange, onMenuClick, sessionId, onSess
                         )}
                       </Button>
                     </div>
-                  </TabsContent>
-
-                  <TabsContent value="upload" className="space-y-4 mt-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="upload-inventory-type">Inventory Type</Label>
-                      <Select value={inventoryType} onValueChange={(value) => setInventoryType(value as InventoryType)}>
-                        <SelectTrigger id="upload-inventory-type" className="w-full">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="ASIS">ASIS (As-Is Returns)</SelectItem>
-                          <SelectItem value="BackHaul">Back Haul</SelectItem>
-                          <SelectItem value="Staged">Staged (Routes)</SelectItem>
-                          <SelectItem value="Inbound">Inbound</SelectItem>
-                          <SelectItem value="FG">FG (Finished Goods)</SelectItem>
-                          <SelectItem value="LocalStock">Local Stock</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <p className="text-sm text-muted-foreground">
-                        {inventoryType === 'Staged'
-                          ? 'Truck IDs will be used as route names (sub-inventory)'
-                          : 'All items will be tagged as ' + inventoryType}
-                      </p>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="csv-file">CSV File</Label>
-                      <Input
-                        id="csv-file"
-                        type="file"
-                        accept=".csv"
-                        onChange={handleFileChange}
-                        disabled={loading}
-                      />
-                      <p className="text-xs text-muted-foreground">
-                        Expected columns: Date, Truck_Id, Stop, CSO, Consumer_Customer_Name, Model, Qty, Serial, Product_Type, Status
-                      </p>
-                    </div>
-
-                    {csvPreview.length > 0 && (
-                      <div className="space-y-2">
-                        <Label>Preview (first 5 rows)</Label>
-                        <div className="border rounded-md overflow-x-auto">
-                          <table className="w-full text-xs">
-                            <thead className="bg-muted">
-                              <tr>
-                                <th className="px-2 py-1 text-left">CSO</th>
-                                <th className="px-2 py-1 text-left">Model</th>
-                                <th className="px-2 py-1 text-left">Serial</th>
-                                <th className="px-2 py-1 text-left">Product Type</th>
-                                <th className="px-2 py-1 text-left">Truck ID</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {csvPreview.map((row, idx) => (
-                                <tr key={idx} className="border-t">
-                                  <td className="px-2 py-1">{row.CSO}</td>
-                                  <td className="px-2 py-1">{row.Model}</td>
-                                  <td className="px-2 py-1">{row.Serial || '-'}</td>
-                                  <td className="px-2 py-1">{row.Product_Type}</td>
-                                  <td className="px-2 py-1">{row.Truck_Id}</td>
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
-                        </div>
-                      </div>
-                    )}
-
-                    {error && (
-                      <Alert variant="destructive">
-                        <AlertDescription>{error}</AlertDescription>
-                      </Alert>
-                    )}
-
-                    <div className="flex justify-end gap-2 pt-2">
-                      <Button variant="outline" onClick={() => onViewChange('inventory')} disabled={loading}>
-                        Cancel
-                      </Button>
-                      <Button onClick={handleUploadAndCreateSession} disabled={!file || loading}>
-                        {loading ? (
-                          <>
-                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                            Uploading...
-                          </>
-                        ) : (
-                          <>
-                            <Upload className="h-4 w-4 mr-2" />
-                            Upload & Start Scanning
-                          </>
-                        )}
-                      </Button>
-                    </div>
-                  </TabsContent>
-                </Tabs>
+                </div>
               </Card>
             </div>
           </div>
