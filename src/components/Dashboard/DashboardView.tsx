@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Package, TruckIcon, PackageOpen, User, Activity, ScanBarcode, ArrowRight, Check, AlertTriangle } from 'lucide-react';
+import { Package, TruckIcon, PackageOpen, User, ScanBarcode, ArrowRight, Check, AlertTriangle } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend } from 'recharts';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import supabase from '@/lib/supabase';
@@ -130,7 +130,7 @@ export function DashboardView({ onViewChange, onMenuClick }: DashboardViewProps)
   });
   const [activityLogs, setActivityLogs] = useState<ActivityLogEntry[]>([]);
   const [activityLoading, setActivityLoading] = useState(false);
-  const [isCompact, setIsCompact] = useState(false);
+  // const [isCompact, setIsCompact] = useState(false);
 
   // Helper to navigate to inventory with filter
   const navigateToInventory = (filterType?: 'LocalStock' | 'FG' | 'ASIS' | 'Parts') => {
@@ -197,14 +197,14 @@ export function DashboardView({ onViewChange, onMenuClick }: DashboardViewProps)
     fetchData();
   }, [locationId]);
 
-  useEffect(() => {
-    const updateLayout = () => {
-      setIsCompact(window.innerWidth < 640);
-    };
-    updateLayout();
-    window.addEventListener('resize', updateLayout);
-    return () => window.removeEventListener('resize', updateLayout);
-  }, []);
+  // useEffect(() => {
+  //   const updateLayout = () => {
+  //     setIsCompact(window.innerWidth < 640);
+  //   };
+  //   updateLayout();
+  //   window.addEventListener('resize', updateLayout);
+  //   return () => window.removeEventListener('resize', updateLayout);
+  // }, []);
 
   useEffect(() => {
     if (!locationId) return;
@@ -719,32 +719,26 @@ export function DashboardView({ onViewChange, onMenuClick }: DashboardViewProps)
 
       <PageContainer className="py-4 space-y-6 pb-24">
         {/* Welcome Header with Quick Stats */}
-        <Card className="p-6 bg-gradient-to-r from-primary/10 to-primary/5">
-          <div className="space-y-4">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex items-center gap-4 min-w-0">
-                <div className="h-12 w-12 rounded-full overflow-hidden bg-primary/20 flex items-center justify-center">
-                  {user?.image ? (
-                    <img
-                      src={user.image}
-                      alt={userDisplayName}
-                      className="h-full w-full object-cover"
-                    />
-                  ) : (
-                    <User className="h-6 w-6 text-primary" />
-                  )}
-                </div>
-                <div className="min-w-0">
-                  <h1 className="text-2xl font-bold break-words">Welcome back, {currentUser.name}</h1>
-                  <p className="text-sm text-muted-foreground break-words">
-                    {currentUser.role} • Last active {currentUser.lastActive} • {new Date().toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' })}
-                  </p>
-                </div>
+        <Card className="p-4 sm:p-6 bg-gradient-to-r from-primary/10 to-primary/5">
+          <div className="space-y-2 sm:space-y-4">
+            <div className="flex items-center gap-3 sm:gap-4 min-w-0">
+              <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-full overflow-hidden bg-primary/20 flex items-center justify-center flex-shrink-0">
+                {user?.image ? (
+                  <img
+                    src={user.image}
+                    alt={userDisplayName}
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <User className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
+                )}
               </div>
-              <Badge variant="outline" className="text-sm w-fit">
-                <Activity className="mr-2 h-3 w-3" />
-                {stats.totalItems} Items
-              </Badge>
+              <div className="min-w-0">
+                <h1 className="text-lg sm:text-2xl font-bold break-words">Welcome back, {currentUser.name}</h1>
+                <p className="text-xs sm:text-sm text-muted-foreground break-words">
+                  {currentUser.role} • {new Date().toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' })}
+                </p>
+              </div>
             </div>
 
             {/* Quick Action Buttons */}
@@ -772,7 +766,7 @@ export function DashboardView({ onViewChange, onMenuClick }: DashboardViewProps)
         {/* Actions */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div>
-            <h2 className="text-lg font-semibold mb-3">Floor Actions</h2>
+            <h2 className="text-lg font-semibold mb-3">Load Board</h2>
             <div className="space-y-5">
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
@@ -901,94 +895,96 @@ export function DashboardView({ onViewChange, onMenuClick }: DashboardViewProps)
         </div>
 
         {/* Interactive Donut Chart */}
-        <Card className="p-6">
-          <div className="space-y-4">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <h2 className="text-lg font-semibold min-w-0">
-                {selectedDrilldown ?
-                  `Load Details: ${selectedDrilldown.replace(/-/g, ' ')}` :
-                  selectedChartType === 'overview' ? 'Inventory Distribution' :
-                  selectedChartType === 'LocalStock' ? 'Local Stock Breakdown' :
-                  selectedChartType === 'FG' ? 'FG Breakdown' : 'ASIS Breakdown'}
-              </h2>
-              {selectedDrilldown ? (
-                <Button
-                  variant="ghost"
-                  size="responsive"
-                  onClick={() => setSelectedDrilldown(null)}
-                >
-                  ← Back to {selectedChartType}
-                </Button>
-              ) : selectedChartType !== 'overview' ? (
-                <Button
-                  variant="ghost"
-                  size="responsive"
-                  onClick={() => setSelectedChartType('overview')}
-                >
-                  ← Back to Overview
-                </Button>
-              ) : null}
-            </div>
-
-            <ChartContainer config={chartConfig} className="h-[240px] sm:h-[320px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={chartData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={isCompact ? 45 : 60}
-                    outerRadius={isCompact ? 80 : 100}
-                    paddingAngle={2}
-                    dataKey="value"
-                    onClick={(data) => {
-                      // Level 1: Overview -> drill to sub-inventories
-                      if (selectedChartType === 'overview' && !selectedDrilldown) {
-                        if (data.name === 'Local Stock') setSelectedChartType('LocalStock');
-                        else if (data.name === 'FG') setSelectedChartType('FG');
-                        else if (data.name === 'ASIS') setSelectedChartType('ASIS');
-                      }
-                      // Level 2: Sub-inventories -> drill to loads
-                      else if (!selectedDrilldown) {
-                        if (selectedChartType === 'LocalStock' && data.name === 'In Routes') {
-                          setSelectedDrilldown('LocalStock-routes');
-                        } else if (selectedChartType === 'FG' && data.name === 'BackHaul') {
-                          setSelectedDrilldown('FG-backhaul');
-                        } else if (selectedChartType === 'ASIS') {
-                          if (data.name === 'Regular') setSelectedDrilldown('ASIS-regular');
-                          else if (data.name === 'Salvage') setSelectedDrilldown('ASIS-salvage');
-                          else if (data.name === 'Scrap') setSelectedDrilldown('ASIS-scrap');
-                        }
-                      }
-                    }}
-                    style={{ cursor: !selectedDrilldown ? 'pointer' : 'default' }}
+        <div className="flex justify-center">
+          <Card className="p-6 w-full max-w-2xl">
+            <div className="space-y-4">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <h2 className="text-lg font-semibold min-w-0">
+                  {selectedDrilldown ?
+                    `Load Details: ${selectedDrilldown.replace(/-/g, ' ')}` :
+                    selectedChartType === 'overview' ? 'Inventory Distribution' :
+                    selectedChartType === 'LocalStock' ? 'Local Stock Breakdown' :
+                    selectedChartType === 'FG' ? 'FG Breakdown' : 'ASIS Breakdown'}
+                </h2>
+                {selectedDrilldown ? (
+                  <Button
+                    variant="ghost"
+                    size="responsive"
+                    onClick={() => setSelectedDrilldown(null)}
                   >
-                    {chartData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.fill} />
-                    ))}
-                  </Pie>
-                  <ChartTooltip content={<ChartTooltipContent />} />
-                  {!isCompact && (
-                    <Legend
-                      wrapperStyle={{
-                        fontSize: 12,
-                        display: 'flex',
-                        flexWrap: 'wrap',
-                        justifyContent: 'center',
-                      }}
-                    />
-                  )}
-                </PieChart>
-              </ResponsiveContainer>
-            </ChartContainer>
+                    ← Back to {selectedChartType}
+                  </Button>
+                ) : selectedChartType !== 'overview' ? (
+                  <Button
+                    variant="ghost"
+                    size="responsive"
+                    onClick={() => setSelectedChartType('overview')}
+                  >
+                    ← Back to Overview
+                  </Button>
+                ) : null}
+              </div>
 
-            {!selectedDrilldown && (
-              <p className="text-sm text-muted-foreground text-center">
-                Click on a segment to view detailed breakdown
-              </p>
-            )}
-          </div>
-        </Card>
+              <div className="w-full aspect-square max-w-sm mx-auto">
+                <ChartContainer config={chartConfig} className="w-full h-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={chartData}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius="50%"
+                        outerRadius="80%"
+                        paddingAngle={2}
+                        dataKey="value"
+                        onClick={(data) => {
+                          // Level 1: Overview -> drill to sub-inventories
+                          if (selectedChartType === 'overview' && !selectedDrilldown) {
+                            if (data.name === 'Local Stock') setSelectedChartType('LocalStock');
+                            else if (data.name === 'FG') setSelectedChartType('FG');
+                            else if (data.name === 'ASIS') setSelectedChartType('ASIS');
+                          }
+                          // Level 2: Sub-inventories -> drill to loads
+                          else if (!selectedDrilldown) {
+                            if (selectedChartType === 'LocalStock' && data.name === 'In Routes') {
+                              setSelectedDrilldown('LocalStock-routes');
+                            } else if (selectedChartType === 'FG' && data.name === 'BackHaul') {
+                              setSelectedDrilldown('FG-backhaul');
+                            } else if (selectedChartType === 'ASIS') {
+                              if (data.name === 'Regular') setSelectedDrilldown('ASIS-regular');
+                              else if (data.name === 'Salvage') setSelectedDrilldown('ASIS-salvage');
+                              else if (data.name === 'Scrap') setSelectedDrilldown('ASIS-scrap');
+                            }
+                          }
+                        }}
+                        style={{ cursor: !selectedDrilldown ? 'pointer' : 'default' }}
+                      >
+                        {chartData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.fill} />
+                        ))}
+                      </Pie>
+                      <ChartTooltip content={<ChartTooltipContent />} />
+                      <Legend
+                        wrapperStyle={{
+                          fontSize: 12,
+                          display: 'flex',
+                          flexWrap: 'wrap',
+                          justifyContent: 'center',
+                        }}
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </ChartContainer>
+              </div>
+
+              {!selectedDrilldown && (
+                <p className="text-sm text-muted-foreground text-center">
+                  Click on a segment to view detailed breakdown
+                </p>
+              )}
+            </div>
+          </Card>
+        </div>
 
         {/* Inventory Overview - 3 columns */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

@@ -20,6 +20,7 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { DisplayManager } from "@/components/FloorDisplay/DisplayManager"
 import { getStoredUiHandedness, setStoredUiHandedness, type UiHandedness } from "@/lib/uiPreferences"
+import { useTheme } from "@/components/theme-provider"
 
 interface SettingsViewProps {
   onMenuClick?: () => void
@@ -78,6 +79,7 @@ const slugify = (value: string) => {
 
 export function SettingsView({ onMenuClick, section }: SettingsViewProps) {
   const { user, updateUser, updatePassword } = useAuth()
+  const { theme, setTheme } = useTheme()
   const resolvedSection: SettingsSection = section ?? "location"
   const sectionTitles: Record<SettingsSection, string> = {
     locations: "Locations",
@@ -1041,29 +1043,52 @@ export function SettingsView({ onMenuClick, section }: SettingsViewProps) {
           <div>
             <h2 className="text-xl font-semibold text-foreground">Interface Preferences</h2>
             <p className="text-sm text-muted-foreground">
-              Align key controls for left- or right-handed use.
+              Customize the appearance and layout of the app.
             </p>
           </div>
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="ui-handedness">Handedness</Label>
-          <Select
-            value={uiHandedness}
-            onValueChange={(value) => {
-              const next = value === "left" ? "left" : "right"
-              setUiHandedness(next)
-              setStoredUiHandedness(next)
-            }}
-          >
-            <SelectTrigger id="ui-handedness" className="w-full">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="right">Right-handed</SelectItem>
-              <SelectItem value="left">Left-handed</SelectItem>
-            </SelectContent>
-          </Select>
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="theme-mode">Color Mode</Label>
+            <Select
+              value={theme}
+              onValueChange={(value) => {
+                if (value === "light" || value === "dark" || value === "system") {
+                  setTheme(value)
+                }
+              }}
+            >
+              <SelectTrigger id="theme-mode" className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="light">Light</SelectItem>
+                <SelectItem value="dark">Dark</SelectItem>
+                <SelectItem value="system">System</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="ui-handedness">Handedness</Label>
+            <Select
+              value={uiHandedness}
+              onValueChange={(value) => {
+                const next = value === "left" ? "left" : "right"
+                setUiHandedness(next)
+                setStoredUiHandedness(next)
+              }}
+            >
+              <SelectTrigger id="ui-handedness" className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="right">Right-handed</SelectItem>
+                <SelectItem value="left">Left-handed</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       </Card>
 

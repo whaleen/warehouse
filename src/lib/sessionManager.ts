@@ -191,19 +191,6 @@ export async function updateSessionStatus(input: {
     return { data: null, error: new Error('Session is closed and cannot be reopened') };
   }
 
-  if (input.status === 'closed') {
-    const items = Array.isArray((current as { items?: unknown }).items)
-      ? ((current as { items?: InventoryItem[] }).items as InventoryItem[])
-      : [];
-    const scanned = Array.isArray((current as { scanned_item_ids?: unknown }).scanned_item_ids)
-      ? ((current as { scanned_item_ids?: string[] }).scanned_item_ids as string[])
-      : [];
-
-    if (items.length === 0 || scanned.length !== items.length) {
-      return { data: null, error: new Error('Session is not complete and cannot be closed') };
-    }
-  }
-
   const updates: Record<string, any> = {
     status: input.status,
     updated_by: input.updatedBy ?? null,

@@ -133,6 +133,11 @@ export async function getCurrentPosition(): Promise<RawGPSPosition | null> {
   return new Promise((resolve) => {
     navigator.geolocation.getCurrentPosition(
       (position) => {
+        console.log('✅ Position acquired:', {
+          lat: position.coords.latitude,
+          lng: position.coords.longitude,
+          accuracy: position.coords.accuracy
+        });
         resolve({
           latitude: position.coords.latitude,
           longitude: position.coords.longitude,
@@ -140,13 +145,19 @@ export async function getCurrentPosition(): Promise<RawGPSPosition | null> {
         });
       },
       (error) => {
-        console.error('Geolocation error:', error.message);
+        console.error('❌ Geolocation error:', {
+          code: error.code,
+          message: error.message,
+          PERMISSION_DENIED: error.code === 1,
+          POSITION_UNAVAILABLE: error.code === 2,
+          TIMEOUT: error.code === 3
+        });
         resolve(null);
       },
       {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 0,
+        enableHighAccuracy: true, // Use GPS on phones for best accuracy
+        timeout: 10000, // 10 second timeout (plenty for phones with GPS)
+        maximumAge: 5000, // Use positions up to 5 seconds old
       }
     );
   });
