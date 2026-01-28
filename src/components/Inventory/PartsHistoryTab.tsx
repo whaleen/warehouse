@@ -18,7 +18,6 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Loader2, TrendingDown, RotateCcw, Truck, DollarSign } from 'lucide-react';
 import { useTrackedParts, usePartsHistory } from '@/hooks/queries/useParts';
-import type { InventoryCountWithProduct } from '@/types/inventory';
 
 function toNumber(value: unknown): number | null {
   if (typeof value === 'number') return value;

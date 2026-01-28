@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Loader2, Search, X, Trash2, Printer, ChevronDown, Maximize2 } from 'lucide-react';
 import { updateLoadMetadata } from '@/lib/loadManager';
 import { useLoadDetail, useLoadConflicts } from '@/hooks/queries/useLoads';
-import type { LoadMetadata, InventoryItem, LoadConflict } from '@/types/inventory';
+import type { LoadMetadata } from '@/types/inventory';
 import { decodeHTMLEntities } from '@/lib/htmlUtils';
 import { InventoryItemCard } from '@/components/Inventory/InventoryItemCard';
 import { useToast } from '@/components/ui/toast';

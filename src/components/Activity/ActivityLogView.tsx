@@ -17,8 +17,6 @@ type ActivityLogEntry = {
   created_at: string;
 };
 
-const PAGE_SIZE = 50;
-
 export function ActivityLogView() {
   const {
     data,

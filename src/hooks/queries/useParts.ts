@@ -65,7 +65,7 @@ export function useUpdatePartCount() {
       return { previous };
     },
 
-    onError: (err, variables, context) => {
+    onError: (_err, _variables, context) => {
       if (context?.previous) {
         queryClient.setQueryData(queryKeys.parts.tracked(locationId), context.previous);
       }
@@ -101,7 +101,7 @@ export function useMarkAsReordered() {
       return { previous };
     },
 
-    onError: (err, variables, context) => {
+    onError: (_err, _variables, context) => {
       if (context?.previous) {
         queryClient.setQueryData(queryKeys.parts.alerts(locationId), context.previous);
       }

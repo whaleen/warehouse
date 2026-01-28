@@ -1,6 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
 import supabase from '@/lib/supabase';
-import { queryKeys } from '@/lib/queryKeys';
 import { getActiveLocationContext } from '@/lib/tenant';
 import type { InventoryItem } from '@/types/inventory';
 
