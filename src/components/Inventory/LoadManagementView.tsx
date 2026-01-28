@@ -3,7 +3,8 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Loader2, Upload, ArrowLeft, Trash2, Check, AlertTriangle } from 'lucide-react';
-import { getAllLoads, getLoadItemCount, getLoadConflictCount, deleteLoad } from '@/lib/loadManager';
+import { getLoadItemCount, getLoadConflictCount } from '@/lib/loadManager';
+import { useLoads } from '@/hooks/queries/useLoads';
 import type { LoadMetadata } from '@/types/inventory';
 import { LoadDetailPanel } from './LoadDetailPanel';
 import { AppHeader } from '@/components/Navigation/AppHeader';
@@ -34,8 +35,8 @@ export function LoadManagementView({ onMenuClick }: LoadManagementViewProps) {
   const { locationId, companyId } = getActiveLocationContext();
   const { user } = useAuth();
   const { toast } = useToast();
+  const { data: loadsData, isLoading: loading, refetch } = useLoads();
   const [loads, setLoads] = useState<LoadWithCount[]>([]);
-  const [loading, setLoading] = useState(false);
   const [importingLoads, setImportingLoads] = useState(false);
   const [syncConfirmOpen, setSyncConfirmOpen] = useState(false);
   const [wipeConfirmOpen, setWipeConfirmOpen] = useState(false);
@@ -57,26 +58,25 @@ export function LoadManagementView({ onMenuClick }: LoadManagementViewProps) {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [loadPendingDelete, setLoadPendingDelete] = useState<LoadMetadata | null>(null);
 
-  const fetchLoads = async () => {
-    setLoading(true);
-    const { data, error } = await getAllLoads();
-
-    if (!error && data) {
-      // Fetch item counts for each load
-      const loadsWithCounts = await Promise.all(
-        data.map(async (load) => {
-          const [{ count: itemCount }, { count: conflictCount }] = await Promise.all([
-            getLoadItemCount(load.inventory_type, load.sub_inventory_name),
-            getLoadConflictCount(load.inventory_type, load.sub_inventory_name),
-          ]);
-          return { ...load, item_count: itemCount, conflict_count: conflictCount };
-        })
-      );
-      setLoads(loadsWithCounts);
-    }
-
-    setLoading(false);
+  const fetchLoadCounts = async (baseLoads: LoadMetadata[]) => {
+    // Fetch item counts for each load
+    const loadsWithCounts = await Promise.all(
+      baseLoads.map(async (load) => {
+        const [{ count: itemCount }, { count: conflictCount }] = await Promise.all([
+          getLoadItemCount(load.inventory_type, load.sub_inventory_name),
+          getLoadConflictCount(load.inventory_type, load.sub_inventory_name),
+        ]);
+        return { ...load, item_count: itemCount, conflict_count: conflictCount };
+      })
+    );
+    setLoads(loadsWithCounts);
   };
+
+  useEffect(() => {
+    if (loadsData) {
+      fetchLoadCounts(loadsData);
+    }
+  }, [loadsData]);
 
   const wipeAsisData = async () => {
     const { error: conflictError } = await supabase
@@ -252,7 +252,7 @@ export function LoadManagementView({ onMenuClick }: LoadManagementViewProps) {
         console.warn('Failed to log activity (asis_sync):', activityError.message);
       }
   
-      fetchLoads();
+      refetch();
     } catch (err) {
       console.error('Failed to sync ASIS:', err);
       toast({
@@ -287,7 +287,7 @@ export function LoadManagementView({ onMenuClick }: LoadManagementViewProps) {
       if (activityError) {
         console.warn('Failed to log activity (asis_wipe):', activityError.message);
       }
-      fetchLoads();
+      refetch();
     } catch (err) {
       console.error('Failed to wipe ASIS:', err);
       toast({
@@ -300,11 +300,6 @@ export function LoadManagementView({ onMenuClick }: LoadManagementViewProps) {
       setWipeConfirmOpen(false);
     }
   };
-  
-
-  useEffect(() => {
-    fetchLoads();
-  }, []);
 
   const syncLocationFromUrl = () => {
     const params = new URLSearchParams(window.location.search);
@@ -441,7 +436,7 @@ export function LoadManagementView({ onMenuClick }: LoadManagementViewProps) {
       if (selectedLoadForDetail?.id === loadPendingDelete.id) {
         setSelectedLoadForDetail(null);
       }
-      fetchLoads();
+      refetch();
     } else {
       toast({
         message: `Failed to delete load: ${error?.message || 'Unknown error'}`,

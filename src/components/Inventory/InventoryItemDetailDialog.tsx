@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -9,10 +9,8 @@ import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Loader2, ExternalLink, Copy, Check } from 'lucide-react';
-import supabase from '@/lib/supabase';
-import type { InventoryItem } from '@/types/inventory';
+import { useInventoryItemDetail } from '@/hooks/queries/useInventory';
 import { decodeHTMLEntities } from '@/lib/htmlUtils';
-import { getActiveLocationContext } from '@/lib/tenant';
 
 // interface InventoryItemWithProduct extends InventoryItem {
 //   products: {
@@ -45,52 +43,7 @@ export function InventoryItemDetailDialog({
   onOpenChange,
   itemId,
 }: InventoryItemDetailDialogProps) {
-  const { locationId } = getActiveLocationContext();
-  const [item, setItem] =
-  useState<InventoryItem | null>(null);
-
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    if (open && itemId) {
-      fetchItemDetails();
-    }
-  }, [open, itemId, locationId]);
-
-  const fetchItemDetails = async () => {
-    setLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from('inventory_items')
-        .select(`
-          *,
-          products:product_fk (
-            id,
-            model,
-            product_type,
-            brand,
-            description,
-            dimensions,
-            image_url,
-            product_url,
-            price,
-            msrp,
-            color
-          )
-        `)
-        .eq('id', itemId)
-        .eq('location_id', locationId)
-        .single();
-
-      if (error) throw error;
-      setItem(data);
-    } catch (err) {
-      console.error(err);
-      setItem(null);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { data: item, isLoading: loading } = useInventoryItemDetail(itemId, open);
 
   const formatMoney = (value?: number) =>
     typeof value === 'number'

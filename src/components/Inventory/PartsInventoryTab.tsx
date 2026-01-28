@@ -1,17 +1,17 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Loader2, AlertTriangle, Check, Package, ShoppingCart, Camera, Plus, Trash2 } from 'lucide-react';
+import { snapshotTrackedParts } from '@/lib/partsManager';
 import {
-  getTrackedParts,
-  updatePartCount,
-  markAsReordered,
-  snapshotTrackedParts,
-  updateThreshold,
-  removeTrackedPart
-} from '@/lib/partsManager';
+  useTrackedParts,
+  useUpdatePartCount,
+  useMarkAsReordered,
+  useUpdateThreshold,
+  useRemoveTrackedPart
+} from '@/hooks/queries/useParts';
 import { PartsTrackingDialog } from './PartsTrackingDialog';
 import type { TrackedPartWithDetails } from '@/types/inventory';
 import { usePartsListView } from '@/hooks/usePartsListView';
@@ -33,8 +33,12 @@ interface PartsInventoryTabProps {
 }
 
 export function PartsInventoryTab({ searchTerm, statusFilter = 'all', onRefresh }: PartsInventoryTabProps) {
-  const [parts, setParts] = useState<TrackedPartWithDetails[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: parts, isLoading: loading, refetch } = useTrackedParts();
+  const updatePartCountMutation = useUpdatePartCount();
+  const markAsReorderedMutation = useMarkAsReordered();
+  const updateThresholdMutation = useUpdateThreshold();
+  const removeTrackedPartMutation = useRemoveTrackedPart();
+
   const [updating, setUpdating] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editValue, setEditValue] = useState<string>('');
@@ -50,20 +54,6 @@ export function PartsInventoryTab({ searchTerm, statusFilter = 'all', onRefresh 
   const { view, setView } = usePartsListView();
   const effectiveView = view === 'table' ? 'compact' : view;
   const isImageView = effectiveView === 'images';
-
-  const fetchParts = useCallback(async () => {
-    setLoading(true);
-    const { data, error } = await getTrackedParts();
-    if (error) {
-      console.error('Failed to fetch tracked parts:', error);
-    }
-    setParts(data ?? []);
-    setLoading(false);
-  }, []);
-
-  useEffect(() => {
-    fetchParts();
-  }, [fetchParts]);
 
   const handleStartEdit = (part: TrackedPartWithDetails) => {
     setEditingId(part.id);
@@ -104,23 +94,17 @@ export function PartsInventoryTab({ searchTerm, statusFilter = 'all', onRefresh 
 
   const handleMarkReordered = async (part: TrackedPartWithDetails) => {
     setMarkingId(part.id);
-    const { success, error } = await markAsReordered(part.id);
-
-    if (success) {
-      setParts(prev =>
-        prev.map(p =>
-          p.id === part.id ? { ...p, reordered_at: new Date().toISOString() } : p
-        )
-      );
+    try {
+      await markAsReorderedMutation.mutateAsync(part.id);
       onRefresh?.();
-    } else {
+    } catch (error) {
       console.error('Failed to mark as reordered:', error);
     }
     setMarkingId(null);
   };
 
   const handleSnapshotAll = async () => {
-    if (parts.length === 0 || snapshotting) return;
+    if (!parts || parts.length === 0 || snapshotting) return;
 
     setSnapshotting(true);
     const { success, error } = await snapshotTrackedParts(parts);
@@ -134,29 +118,14 @@ export function PartsInventoryTab({ searchTerm, statusFilter = 'all', onRefresh 
     if (!pendingPart || pendingQty === null || !selectedReason) return;
 
     setUpdating(pendingPart.id);
-    const { success, error } = await updatePartCount(
-      pendingPart.product_id,
-      pendingQty,
-      undefined,
-      undefined,
-      selectedReason
-    );
-
-    if (success) {
-      setParts(prev =>
-        prev.map(p => {
-          if (p.id !== pendingPart.id) return p;
-          const shouldClearReordered =
-            p.reordered_at && pendingQty > p.reorder_threshold;
-          return {
-            ...p,
-            current_qty: pendingQty,
-            reordered_at: shouldClearReordered ? null : p.reordered_at
-          };
-        })
-      );
+    try {
+      await updatePartCountMutation.mutateAsync({
+        productId: pendingPart.product_id,
+        newQty: pendingQty,
+        reason: selectedReason
+      });
       onRefresh?.();
-    } else {
+    } catch (error) {
       console.error('Failed to update count:', error);
     }
 
@@ -198,16 +167,13 @@ export function PartsInventoryTab({ searchTerm, statusFilter = 'all', onRefresh 
     }
 
     setUpdating(part.id);
-    const { success, error } = await updateThreshold(part.id, newThreshold);
-
-    if (success) {
-      setParts(prev =>
-        prev.map(p =>
-          p.id === part.id ? { ...p, reorder_threshold: newThreshold } : p
-        )
-      );
+    try {
+      await updateThresholdMutation.mutateAsync({
+        trackedPartId: part.id,
+        threshold: newThreshold
+      });
       onRefresh?.();
-    } else {
+    } catch (error) {
       console.error('Failed to update threshold:', error);
     }
 
@@ -232,12 +198,10 @@ export function PartsInventoryTab({ searchTerm, statusFilter = 'all', onRefresh 
     }
 
     setUpdating(part.id);
-    const { success, error } = await removeTrackedPart(part.id);
-
-    if (success) {
-      setParts(prev => prev.filter(p => p.id !== part.id));
+    try {
+      await removeTrackedPartMutation.mutateAsync(part.id);
       onRefresh?.();
-    } else {
+    } catch (error) {
       console.error('Failed to remove tracked part:', error);
     }
 
@@ -245,7 +209,7 @@ export function PartsInventoryTab({ searchTerm, statusFilter = 'all', onRefresh 
   };
 
   const handlePartAdded = () => {
-    fetchParts();
+    refetch();
     onRefresh?.();
   };
 
@@ -283,7 +247,7 @@ export function PartsInventoryTab({ searchTerm, statusFilter = 'all', onRefresh 
     return part.current_qty <= part.reorder_threshold && !part.reordered_at;
   };
 
-  const filteredParts = parts.filter(part => {
+  const filteredParts = (parts ?? []).filter(part => {
     if (!searchTerm) return true;
     const q = searchTerm.toLowerCase();
     return (
@@ -306,7 +270,7 @@ export function PartsInventoryTab({ searchTerm, statusFilter = 'all', onRefresh 
     );
   }
 
-  if (parts.length === 0) {
+  if (!parts || parts.length === 0) {
     return (
       <div className="space-y-4">
         <div className="flex justify-end">

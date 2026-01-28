@@ -1,11 +1,10 @@
-import { useEffect, useState } from 'react';
 import { AppHeader } from '@/components/Navigation/AppHeader';
 import { PageContainer } from '@/components/Layout/PageContainer';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, Loader2 } from 'lucide-react';
-import supabase from '@/lib/supabase';
-import { getActiveLocationContext } from '@/lib/tenant';
+import { useActivityLog } from '@/hooks/queries/useActivity';
+import { useActivityRealtime } from '@/hooks/queries/useRealtimeSync';
 
 type ActivityLogEntry = {
   id: string;
@@ -21,11 +20,17 @@ type ActivityLogEntry = {
 const PAGE_SIZE = 50;
 
 export function ActivityLogView() {
-  const { locationId } = getActiveLocationContext();
-  const [logs, setLogs] = useState<ActivityLogEntry[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [loadingMore, setLoadingMore] = useState(false);
-  const [hasMore, setHasMore] = useState(true);
+  const {
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading,
+  } = useActivityLog();
+
+  useActivityRealtime();
+
+  const logs = data?.pages.flatMap((page) => page.data) ?? [];
 
   const formatActivityDate = (value: string) =>
     new Date(value).toLocaleString(undefined, {
@@ -75,67 +80,6 @@ export function ActivityLogView() {
     return entry.action.replace(/_/g, ' ');
   };
 
-  const dedupeById = (entries: ActivityLogEntry[]) => {
-    const seen = new Set<string>();
-    return entries.filter((entry) => {
-      if (seen.has(entry.id)) return false;
-      seen.add(entry.id);
-      return true;
-    });
-  };
-
-  const fetchLogs = async (page: number, append = false) => {
-    if (loading || loadingMore) return;
-    append ? setLoadingMore(true) : setLoading(true);
-
-    const from = page * PAGE_SIZE;
-    const to = from + PAGE_SIZE - 1;
-    const { data, error } = await supabase
-      .from('activity_log')
-      .select('id, action, entity_type, entity_id, details, actor_name, actor_image, created_at')
-      .eq('location_id', locationId)
-      .order('created_at', { ascending: false })
-      .range(from, to);
-
-    if (error) {
-      console.error('Failed to load activity log:', error);
-    } else {
-      setLogs(prev => (append ? dedupeById([...prev, ...(data ?? [])]) : data ?? []));
-      setHasMore((data ?? []).length === PAGE_SIZE);
-    }
-
-    append ? setLoadingMore(false) : setLoading(false);
-  };
-
-  useEffect(() => {
-    setLogs([]);
-    setHasMore(true);
-    fetchLogs(0);
-  }, [locationId]);
-
-  useEffect(() => {
-    if (!locationId) return;
-    const channel = supabase
-      .channel(`activity-log-page-${locationId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'activity_log',
-          filter: `location_id=eq.${locationId}`,
-        },
-        (payload) => {
-          const entry = payload.new as ActivityLogEntry;
-          setLogs((prev) => dedupeById([entry, ...prev]));
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [locationId]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -143,7 +87,7 @@ export function ActivityLogView() {
       <PageContainer className="py-4 pb-24 space-y-4">
         <Card className="p-4">
           <div className="space-y-3">
-            {loading && logs.length === 0 ? (
+            {isLoading && logs.length === 0 ? (
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Loader2 className="h-4 w-4 animate-spin" />
                 Loading activity…
@@ -173,15 +117,15 @@ export function ActivityLogView() {
               ))
             )}
           </div>
-          {hasMore && (
+          {hasNextPage && (
             <div className="pt-3">
               <Button
                 variant="outline"
                 size="responsive"
-                onClick={() => fetchLogs(Math.floor(logs.length / PAGE_SIZE), true)}
-                disabled={loadingMore}
+                onClick={() => fetchNextPage()}
+                disabled={isFetchingNextPage}
               >
-                {loadingMore ? (
+                {isFetchingNextPage ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     Loading…

@@ -1,3 +1,5 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { ThemeProvider } from "@/components/theme-provider";
 import { useAuth } from "@/context/AuthContext";
 import { useCallback, useEffect, useState, lazy, Suspense, useTransition } from "react";
@@ -28,6 +30,19 @@ const SignupPage = lazy(() => import("@/components/Marketing/SignupPage").then(m
 const ActivityLogView = lazy(() => import("@/components/Activity/ActivityLogView").then(m => ({ default: m.ActivityLogView })));
 const MapView = lazy(() => import("@/components/Map/MapView").then(m => ({ default: m.MapView })));
 
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5,      // 5 minutes (inventory changes slowly)
+      gcTime: 1000 * 60 * 30,        // 30 minutes cache retention
+      retry: 1,
+      refetchOnWindowFocus: false,   // Warehouse kiosks stay open
+    },
+    mutations: {
+      retry: 0,
+    },
+  },
+});
 
 function App() {
   const { user, loading, logout } = useAuth();
@@ -272,75 +287,78 @@ function App() {
   }
 
   return (
-    <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
-      <SidebarProvider
-        className={isMobile && uiHandedness === "right" ? "flex-row-reverse" : undefined}
-      >
-        <AppSidebar
-          currentView={currentView}
-          onViewChange={navigate}
-          side={isMobile && uiHandedness === "right" ? "right" : "left"}
-        />
-        <SidebarInset className="bg-muted/40">
-          <div className="flex min-h-screen flex-col min-w-0">
-            <Suspense fallback={null}>
-              <PageTransition>
-                {currentView === "dashboard" && (
-                  <DashboardView
-                    onViewChange={handleViewChange}
-                  />
-                )}
-                {currentView === "inventory" && (
-                  <InventoryView />
-                )}
-                {currentView === "parts" && (
-                  <PartsView />
-                )}
-                {currentView === "products" && (
-                  <ProductEnrichment
-                  />
-                )}
-                {currentView === "loads" && (
-                  <LoadManagementView
-                  />
-                )}
-                {currentView === "activity" && (
-                  <ActivityLogView />
-                )}
-                {currentView === "map" && (
-                  <MapView />
-                )}
-                {currentView === "create-session" && (
-                  <CreateSessionView
-                    onViewChange={handleViewChange}
-                    sessionId={sessionId}
-                    onSessionChange={handleSessionChange}
-                  />
-                )}
-                {currentView === "settings-locations" && (
-                  <SettingsView section="locations" />
-                )}
-                {currentView === "settings-location" && (
-                  <SettingsView section="location" />
-                )}
-                {currentView === "settings-company" && (
-                  <SettingsView section="company" />
-                )}
-                {currentView === "settings-users" && (
-                  <SettingsView section="users" />
-                )}
-                {currentView === "settings-profile" && (
-                  <SettingsView section="profile" />
-                )}
-                {currentView === "settings-displays" && (
-                  <SettingsView section="displays" />
-                )}
-              </PageTransition>
-            </Suspense>
-          </div>
-        </SidebarInset>
-      </SidebarProvider>
-    </ThemeProvider>
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+        <SidebarProvider
+          className={isMobile && uiHandedness === "right" ? "flex-row-reverse" : undefined}
+        >
+          <AppSidebar
+            currentView={currentView}
+            onViewChange={navigate}
+            side={isMobile && uiHandedness === "right" ? "right" : "left"}
+          />
+          <SidebarInset className="bg-muted/40">
+            <div className="flex min-h-screen flex-col min-w-0">
+              <Suspense fallback={null}>
+                <PageTransition>
+                  {currentView === "dashboard" && (
+                    <DashboardView
+                      onViewChange={handleViewChange}
+                    />
+                  )}
+                  {currentView === "inventory" && (
+                    <InventoryView />
+                  )}
+                  {currentView === "parts" && (
+                    <PartsView />
+                  )}
+                  {currentView === "products" && (
+                    <ProductEnrichment
+                    />
+                  )}
+                  {currentView === "loads" && (
+                    <LoadManagementView
+                    />
+                  )}
+                  {currentView === "activity" && (
+                    <ActivityLogView />
+                  )}
+                  {currentView === "map" && (
+                    <MapView />
+                  )}
+                  {currentView === "create-session" && (
+                    <CreateSessionView
+                      onViewChange={handleViewChange}
+                      sessionId={sessionId}
+                      onSessionChange={handleSessionChange}
+                    />
+                  )}
+                  {currentView === "settings-locations" && (
+                    <SettingsView section="locations" />
+                  )}
+                  {currentView === "settings-location" && (
+                    <SettingsView section="location" />
+                  )}
+                  {currentView === "settings-company" && (
+                    <SettingsView section="company" />
+                  )}
+                  {currentView === "settings-users" && (
+                    <SettingsView section="users" />
+                  )}
+                  {currentView === "settings-profile" && (
+                    <SettingsView section="profile" />
+                  )}
+                  {currentView === "settings-displays" && (
+                    <SettingsView section="displays" />
+                  )}
+                </PageTransition>
+              </Suspense>
+            </div>
+          </SidebarInset>
+        </SidebarProvider>
+      </ThemeProvider>
+      <ReactQueryDevtools initialIsOpen={false} />
+    </QueryClientProvider>
   );
 }
 

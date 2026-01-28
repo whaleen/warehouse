@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { AlertTriangle, ArrowRight, Package, Loader2, Check, ShoppingCart } from 'lucide-react';
-import { getReorderAlerts, markAsReordered } from '@/lib/partsManager';
+import { useReorderAlerts, useMarkAsReordered } from '@/hooks/queries/useParts';
 import type { ReorderAlert } from '@/types/inventory';
 
 interface ReorderAlertsCardProps {
@@ -11,38 +11,15 @@ interface ReorderAlertsCardProps {
 }
 
 export function ReorderAlertsCard({ onViewParts }: ReorderAlertsCardProps) {
-  const [alerts, setAlerts] = useState<ReorderAlert[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: alerts, isLoading: loading } = useReorderAlerts();
+  const markAsReorderedMutation = useMarkAsReordered();
   const [markingId, setMarkingId] = useState<string | null>(null);
-
-  useEffect(() => {
-    fetchAlerts();
-  }, []);
-
-  const fetchAlerts = async () => {
-    setLoading(true);
-    const { data, error } = await getReorderAlerts();
-    if (error) {
-      console.error('Failed to fetch reorder alerts:', error);
-    }
-    setAlerts(data ?? []);
-    setLoading(false);
-  };
 
   const handleMarkReordered = async (alert: ReorderAlert) => {
     setMarkingId(alert.tracked_part_id);
-    const { success, error } = await markAsReordered(alert.tracked_part_id);
-
-    if (success) {
-      // Update local state
-      setAlerts(prev =>
-        prev.map(a =>
-          a.tracked_part_id === alert.tracked_part_id
-            ? { ...a, reordered_at: new Date().toISOString() }
-            : a
-        )
-      );
-    } else {
+    try {
+      await markAsReorderedMutation.mutateAsync(alert.tracked_part_id);
+    } catch (error) {
       console.error('Failed to mark as reordered:', error);
     }
     setMarkingId(null);
@@ -60,10 +37,10 @@ export function ReorderAlertsCard({ onViewParts }: ReorderAlertsCardProps) {
   }
 
   // Filter out reordered items from the active alerts count
-  const activeAlerts = alerts.filter(a => !a.reordered_at);
-  const reorderedAlerts = alerts.filter(a => a.reordered_at);
+  const activeAlerts = alerts?.filter(a => !a.reordered_at) ?? [];
+  const reorderedAlerts = alerts?.filter(a => a.reordered_at) ?? [];
 
-  if (alerts.length === 0) {
+  if (!alerts || alerts.length === 0) {
     return null;
   }
 

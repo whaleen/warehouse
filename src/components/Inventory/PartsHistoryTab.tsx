@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Card } from '@/components/ui/card';
 import {
   Select,
@@ -17,8 +17,8 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Loader2, TrendingDown, RotateCcw, Truck, DollarSign } from 'lucide-react';
-import { getCountHistoryWithProducts, getTrackedParts } from '@/lib/partsManager';
-import type { InventoryCountWithProduct, TrackedPartWithDetails } from '@/types/inventory';
+import { useTrackedParts, usePartsHistory } from '@/hooks/queries/useParts';
+import type { InventoryCountWithProduct } from '@/types/inventory';
 
 function toNumber(value: unknown): number | null {
   if (typeof value === 'number') return value;
@@ -50,38 +50,14 @@ function getReasonBadge(reason: string | null | undefined) {
 }
 
 export function PartsHistoryTab() {
-  const [history, setHistory] = useState<InventoryCountWithProduct[]>([]);
-  const [trackedParts, setTrackedParts] = useState<TrackedPartWithDetails[]>([]);
-  const [loading, setLoading] = useState(true);
   const [selectedProductId, setSelectedProductId] = useState<string>('all');
   const [timeRange, setTimeRange] = useState<number>(30);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-
-      const [historyResult, partsResult] = await Promise.all([
-        getCountHistoryWithProducts(
-          selectedProductId === 'all' ? undefined : selectedProductId,
-          timeRange
-        ),
-        getTrackedParts()
-      ]);
-
-      if (historyResult.error) {
-        console.error('Failed to fetch history:', historyResult.error);
-      }
-      if (partsResult.error) {
-        console.error('Failed to fetch tracked parts:', partsResult.error);
-      }
-
-      setHistory(historyResult.data ?? []);
-      setTrackedParts(partsResult.data ?? []);
-      setLoading(false);
-    };
-
-    fetchData();
-  }, [selectedProductId, timeRange]);
+  const { data: trackedParts } = useTrackedParts();
+  const { data: history, isLoading: loading } = usePartsHistory(
+    selectedProductId === 'all' ? undefined : selectedProductId,
+    timeRange
+  );
 
   const summary = useMemo(() => {
     let usageUnits = 0;
@@ -91,7 +67,7 @@ export function PartsHistoryTab() {
     const pricedProducts = new Set<string>();
     const usageProducts = new Set<string>();
 
-    history.forEach(row => {
+    (history ?? []).forEach(row => {
       const prev = row.previous_qty ?? 0;
       const qty = row.qty ?? 0;
       const reason = row.count_reason;
@@ -163,7 +139,7 @@ export function PartsHistoryTab() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Tracked Parts</SelectItem>
-            {trackedParts.map(part => (
+            {(trackedParts ?? []).map(part => (
               <SelectItem key={part.product_id} value={part.product_id}>
                 {part.products?.model ?? 'Unknown'}
               </SelectItem>
@@ -208,7 +184,7 @@ export function PartsHistoryTab() {
       </div>
 
       {/* Snapshots Table */}
-      {history.length === 0 ? (
+      {!history || history.length === 0 ? (
         <Card className="p-8 text-center">
           <p className="text-muted-foreground">
             No snapshots recorded for the selected filters.

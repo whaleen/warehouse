@@ -6,7 +6,8 @@ import { Package, TruckIcon, PackageOpen, User, ScanBarcode, ArrowRight, Check, 
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend } from 'recharts';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import supabase from '@/lib/supabase';
-import { getAllLoads } from '@/lib/loadManager';
+import { useLoads } from '@/hooks/queries/useLoads';
+import { useActivityRealtime } from '@/hooks/queries/useRealtimeSync';
 import { AppHeader } from '@/components/Navigation/AppHeader';
 import { ReorderAlertsCard } from './ReorderAlertsCard';
 import { useAuth } from '@/context/AuthContext';
@@ -96,6 +97,10 @@ export function DashboardView({ onViewChange, onMenuClick }: DashboardViewProps)
   const { user } = useAuth();
   const { locationId } = getActiveLocationContext();
   const userDisplayName = user?.username ?? user?.email ?? "User";
+
+  const { data: loadsData } = useLoads();
+  useActivityRealtime();
+
   const [stats, setStats] = useState<DetailedStats>({
     totalItems: 0,
     localStock: { total: 0, unassigned: 0, staged: 0, inbound: 0, routes: 0 },
@@ -194,8 +199,10 @@ export function DashboardView({ onViewChange, onMenuClick }: DashboardViewProps)
 
 
   useEffect(() => {
-    fetchData();
-  }, [locationId]);
+    if (loadsData) {
+      fetchData(loadsData);
+    }
+  }, [locationId, loadsData]);
 
   // useEffect(() => {
   //   const updateLayout = () => {
@@ -234,7 +241,7 @@ export function DashboardView({ onViewChange, onMenuClick }: DashboardViewProps)
     };
   }, [locationId]);
 
-  const fetchData = async () => {
+  const fetchData = async (baseLoadsData: any[]) => {
     try {
       // Fetch ALL inventory items in batches
       let allItems: any[] = [];
@@ -262,8 +269,7 @@ export function DashboardView({ onViewChange, onMenuClick }: DashboardViewProps)
 
       const itemsData = allItems;
 
-      // Fetch all loads
-      const { data: loadsData } = await getAllLoads();
+      // Get conflicts
       const { data: conflictsData } = await supabase
         .from('load_conflicts')
         .select('load_number')
@@ -276,7 +282,7 @@ export function DashboardView({ onViewChange, onMenuClick }: DashboardViewProps)
         conflictCountMap.set(row.load_number, (conflictCountMap.get(row.load_number) ?? 0) + 1);
       });
 
-      const loads = (loadsData ?? []).map((load) => ({
+      const loads = (baseLoadsData ?? []).map((load) => ({
         ...load,
         conflict_count: conflictCountMap.get(load.sub_inventory_name) ?? 0,
       }));

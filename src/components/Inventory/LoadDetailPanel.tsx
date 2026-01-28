@@ -3,7 +3,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Loader2, Search, X, Trash2, Printer, ChevronDown, Maximize2 } from 'lucide-react';
-import { getLoadWithItems, getLoadConflicts, updateLoadMetadata } from '@/lib/loadManager';
+import { updateLoadMetadata } from '@/lib/loadManager';
+import { useLoadDetail, useLoadConflicts } from '@/hooks/queries/useLoads';
 import type { LoadMetadata, InventoryItem, LoadConflict } from '@/types/inventory';
 import { decodeHTMLEntities } from '@/lib/htmlUtils';
 import { InventoryItemCard } from '@/components/Inventory/InventoryItemCard';
@@ -36,9 +37,17 @@ export function LoadDetailPanel({
   const userDisplayName = user?.username ?? user?.email ?? 'Unknown';
   const { locationId, companyId } = getActiveLocationContext();
   const { toast } = useToast();
-  const [items, setItems] = useState<InventoryItem[]>([]);
-  const [conflicts, setConflicts] = useState<LoadConflict[]>([]);
-  const [loading, setLoading] = useState(false);
+
+  const { data: loadDetail, isLoading: loading } = useLoadDetail(
+    load.inventory_type,
+    load.sub_inventory_name
+  );
+  const { data: conflicts } = useLoadConflicts(
+    load.inventory_type,
+    load.sub_inventory_name
+  );
+
+  const items = loadDetail?.items ?? [];
   const [searchTerm, setSearchTerm] = useState('');
   const [prepTagged, setPrepTagged] = useState(false);
   const [prepWrapped, setPrepWrapped] = useState(false);
@@ -80,19 +89,7 @@ export function LoadDetailPanel({
     ? COLOR_OPTIONS.find((option) => option.value === primaryColor)?.label ?? primaryColor
     : 'No color';
 
-  const fetchItems = async () => {
-    setLoading(true);
-    const [{ data }, { data: conflictData }] = await Promise.all([
-      getLoadWithItems(load.inventory_type, load.sub_inventory_name),
-      getLoadConflicts(load.inventory_type, load.sub_inventory_name),
-    ]);
-    if (data) setItems(data.items);
-    setConflicts(conflictData);
-    setLoading(false);
-  };
-
   useEffect(() => {
-    fetchItems();
     setSearchTerm('');
     setDetailsOpen(false);
   }, [load.inventory_type, load.sub_inventory_name]);
@@ -1109,7 +1106,7 @@ export function LoadDetailPanel({
             </div>
           </div>
         </div>
-        {conflicts.length > 0 && (
+        {conflicts && conflicts.length > 0 && (
           <div className="rounded-lg border border-destructive/40 bg-destructive/5 p-3 text-sm">
             <div className="font-semibold text-destructive">
               {conflicts.length} serial conflict{conflicts.length === 1 ? '' : 's'}
