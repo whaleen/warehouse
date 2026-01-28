@@ -19,7 +19,8 @@ export type AppView =
   | 'loads'
   | 'activity'
   | 'create-session'
-  | 'floor-display';
+  | 'floor-display'
+  | 'map';
 
 export type RouteState = {
   view: AppView;
@@ -66,6 +67,8 @@ export function getPathForView(view: AppView, sessionId?: string | null, display
       return '/loads';
     case 'activity':
       return '/activity';
+    case 'map':
+      return '/map';
     case 'settings-locations':
       return '/settings/locations';
     case 'settings-location':
@@ -119,6 +122,8 @@ export function parseRoute(pathname: string): RouteState {
       return { view: 'loads' };
     case 'activity':
       return { view: 'activity' };
+    case 'map':
+      return { view: 'map' };
     case 'scanning-sessions':
     case 'sessions':
       return { view: 'create-session', sessionId: second ?? null };

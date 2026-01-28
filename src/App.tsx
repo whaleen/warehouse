@@ -23,6 +23,7 @@ import { ActivityLogView } from "@/components/Activity/ActivityLogView";
 import { useUiHandedness } from "@/hooks/useUiHandedness";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { PendingAccess } from "@/components/Auth/PendingAccess";
+import { MapView } from "@/components/Map/MapView";
 
 function App() {
   const { user, loading, logout } = useAuth();
@@ -274,6 +275,9 @@ function App() {
             )}
             {currentView === "activity" && (
               <ActivityLogView />
+            )}
+            {currentView === "map" && (
+              <MapView />
             )}
             {currentView === "create-session" && (
               <CreateSessionView
