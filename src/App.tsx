@@ -1,6 +1,6 @@
 import { ThemeProvider } from "@/components/theme-provider";
 import { useAuth } from "@/context/AuthContext";
-import { useCallback, useEffect, useState, lazy, Suspense } from "react";
+import { useCallback, useEffect, useState, lazy, Suspense, useTransition } from "react";
 import { AppSidebar } from "./components/app-sidebar";
 import { getPathForView, parseRoute, isPublicRoute, isMarketingRoute, type AppView } from "@/lib/routes";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
@@ -8,7 +8,6 @@ import { useUiHandedness } from "@/hooks/useUiHandedness";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { PendingAccess } from "@/components/Auth/PendingAccess";
 import { PageTransition } from "@/components/ui/page-transition";
-import { ViewLoader } from "@/components/ui/view-loader";
 
 // Lazy load heavy components for code splitting
 const LoadManagementView = lazy(() => import("@/components/Inventory/LoadManagementView").then(m => ({ default: m.LoadManagementView })));
@@ -29,10 +28,10 @@ const SignupPage = lazy(() => import("@/components/Marketing/SignupPage").then(m
 const ActivityLogView = lazy(() => import("@/components/Activity/ActivityLogView").then(m => ({ default: m.ActivityLogView })));
 const MapView = lazy(() => import("@/components/Map/MapView").then(m => ({ default: m.MapView })));
 
-// ViewLoader is now imported from components/ui/view-loader
 
 function App() {
   const { user, loading, logout } = useAuth();
+  const [, startTransition] = useTransition();
   const uiHandedness = useUiHandedness();
   const isMobile = useIsMobile();
   const isPending = user?.role === "pending";
@@ -75,7 +74,7 @@ function App() {
       return { view: mappedView as AppView, sessionId: null };
     }
     return route;
-  }, []);
+  }, [startTransition]);
 
   const initialRoute = getRouteFromLocation();
 
@@ -102,9 +101,11 @@ function App() {
       window.history.pushState({}, '', nextUrl);
     }
     window.dispatchEvent(new Event('app:locationchange'));
-    setCurrentView(view);
-    setSessionId(nextSessionId);
-    setDisplayId(nextDisplayId);
+    startTransition(() => {
+      setCurrentView(view);
+      setSessionId(nextSessionId);
+      setDisplayId(nextDisplayId);
+    });
   }, []);
 
   const handleViewChange = (view: AppView) => {
@@ -118,9 +119,11 @@ function App() {
   useEffect(() => {
     const syncRoute = () => {
       const route = getRouteFromLocation();
-      setCurrentView(route.view);
-      setSessionId(route.sessionId ?? null);
-      setDisplayId(route.displayId ?? null);
+      startTransition(() => {
+        setCurrentView(route.view);
+        setSessionId(route.sessionId ?? null);
+        setDisplayId(route.displayId ?? null);
+      });
     };
     window.addEventListener('popstate', syncRoute);
     window.addEventListener('app:locationchange', syncRoute);
@@ -128,7 +131,7 @@ function App() {
       window.removeEventListener('popstate', syncRoute);
       window.removeEventListener('app:locationchange', syncRoute);
     };
-  }, [getRouteFromLocation]);
+  }, [getRouteFromLocation, startTransition]);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -161,7 +164,7 @@ function App() {
       const normalizedPath = pathname.replace(/\/+$/, '');
       return (
         <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme-marketing">
-          <Suspense fallback={<ViewLoader />}>
+          <Suspense fallback={null}>
             <PageTransition>
               {normalizedPath.startsWith('/pricing') ? (
                 <PricingPage />
@@ -195,7 +198,7 @@ function App() {
       // Show login page (even while auth is loading)
       return (
         <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme-marketing">
-          <Suspense fallback={<ViewLoader />}>
+          <Suspense fallback={null}>
             <PageTransition>
               <LoginView />
             </PageTransition>
@@ -208,7 +211,7 @@ function App() {
     if (pathname.startsWith('/reset-password')) {
       return (
         <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme-marketing">
-          <Suspense fallback={<ViewLoader />}>
+          <Suspense fallback={null}>
             <PageTransition>
               <ResetPasswordView />
             </PageTransition>
@@ -221,7 +224,7 @@ function App() {
     if (pathname.startsWith('/update-password')) {
       return (
         <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme-marketing">
-          <Suspense fallback={<ViewLoader />}>
+          <Suspense fallback={null}>
             <PageTransition>
               <UpdatePasswordView />
             </PageTransition>
@@ -234,7 +237,7 @@ function App() {
     if (pathname.startsWith('/display')) {
       return (
         <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme-display">
-          <Suspense fallback={<ViewLoader />}>
+          <Suspense fallback={null}>
             <PageTransition>
               <FloorDisplayView displayId={displayId} />
             </PageTransition>
@@ -280,7 +283,7 @@ function App() {
         />
         <SidebarInset className="bg-muted/40">
           <div className="flex min-h-screen flex-col min-w-0">
-            <Suspense fallback={<ViewLoader />}>
+            <Suspense fallback={null}>
               <PageTransition>
                 {currentView === "dashboard" && (
                   <DashboardView

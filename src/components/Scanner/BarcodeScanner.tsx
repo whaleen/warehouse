@@ -104,10 +104,9 @@ export function BarcodeScanner({ onScan, onClose, inventoryType }: BarcodeScanne
   };
 
   return (
-    <div className="fixed inset-0 bg-black z-50">
-      {/* Header */}
-      <div className="absolute top-0 left-0 right-0 bg-gradient-to-b from-black/80 to-transparent z-10 p-4">
-        <div className="flex items-center justify-between text-white">
+    <div className="fixed inset-0 z-50 bg-black text-white flex flex-col overflow-y-auto overscroll-contain">
+      <div className="px-4 pt-4 pb-3 bg-gradient-to-b from-black/80 to-transparent">
+        <div className="flex items-center justify-between">
           <Button
             variant="ghost"
             size="icon"
@@ -128,38 +127,40 @@ export function BarcodeScanner({ onScan, onClose, inventoryType }: BarcodeScanne
         </div>
       </div>
 
-      {/* Size Selection Tabs */}
       {!manualEntry && (
-        <div className="absolute top-20 left-0 right-0 z-10 flex justify-center px-4">
-          <Tabs value={scanSize} onValueChange={(value) => handleScanSizeChange(value as ScanSize)}>
-            <TabsList className="bg-black/60 backdrop-blur-sm">
-              {(Object.keys(SCAN_SIZES) as ScanSize[]).map((size) => (
-                <TabsTrigger
-                  key={size}
-                  value={size}
-                  className="text-white data-[state=active]:bg-white/20 data-[state=active]:text-white"
-                >
-                  {SCAN_SIZES[size].label}
-                </TabsTrigger>
-              ))}
-            </TabsList>
-          </Tabs>
-        </div>
-      )}
+        <div className="flex-1 flex flex-col items-center justify-center gap-4 px-4 pb-6">
+          <div className="hidden sm:flex">
+            <Tabs value={scanSize} onValueChange={(value) => handleScanSizeChange(value as ScanSize)}>
+              <TabsList className="bg-black/60 backdrop-blur-sm">
+                {(Object.keys(SCAN_SIZES) as ScanSize[]).map((size) => (
+                  <TabsTrigger
+                    key={size}
+                    value={size}
+                    className="text-white data-[state=active]:bg-white/20 data-[state=active]:text-white"
+                  >
+                    {SCAN_SIZES[size].label}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+            </Tabs>
+          </div>
 
-      {/* Scanner Region */}
-      {!manualEntry && (
-        <div className="flex items-center justify-center h-full">
           <div id="barcode-scanner-region" ref={scannerRef} className="w-full max-w-md" />
+
+          <div className="text-center text-white/90">
+            <p className="text-sm">Point camera at barcode on label</p>
+            <p className="hidden sm:block text-xs text-white/70 mt-1">
+              Scanning: Serial, CSO, or Model Number
+            </p>
+          </div>
         </div>
       )}
 
-      {/* Manual Entry */}
       {manualEntry && (
-        <div className="flex flex-col items-center justify-center h-full p-6">
-          <div className="bg-background rounded-lg p-6 w-full max-w-md space-y-4">
-            <h3 className="text-lg font-semibold text-gray-900">Manual Entry</h3>
-            <p className="text-sm text-gray-600">
+        <div className="flex-1 flex items-start justify-center px-4 pb-6">
+          <div className="bg-background text-foreground rounded-lg p-6 w-full max-w-md space-y-4">
+            <h3 className="text-lg font-semibold">Manual Entry</h3>
+            <p className="text-sm text-muted-foreground">
               Enter the barcode value manually if the camera cannot scan it.
             </p>
             <Input
@@ -188,16 +189,6 @@ export function BarcodeScanner({ onScan, onClose, inventoryType }: BarcodeScanne
               </Button>
             </div>
           </div>
-        </div>
-      )}
-
-      {/* Instructions */}
-      {!manualEntry && (
-        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-6 text-center text-white">
-          <p className="text-sm">Point camera at barcode on label</p>
-          <p className="text-xs text-white/70 mt-2">
-            Scanning: Serial, CSO, or Model Number
-          </p>
         </div>
       )}
     </div>

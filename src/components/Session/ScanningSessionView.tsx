@@ -400,9 +400,9 @@ export function ScanningSessionView({ sessionId, onExit }: ScanningSessionViewPr
   const remainingCount = Math.max(progress.total - progress.scanned, 0);
 
   return (
-    <div className="min-h-screen bg-muted/30">
-      <div className="bg-background/95 border-b sticky top-0 z-10 backdrop-blur">
-        <PageContainer className="py-4 space-y-4">
+    <div className="min-h-svh bg-muted/30 flex flex-col">
+      <div className="bg-background/95 border-b sticky top-0 z-10 backdrop-blur shrink-0">
+        <PageContainer className="py-3 sm:py-4 space-y-3 sm:space-y-4">
           <div className="flex flex-wrap items-center gap-3">
             <Button variant="ghost" size="icon" onClick={handleExit}>
               <ArrowLeft className="h-5 w-5" />
@@ -424,14 +424,19 @@ export function ScanningSessionView({ sessionId, onExit }: ScanningSessionViewPr
               </p>
             </div>
             {session.status !== 'closed' && (
-              <Button variant="outline" size="responsive" onClick={() => setManualDialogOpen(true)}>
+              <Button
+                variant="outline"
+                size="responsive"
+                onClick={() => setManualDialogOpen(true)}
+                className="hidden sm:inline-flex"
+              >
                 <ListPlus className="h-4 w-4 mr-1" />
                 Manual Mark
               </Button>
             )}
           </div>
 
-          <div className="grid gap-3 sm:grid-cols-3">
+          <div className="hidden sm:grid gap-3 sm:grid-cols-3">
             <Card className="p-3 space-y-2">
               <div className="text-xs uppercase tracking-wide text-muted-foreground">Progress</div>
               <div className="text-2xl font-semibold text-foreground">{Math.round(progress.percentage)}%</div>
@@ -450,6 +455,20 @@ export function ScanningSessionView({ sessionId, onExit }: ScanningSessionViewPr
               <div className="text-2xl font-semibold text-foreground">{progress.scanned}</div>
               <div className="text-xs text-muted-foreground">items confirmed</div>
             </Card>
+          </div>
+
+          <div className="sm:hidden flex items-center gap-3">
+            <div className="flex-1 space-y-2">
+              <div className="flex items-center justify-between text-xs text-muted-foreground">
+                <span className="uppercase tracking-wide">Progress</span>
+                <span>{progress.scanned}/{progress.total}</span>
+              </div>
+              <Progress value={progress.percentage} className="h-1.5" />
+            </div>
+            <div className="text-right">
+              <div className="text-lg font-semibold text-foreground">{remainingCount}</div>
+              <div className="text-xs text-muted-foreground">remaining</div>
+            </div>
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
@@ -473,52 +492,53 @@ export function ScanningSessionView({ sessionId, onExit }: ScanningSessionViewPr
         </PageContainer>
       </div>
 
-      {session.status === 'closed' && (
-        <PageContainer className="pt-4">
-          <Alert>
-            <AlertDescription>
-              This session is closed. Scanning is disabled.
-            </AlertDescription>
-          </Alert>
-        </PageContainer>
-      )}
-
-      {alert && (
-        <PageContainer className="pt-4">
-          <Alert variant={alert.type === 'error' ? 'destructive' : 'default'}>
-            <AlertDescription>{alert.message}</AlertDescription>
-          </Alert>
-        </PageContainer>
-      )}
-
-      <PageContainer className="py-6 pb-32 space-y-6">
-        {(itemTab === 'pending' || itemTab === 'all') && (
-          <div className="space-y-3">
-            {itemTab === 'all' && (
-              <div className="flex items-center justify-between text-xs text-muted-foreground">
-                <span className="uppercase tracking-wide">Pending Items</span>
-                <span>{filteredPending.length} shown</span>
-              </div>
-            )}
-            {filteredPending.length === 0 ? (
-              <Card className="p-4 text-sm text-muted-foreground">No pending items found.</Card>
-            ) : (
-              <div className="space-y-2">
-                {filteredPending.map(item => (
-                  <InventoryItemCard
-                    key={item.id}
-                    item={item}
-                    leading={<Circle className="h-5 w-5 text-muted-foreground/70" />}
-                    variant="pending"
-                    showInventoryTypeBadge={false}
-                    showProductMeta={false}
-                    routeValue={item.route_id ?? item.sub_inventory}
-                  />
-                ))}
-              </div>
-            )}
-          </div>
+      <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain">
+        {session.status === 'closed' && (
+          <PageContainer className="pt-4">
+            <Alert>
+              <AlertDescription>
+                This session is closed. Scanning is disabled.
+              </AlertDescription>
+            </Alert>
+          </PageContainer>
         )}
+
+        {alert && (
+          <PageContainer className="pt-4">
+            <Alert variant={alert.type === 'error' ? 'destructive' : 'default'}>
+              <AlertDescription>{alert.message}</AlertDescription>
+            </Alert>
+          </PageContainer>
+        )}
+
+        <PageContainer className="py-4 sm:py-6 pb-[calc(8rem+env(safe-area-inset-bottom))] space-y-6">
+          {(itemTab === 'pending' || itemTab === 'all') && (
+            <div className="space-y-3">
+              {itemTab === 'all' && (
+                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                  <span className="uppercase tracking-wide">Pending Items</span>
+                  <span>{filteredPending.length} shown</span>
+                </div>
+              )}
+              {filteredPending.length === 0 ? (
+                <Card className="p-4 text-sm text-muted-foreground">No pending items found.</Card>
+              ) : (
+                <div className="space-y-2">
+                  {filteredPending.map(item => (
+                    <InventoryItemCard
+                      key={item.id}
+                      item={item}
+                      leading={<Circle className="h-5 w-5 text-muted-foreground/70" />}
+                      variant="pending"
+                      showInventoryTypeBadge={false}
+                      showProductMeta={false}
+                      routeValue={item.route_id ?? item.sub_inventory}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
 
         {(itemTab === 'scanned' || itemTab === 'all') && (
           <div className="space-y-3">
@@ -548,27 +568,28 @@ export function ScanningSessionView({ sessionId, onExit }: ScanningSessionViewPr
           </div>
         )}
 
-        {progress.scanned === progress.total && progress.total > 0 && (
-          <Card className="p-6 bg-emerald-500/10 border-emerald-500/30 text-center">
-            <CheckCircle2 className="h-12 w-12 text-emerald-600 mx-auto mb-3" />
-            <h3 className="text-lg font-semibold text-foreground mb-2">
-              Session Complete!
-            </h3>
-            <p className="text-sm text-muted-foreground mb-4">
-              All {progress.total} items have been scanned
-            </p>
-            <div className="flex items-center justify-center gap-2">
-              <Button onClick={handleExit} variant="outline">Exit Session</Button>
-              <Button onClick={() => setCloseDialogOpen(true)} disabled={session.status === 'closed'}>
-                Close Session
-              </Button>
-            </div>
-          </Card>
-        )}
-      </PageContainer>
+          {progress.scanned === progress.total && progress.total > 0 && (
+            <Card className="p-6 bg-emerald-500/10 border-emerald-500/30 text-center">
+              <CheckCircle2 className="h-12 w-12 text-emerald-600 mx-auto mb-3" />
+              <h3 className="text-lg font-semibold text-foreground mb-2">
+                Session Complete!
+              </h3>
+              <p className="text-sm text-muted-foreground mb-4">
+                All {progress.total} items have been scanned
+              </p>
+              <div className="flex items-center justify-center gap-2">
+                <Button onClick={handleExit} variant="outline">Exit Session</Button>
+                <Button onClick={() => setCloseDialogOpen(true)} disabled={session.status === 'closed'}>
+                  Close Session
+                </Button>
+              </div>
+            </Card>
+          )}
+        </PageContainer>
+      </div>
 
       {session.status !== 'closed' && (
-        <div className="fixed bottom-0 left-0 right-0 border-t bg-background/95 backdrop-blur">
+        <div className="fixed bottom-0 left-0 right-0 border-t bg-background/95 backdrop-blur pb-[env(safe-area-inset-bottom)]">
           <PageContainer className="py-3 flex flex-col gap-2 sm:flex-row sm:items-center">
             <Button
               variant="outline"
