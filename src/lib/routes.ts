@@ -16,6 +16,7 @@ export type AppView =
   | 'settings-users'
   | 'settings-profile'
   | 'settings-displays'
+  | 'settings-gesync'
   | 'loads'
   | 'activity'
   | 'create-session'
@@ -81,6 +82,8 @@ export function getPathForView(view: AppView, sessionId?: string | null, display
       return '/settings/profile';
     case 'settings-displays':
       return '/settings/displays';
+    case 'settings-gesync':
+      return '/settings/gesync';
     default:
       return '/app';
   }
@@ -139,6 +142,8 @@ export function parseRoute(pathname: string): RouteState {
           return { view: 'settings-profile' };
         case 'displays':
           return { view: 'settings-displays' };
+        case 'gesync':
+          return { view: 'settings-gesync' };
         case 'locations':
         case undefined:
           return { view: 'settings-locations' };

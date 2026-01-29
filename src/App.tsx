@@ -19,6 +19,7 @@ const InventoryView = lazy(() => import("./components/Inventory/InventoryView").
 const PartsView = lazy(() => import("./components/Parts/PartsView").then(m => ({ default: m.PartsView })));
 const DashboardView = lazy(() => import("./components/Dashboard/DashboardView").then(m => ({ default: m.DashboardView })));
 const SettingsView = lazy(() => import("./components/Settings/SettingsView").then(m => ({ default: m.SettingsView })));
+const GESyncView = lazy(() => import("./components/Settings/GESyncView").then(m => ({ default: m.GESyncView })));
 const FloorDisplayView = lazy(() => import("@/components/FloorDisplay/FloorDisplayView").then(m => ({ default: m.FloorDisplayView })));
 const LandingPage = lazy(() => import("@/components/Marketing/LandingPage").then(m => ({ default: m.LandingPage })));
 const PricingPage = lazy(() => import("@/components/Marketing/PricingPage").then(m => ({ default: m.PricingPage })));
@@ -72,6 +73,7 @@ function App() {
         'settings-displays-list',
         'settings-displays-settings',
         'settings-profile',
+        'settings-gesync',
         'loads',
         'activity',
         'create-session',
@@ -350,6 +352,9 @@ function App() {
                   )}
                   {currentView === "settings-displays" && (
                     <SettingsView section="displays" />
+                  )}
+                  {currentView === "settings-gesync" && (
+                    <GESyncView />
                   )}
                 </PageTransition>
               </Suspense>

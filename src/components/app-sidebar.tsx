@@ -284,6 +284,13 @@ export function AppSidebar({ currentView, onViewChange, ...props }: AppSidebarPr
             applyParams: clearPartsParams,
             isActive: (currentView) => currentView === "settings-displays",
           },
+          {
+            label: "GE Sync",
+            icon: Database,
+            view: "settings-gesync",
+            applyParams: clearPartsParams,
+            isActive: (currentView) => currentView === "settings-gesync",
+          },
         ],
       },
     ],
