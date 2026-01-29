@@ -8,7 +8,13 @@
     "build": "doppler run -- tsc -b && vite build",
     "build:prod": "tsc -b && vite build",
     "preview": "doppler run -- vite preview",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "*.{ts,tsx}": [
+      "eslint --fix"
+    ]
   },
   "dependencies": {
     "@radix-ui/react-avatar": "^1.1.11",
@@ -60,6 +66,8 @@
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.22",
     "globals": "^16.4.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.2.7",
     "playwright": "^1.57.0",
     "terser": "^5.46.0",
     "tsx": "^4.20.6",
