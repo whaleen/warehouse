@@ -103,9 +103,11 @@ export interface SyncStats {
 
 export interface SyncResult {
   success: boolean;
+  message?: string;
   stats: SyncStats;
+  changes?: GEChange[];
   error?: string;
-  duration: number;
+  duration?: number;
 }
 
 export interface AuthStatus {

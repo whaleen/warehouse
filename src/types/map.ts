@@ -1,24 +1,14 @@
 /**
- * Map Types - Fog of War positioning system
+ * Map Types
  */
-
-export interface GenesisPoint {
-  id: string;
-  location_id: string;
-  genesis_lat: number;
-  genesis_lng: number;
-  genesis_scan_id: string | null;
-  established_at: string;
-  established_by: string | null;
-}
 
 export interface Beacon {
   id: string;
   company_id: string;
   location_id: string;
   name: string; // e.g., "VELVET-HAMMER"
-  position_x: number; // meters from genesis
-  position_y: number; // meters from genesis
+  position_x: number;
+  position_y: number;
   icon?: string | null; // Lucide icon name
   created_at: string;
 }
@@ -32,8 +22,8 @@ export interface ProductLocationHistory {
   product_id: string | null;
   inventory_item_id: string | null;
   scanning_session_id: string | null;
-  position_x: number; // meters from genesis
-  position_y: number; // meters from genesis
+  position_x: number;
+  position_y: number;
   position_source: PositionSource;
   beacon_id: string | null;
   raw_lat: number | null; // original GPS latitude
@@ -51,11 +41,6 @@ export interface RawGPSPosition {
   accuracy: number; // meters
 }
 
-export interface RelativePosition {
-  x: number; // meters from genesis
-  y: number; // meters from genesis
-}
-
 /**
  * Product location with load color for map visualization
  */
@@ -63,6 +48,10 @@ export interface ProductLocationForMap {
   id: string;
   position_x: number;
   position_y: number;
+  raw_lat: number | null;
+  raw_lng: number | null;
+  image_url?: string | null;
+  load_item_count?: number | null;
   product_type: string | null;
   model?: string | null;
   serial?: string | null;

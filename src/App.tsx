@@ -300,7 +300,7 @@ function App() {
           <SidebarInset className="bg-muted/40">
             <div className="flex min-h-screen flex-col min-w-0">
               <Suspense fallback={null}>
-                <PageTransition>
+                <PageTransition className="flex-1 min-h-0">
                   {currentView === "dashboard" && (
                     <DashboardView
                       onViewChange={handleViewChange}

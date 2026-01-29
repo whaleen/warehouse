@@ -1,125 +1,14 @@
 /**
  * Map Manager - Fog of War positioning system
  *
- * Handles GPS positioning with genesis point relative coordinates.
- * First scan establishes coordinate origin (0,0) for the location.
- * Subsequent scans are positioned relative to genesis.
+ * Handles GPS positioning and map data access.
+ * Stores raw GPS coordinates for map visualization.
  */
 
 import supabase from './supabase';
 import { getActiveLocationContext } from './tenant';
-import type {
-  GenesisPoint,
-  RawGPSPosition,
-  RelativePosition,
-  ProductLocationHistory,
-  ProductLocationForMap,
-} from '@/types/map';
+import type { RawGPSPosition, ProductLocationHistory, ProductLocationForMap } from '@/types/map';
 import { getLoadColorByName } from './loadColors';
-
-/**
- * Convert GPS coordinates to relative x,y from genesis point
- * Uses Haversine formula for distance, bearing for direction
- *
- * @returns x,y coordinates in meters from genesis point
- */
-function gpsToRelative(
-  lat: number,
-  lng: number,
-  genesisLat: number,
-  genesisLng: number
-): RelativePosition {
-  const R = 6371000; // Earth radius in meters
-
-  const φ1 = (genesisLat * Math.PI) / 180;
-  const φ2 = (lat * Math.PI) / 180;
-  const Δφ = ((lat - genesisLat) * Math.PI) / 180;
-  const Δλ = ((lng - genesisLng) * Math.PI) / 180;
-
-  // Calculate bearing (direction from genesis to point)
-  const y = Math.sin(Δλ) * Math.cos(φ2);
-  const x = Math.cos(φ1) * Math.sin(φ2) - Math.sin(φ1) * Math.cos(φ2) * Math.cos(Δλ);
-  const bearing = Math.atan2(y, x);
-
-  // Calculate distance using Haversine
-  const a =
-    Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
-    Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  const distance = R * c;
-
-  // Convert polar (distance, bearing) to cartesian (x, y)
-  const relX = distance * Math.sin(bearing);
-  const relY = distance * Math.cos(bearing);
-
-  return { x: relX, y: relY };
-}
-
-/**
- * Get genesis point for current location
- */
-export async function getGenesisPoint(): Promise<{
-  data: GenesisPoint | null;
-  error: any;
-}> {
-  const { locationId } = getActiveLocationContext();
-
-  const { data, error } = await supabase
-    .from('location_genesis_points')
-    .select('*')
-    .eq('location_id', locationId)
-    .maybeSingle();
-
-  return { data: data as GenesisPoint | null, error };
-}
-
-/**
- * Create genesis point for location (first scan)
- */
-export async function createGenesisPoint(
-  firstScanLat: number,
-  firstScanLng: number,
-  establishedBy?: string
-): Promise<{ data: GenesisPoint | null; error: any }> {
-  const { locationId } = getActiveLocationContext();
-
-  const { data, error } = await supabase
-    .from('location_genesis_points')
-    .insert({
-      location_id: locationId,
-      genesis_lat: firstScanLat,
-      genesis_lng: firstScanLng,
-      established_by: establishedBy ?? null,
-    })
-    .select()
-    .single();
-
-  return { data: data as GenesisPoint | null, error };
-}
-
-/**
- * Get or create genesis point (handles first scan automatically)
- */
-export async function getOrCreateGenesisPoint(
-  firstScanLat: number,
-  firstScanLng: number,
-  establishedBy?: string
-): Promise<{ data: GenesisPoint | null; error: any }> {
-  // Check if genesis exists
-  const { data: existing, error: fetchError } = await getGenesisPoint();
-
-  if (fetchError && fetchError.code !== 'PGRST116') {
-    // PGRST116 is "not found" - that's expected for first scan
-    return { data: null, error: fetchError };
-  }
-
-  if (existing) {
-    return { data: existing, error: null };
-  }
-
-  // Create new genesis point
-  return await createGenesisPoint(firstScanLat, firstScanLng, establishedBy);
-}
 
 /**
  * Capture current GPS position from device
@@ -165,7 +54,6 @@ export async function getCurrentPosition(): Promise<RawGPSPosition | null> {
 
 /**
  * Log product location during scan
- * Automatically handles genesis point creation and relative positioning
  *
  * Note: inventory_item_id is optional since session items are snapshots
  * and may not have valid FK references to inventory_items table.
@@ -181,33 +69,11 @@ export async function logProductLocation(input: {
   scanned_by?: string;
   product_type?: string;
   sub_inventory?: string;
-}): Promise<{ success: boolean; error?: any; isGenesisScan?: boolean }> {
+}): Promise<{ success: boolean; error?: any }> {
   const { locationId, companyId } = getActiveLocationContext();
 
-  // Get or establish genesis point
-  const { data: genesis, error: genesisError } = await getOrCreateGenesisPoint(
-    input.raw_lat,
-    input.raw_lng,
-    input.scanned_by
-  );
-
-  if (genesisError || !genesis) {
-    return { success: false, error: genesisError };
-  }
-
-  const isGenesisScan =
-    genesis.genesis_lat === input.raw_lat && genesis.genesis_lng === input.raw_lng;
-
-  // Calculate relative position from genesis
-  const { x, y } = gpsToRelative(
-    input.raw_lat,
-    input.raw_lng,
-    genesis.genesis_lat,
-    genesis.genesis_lng
-  );
-
   // Insert location record
-  const { data: locationRecord, error } = await supabase
+  const { error } = await supabase
     .from('product_location_history')
     .insert({
       company_id: companyId,
@@ -215,8 +81,8 @@ export async function logProductLocation(input: {
       product_id: input.product_id ?? null,
       inventory_item_id: input.inventory_item_id ?? null,
       scanning_session_id: input.scanning_session_id,
-      position_x: x,
-      position_y: y,
+      position_x: 0,
+      position_y: 0,
       position_source: 'gps',
       raw_lat: input.raw_lat,
       raw_lng: input.raw_lng,
@@ -224,19 +90,9 @@ export async function logProductLocation(input: {
       scanned_by: input.scanned_by ?? null,
       product_type: input.product_type ?? null,
       sub_inventory: input.sub_inventory ?? null,
-    })
-    .select()
-    .single();
+    });
 
-  // Update genesis point with genesis_scan_id if this is the first scan
-  if (isGenesisScan && !genesis.genesis_scan_id && locationRecord) {
-    await supabase
-      .from('location_genesis_points')
-      .update({ genesis_scan_id: locationRecord.id })
-      .eq('id', genesis.id);
-  }
-
-  return { success: !error, error, isGenesisScan };
+  return { success: !error, error };
 }
 
 /**
@@ -251,7 +107,7 @@ export async function getProductLocations(): Promise<{
 
   const { data, error } = await supabase
     .from('product_location_history')
-    .select('id, position_x, position_y, accuracy, created_at, product_type, sub_inventory, inventory_item_id, product_id')
+    .select('id, position_x, position_y, raw_lat, raw_lng, accuracy, created_at, product_type, sub_inventory, inventory_item_id, product_id')
     .eq('location_id', locationId)
     .order('created_at', { ascending: false });
 
@@ -267,30 +123,82 @@ export async function getProductLocations(): Promise<{
     new Set((data as ProductLocationHistory[]).map((item) => item.product_id).filter(Boolean))
   ) as string[];
 
-  const inventoryItemById = new Map<string, { model: string | null; serial: string | null; product_type: string | null }>();
+  const inventoryItemById = new Map<
+    string,
+    {
+      model: string | null;
+      serial: string | null;
+      product_type: string | null;
+      product_fk: string | null;
+    }
+  >();
   if (inventoryItemIds.length > 0) {
     const { data: inventoryItems, error: inventoryError } = await supabase
       .from('inventory_items')
-      .select('id, model, serial, product_type')
+      .select('id, model, serial, product_type, product_fk')
       .in('id', inventoryItemIds);
 
     if (!inventoryError && inventoryItems) {
-      for (const item of inventoryItems as { id: string; model: string | null; serial: string | null; product_type: string | null }[]) {
+      for (const item of inventoryItems as {
+        id: string;
+        model: string | null;
+        serial: string | null;
+        product_type: string | null;
+        product_fk: string | null;
+      }[]) {
         inventoryItemById.set(item.id, item);
       }
     }
   }
 
-  const productById = new Map<string, { model: string | null; product_type: string | null }>();
-  if (productIds.length > 0) {
+  const productById = new Map<string, { model: string | null; product_type: string | null; image_url: string | null }>();
+  const productByModel = new Map<string, { id: string; model: string | null; product_type: string | null; image_url: string | null }>();
+
+  const productIdsFromInventory = Array.from(
+    new Set(
+      (Array.from(inventoryItemById.values()).map((item) => item.product_fk).filter(Boolean)) as string[]
+    )
+  );
+
+  const allProductIds = Array.from(new Set([...productIds, ...productIdsFromInventory]));
+  if (allProductIds.length > 0) {
     const { data: products, error: productError } = await supabase
       .from('products')
-      .select('id, model, product_type')
-      .in('id', productIds);
+      .select('id, model, product_type, image_url')
+      .in('id', allProductIds);
 
     if (!productError && products) {
-      for (const product of products as { id: string; model: string | null; product_type: string | null }[]) {
+      for (const product of products as { id: string; model: string | null; product_type: string | null; image_url: string | null }[]) {
         productById.set(product.id, product);
+        if (product.model) {
+          productByModel.set(product.model, product);
+        }
+      }
+    }
+  }
+
+  const modelsFromInventory = Array.from(
+    new Set(
+      (Array.from(inventoryItemById.values())
+        .map((item) => item.model)
+        .filter((model): model is string => Boolean(model)))
+    )
+  );
+
+  if (modelsFromInventory.length > 0) {
+    const { data: productsByModel, error: productsByModelError } = await supabase
+      .from('products')
+      .select('id, model, product_type, image_url')
+      .in('model', modelsFromInventory);
+
+    if (!productsByModelError && productsByModel) {
+      for (const product of productsByModel as { id: string; model: string | null; product_type: string | null; image_url: string | null }[]) {
+        if (!productById.has(product.id)) {
+          productById.set(product.id, product);
+        }
+        if (product.model) {
+          productByModel.set(product.model, product);
+        }
       }
     }
   }
@@ -303,6 +211,22 @@ export async function getProductLocations(): Promise<{
         .filter((name): name is string => name != null)
     )
   );
+
+  const loadItemCounts = new Map<string, number>();
+  if (loadNames.length > 0) {
+    const { data: loadItems, error: loadItemsError } = await supabase
+      .from('inventory_items')
+      .select('sub_inventory')
+      .eq('location_id', locationId)
+      .in('sub_inventory', loadNames);
+
+    if (!loadItemsError && loadItems) {
+      for (const item of loadItems as { sub_inventory: string | null }[]) {
+        if (!item.sub_inventory) continue;
+        loadItemCounts.set(item.sub_inventory, (loadItemCounts.get(item.sub_inventory) ?? 0) + 1);
+      }
+    }
+  }
 
   const loadMetadataByName = new Map<string, { friendly_name: string | null }>();
   if (loadNames.length > 0) {
@@ -326,15 +250,24 @@ export async function getProductLocations(): Promise<{
       ? loadMetadataByName.get(item.sub_inventory)?.friendly_name ?? null
       : null;
     const inventoryItem = item.inventory_item_id ? inventoryItemById.get(item.inventory_item_id) : undefined;
-    const product = item.product_id ? productById.get(item.product_id) : undefined;
+    const resolvedProductId = item.product_id ?? inventoryItem?.product_fk ?? null;
+    const product =
+      (resolvedProductId ? productById.get(resolvedProductId) : undefined) ??
+      (inventoryItem?.model ? productByModel.get(inventoryItem.model) : undefined);
     const model = inventoryItem?.model ?? product?.model ?? null;
     const serial = inventoryItem?.serial ?? null;
     const productType = item.product_type ?? inventoryItem?.product_type ?? product?.product_type ?? null;
+    const imageUrl = product?.image_url ?? null;
+    const loadItemCount = item.sub_inventory ? loadItemCounts.get(item.sub_inventory) ?? null : null;
 
     return {
       id: item.id,
       position_x: item.position_x,
       position_y: item.position_y,
+      raw_lat: item.raw_lat != null ? Number(item.raw_lat) : null,
+      raw_lng: item.raw_lng != null ? Number(item.raw_lng) : null,
+      image_url: imageUrl,
+      load_item_count: loadItemCount,
       product_type: productType,
       model,
       serial,
@@ -347,6 +280,18 @@ export async function getProductLocations(): Promise<{
   });
 
   return { data: locationsWithColors, error: null };
+}
+
+export async function deleteProductLocation(locationId: string): Promise<{ error?: any }> {
+  const { locationId: activeLocationId } = getActiveLocationContext();
+
+  const { error } = await supabase
+    .from('product_location_history')
+    .delete()
+    .eq('id', locationId)
+    .eq('location_id', activeLocationId);
+
+  return { error };
 }
 
 /**

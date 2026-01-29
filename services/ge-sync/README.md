@@ -18,6 +18,8 @@ Frontend (Netlify)
 │  │ - /auth/status              │ │
 │  │ - /auth/refresh             │ │
 │  │ - /sync/asis                │ │
+│  │ - /sync/fg                  │ │
+│  │ - /sync/sta                 │ │
 │  └─────────────────────────────┘ │
 │              │                   │
 │              ▼                   │
@@ -125,6 +127,74 @@ Response:
 Notes:
 - ASIS data is sourced from report history + per-load CSVs and merged with ERP inventory export.
 - CSO comes from report history (`ASISReportHistoryData.xls`).
+
+### `POST /sync/fg`
+Sync FG (Finished Goods) inventory from GE DMS.
+
+Request:
+```json
+{
+  "locationId": "uuid-of-location"
+}
+```
+
+Headers (optional):
+```
+X-API-Key: <API_KEY>
+```
+
+Response:
+```json
+{
+  "success": true,
+  "message": "FG sync completed successfully",
+  "stats": {
+    "totalGEItems": 250,
+    "newItems": 12,
+    "updatedItems": 238,
+    "changesLogged": 18
+  },
+  "changes": [...]
+}
+```
+
+Notes:
+- FG data is sourced from ERP master inventory export only (no load lists).
+- Simpler sync than ASIS - just a snapshot of current finished goods inventory.
+
+### `POST /sync/sta`
+Sync STA (Staged) inventory from GE DMS.
+
+Request:
+```json
+{
+  "locationId": "uuid-of-location"
+}
+```
+
+Headers (optional):
+```
+X-API-Key: <API_KEY>
+```
+
+Response:
+```json
+{
+  "success": true,
+  "message": "STA sync completed successfully",
+  "stats": {
+    "totalGEItems": 180,
+    "newItems": 8,
+    "updatedItems": 172,
+    "changesLogged": 12
+  },
+  "changes": [...]
+}
+```
+
+Notes:
+- STA data is sourced from ERP master inventory export only (no load lists).
+- Tracks items staged for delivery or pickup.
 
 ## Scaling Notes (for beta+)
 

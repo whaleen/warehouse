@@ -1,0 +1,364 @@
+/**
+ * Warehouse Map - mapcn/MapLibre version
+ *
+ * Fog of war visualization using actual GPS coordinates.
+ * Blank canvas - markers themselves create the map.
+ */
+
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Map, MapMarker, MarkerContent, MarkerPopup, MapControls, type MapRef } from '@/components/ui/map';
+import { Button } from '@/components/ui/button';
+import { Globe, Package, Pencil, ScanLine, Trash2 } from 'lucide-react';
+import { Spinner } from '@/components/ui/spinner';
+import { useDeleteProductLocation } from '@/hooks/queries/useMap';
+import type { ProductLocationForMap } from '@/types/map';
+import { useTheme } from '@/components/theme-provider';
+import { blankMapStyle } from './BlankMapStyle';
+
+interface WarehouseMapNewProps {
+  locations: ProductLocationForMap[];
+}
+
+const WORLD_MAP_STORAGE_KEY = 'warehouse.map.showWorldMap';
+const VIEW_STATE_STORAGE_KEY = 'warehouse.map.viewState';
+
+type SavedViewState = {
+  center: [number, number];
+  zoom: number;
+  bearing?: number;
+  pitch?: number;
+};
+
+export function WarehouseMapNew({ locations }: WarehouseMapNewProps) {
+  const [mapInstance, setMapInstance] = useState<MapRef | null>(null);
+  const [showWorldMap, setShowWorldMap] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return window.localStorage.getItem(WORLD_MAP_STORAGE_KEY) === 'true';
+  });
+  const savedView = useMemo<SavedViewState | null>(() => {
+    if (typeof window === 'undefined') return null;
+    const raw = window.localStorage.getItem(VIEW_STATE_STORAGE_KEY);
+    if (!raw) return null;
+    try {
+      const parsed = JSON.parse(raw) as SavedViewState;
+      if (!parsed?.center || typeof parsed.zoom !== 'number') return null;
+      return parsed;
+    } catch {
+      return null;
+    }
+  }, []);
+  const savedViewRef = useRef<SavedViewState | null>(savedView);
+  const hasSavedViewRef = useRef(Boolean(savedView));
+  const hasFitRef = useRef(false);
+  const deleteLocation = useDeleteProductLocation();
+  const { theme } = useTheme();
+  const isDark = theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+
+  // Calculate center point from all locations
+  const { center } = useMemo(() => {
+    if (locations.length === 0) {
+      return {
+        center: [-122.4194, 37.7749] as [number, number], // Default to SF
+      };
+    }
+
+    // Find center by averaging all coordinates
+    const lats = locations.map(l => l.raw_lat).filter(Boolean) as number[];
+    const lngs = locations.map(l => l.raw_lng).filter(Boolean) as number[];
+
+    if (lats.length === 0 || lngs.length === 0) {
+      return {
+        center: [-122.4194, 37.7749] as [number, number],
+      };
+    }
+
+    const centerLat = lats.reduce((sum, lat) => sum + lat, 0) / lats.length;
+    const centerLng = lngs.reduce((sum, lng) => sum + lng, 0) / lngs.length;
+
+    return {
+      center: [centerLng, centerLat] as [number, number],
+    };
+  }, [locations]);
+
+  // Filter locations with valid GPS coordinates
+  const validLocations = useMemo(() => {
+    return locations.filter(l => l.raw_lat != null && l.raw_lng != null);
+  }, [locations]);
+
+  const mapStyles = useMemo(
+    () => ({
+      light: blankMapStyle(false),
+      dark: blankMapStyle(true),
+    }),
+    []
+  );
+
+  useEffect(() => {
+    const map = mapInstance;
+    if (!map || validLocations.length === 0) return;
+    if (hasFitRef.current) return;
+    if (hasSavedViewRef.current) return;
+
+    if (validLocations.length === 1) {
+      const only = validLocations[0];
+      map.flyTo({
+        center: [only.raw_lng as number, only.raw_lat as number],
+        zoom: 18,
+        duration: 0,
+      });
+      return;
+    }
+
+    const bounds = validLocations.reduce(
+      (acc, loc) => {
+        const lat = loc.raw_lat as number;
+        const lng = loc.raw_lng as number;
+        return {
+          minLat: Math.min(acc.minLat, lat),
+          maxLat: Math.max(acc.maxLat, lat),
+          minLng: Math.min(acc.minLng, lng),
+          maxLng: Math.max(acc.maxLng, lng),
+        };
+      },
+      {
+        minLat: validLocations[0].raw_lat as number,
+        maxLat: validLocations[0].raw_lat as number,
+        minLng: validLocations[0].raw_lng as number,
+        maxLng: validLocations[0].raw_lng as number,
+      }
+    );
+
+    map.fitBounds(
+      [
+        [bounds.minLng, bounds.minLat],
+        [bounds.maxLng, bounds.maxLat],
+      ],
+      { padding: 48, maxZoom: 19, duration: 0 }
+    );
+    hasFitRef.current = true;
+  }, [validLocations]);
+
+  useEffect(() => {
+    if (validLocations.length === 0) {
+      hasFitRef.current = false;
+    }
+  }, [validLocations.length]);
+
+  const handleMapRef = useCallback((instance: MapRef | null) => {
+    setMapInstance(instance);
+  }, []);
+
+  useEffect(() => {
+    const map = mapInstance;
+    if (!map || typeof window === 'undefined') return;
+
+    const applySavedView = () => {
+      const parsed = savedViewRef.current;
+      if (!parsed) return;
+      map.jumpTo({
+        center: parsed.center,
+        zoom: parsed.zoom,
+        bearing: parsed.bearing ?? 0,
+        pitch: parsed.pitch ?? 0,
+      });
+      hasSavedViewRef.current = true;
+    };
+
+    if (savedViewRef.current) {
+      if (map.isStyleLoaded()) {
+        applySavedView();
+      } else {
+        map.once('load', applySavedView);
+      }
+    }
+
+    const handleMoveEnd = () => {
+      const center = map.getCenter();
+      const viewState = {
+        center: [center.lng, center.lat] as [number, number],
+        zoom: map.getZoom(),
+        bearing: map.getBearing(),
+        pitch: map.getPitch(),
+      };
+      window.localStorage.setItem(VIEW_STATE_STORAGE_KEY, JSON.stringify(viewState));
+      hasSavedViewRef.current = true;
+    };
+
+    map.on('moveend', handleMoveEnd);
+
+    return () => {
+      map.off('moveend', handleMoveEnd);
+    };
+  }, [mapInstance]);
+
+  return (
+    <div className="relative w-full h-full">
+      <Map
+        ref={handleMapRef}
+        center={center}
+        zoom={19} // Start very zoomed in for warehouse-level detail
+        minZoom={10} // Allow zooming out to see context
+        maxZoom={24} // Allow extreme zoom for precision
+        styles={showWorldMap ? undefined : mapStyles}
+      >
+        <MapControls position="top-right" showZoom />
+        {validLocations.map((location) => (
+          <MapMarker
+            key={location.id}
+            longitude={location.raw_lng!}
+            latitude={location.raw_lat!}
+          >
+            <MarkerContent>
+              <div
+                className="size-3 rounded-sm shadow-lg hover:scale-125 transition-transform cursor-pointer"
+                style={{ backgroundColor: location.load_color || '#94a3b8' }}
+              />
+            </MarkerContent>
+            <MarkerPopup className="p-3 min-w-[200px]">
+              <div className="space-y-2">
+                <div className="flex gap-3">
+                  <div className="h-14 w-14 shrink-0 overflow-hidden rounded-md bg-muted flex items-center justify-center">
+                    {location.image_url ? (
+                      <img
+                        src={location.image_url}
+                        alt={location.model || location.product_type || 'Product'}
+                        className="h-full w-full object-contain"
+                        loading="lazy"
+                      />
+                    ) : (
+                      <Package className="h-4 w-4 text-muted-foreground" />
+                    )}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="font-semibold text-sm">
+                      {location.model || location.product_type || 'Unknown'}
+                    </p>
+                    {location.serial && (
+                      <p className="text-xs text-muted-foreground">
+                        Serial: {location.serial}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {(location.sub_inventory || location.load_friendly_name) && (
+                  <div className="flex items-center gap-2 pt-1 border-t">
+                    <div
+                      className="size-2 rounded-sm shrink-0"
+                      style={{ backgroundColor: location.load_color || '#94a3b8' }}
+                    />
+                    <span className="text-xs font-medium">
+                      {location.load_friendly_name || location.sub_inventory}
+                    </span>
+                    {location.sub_inventory && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6"
+                        onClick={() => {
+                          const path = `/loads/${encodeURIComponent(location.sub_inventory)}`;
+                          const params = new URLSearchParams(window.location.search);
+                          params.set('from', 'map');
+                          const nextUrl = params.toString() ? `${path}?${params.toString()}` : path;
+                          window.history.replaceState({}, '', nextUrl);
+                          window.dispatchEvent(new Event('app:locationchange'));
+                        }}
+                        aria-label="Edit load"
+                      >
+                        <Pencil className="h-3 w-3" />
+                      </Button>
+                    )}
+                  </div>
+                )}
+
+                {location.created_at && (
+                  <p className="text-xs text-muted-foreground pt-1 border-t">
+                    Scanned: {new Date(location.created_at).toLocaleString()}
+                  </p>
+                )}
+
+                {location.sub_inventory && (
+                  <p className="text-xs text-muted-foreground">
+                    Load ID: {location.sub_inventory}
+                  </p>
+                )}
+
+                {location.sub_inventory && location.load_item_count != null && (
+                  <p className="text-xs text-muted-foreground">
+                    Load items: 1 / {location.load_item_count}
+                  </p>
+                )}
+
+                {location.accuracy && (
+                  <p className="text-xs text-muted-foreground">
+                    GPS ±{Math.round(location.accuracy * 3.28084)}ft
+                  </p>
+                )}
+
+                <div className="pt-2 border-t flex justify-end">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7"
+                    disabled={deleteLocation.isPending}
+                    onClick={() => {
+                      if (deleteLocation.isPending) return;
+                      deleteLocation.mutate(location.id);
+                    }}
+                    aria-label="Delete scan"
+                  >
+                    {deleteLocation.isPending ? (
+                      <Spinner size="sm" />
+                    ) : (
+                      <Trash2 className="h-4 w-4" />
+                    )}
+                  </Button>
+                </div>
+              </div>
+            </MarkerPopup>
+          </MapMarker>
+        ))}
+      </Map>
+
+      {/* Scans count overlay */}
+      <div className="absolute bottom-4 left-4 bg-card/95 backdrop-blur border border-border p-3 rounded-lg shadow-lg space-y-2">
+        <div>
+          <div className="text-xs text-muted-foreground">Inventory</div>
+          <div className="text-2xl font-bold">{validLocations.length}</div>
+          {validLocations.length !== locations.length && (
+            <div className="text-xs text-amber-500">
+              {locations.length - validLocations.length} without GPS
+            </div>
+          )}
+        </div>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className={showWorldMap ? '' : 'opacity-50'}
+          onClick={() => {
+            setShowWorldMap((prev) => {
+              const next = !prev;
+              if (typeof window !== 'undefined') {
+                window.localStorage.setItem(WORLD_MAP_STORAGE_KEY, String(next));
+              }
+              return next;
+            });
+          }}
+          aria-label="Toggle world map"
+        >
+          <Globe className="h-4 w-4" />
+        </Button>
+      </div>
+
+      <div className="absolute bottom-4 right-4">
+        <Button type="button" className="gap-2 shadow-lg">
+          <ScanLine className="h-4 w-4" />
+          Scan
+        </Button>
+      </div>
+    </div>
+  );
+}

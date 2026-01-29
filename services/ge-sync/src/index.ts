@@ -2,6 +2,7 @@ import 'dotenv/config';
 import express from 'express';
 import { getAuthStatus, refreshAuth } from './auth/playwright.js';
 import { syncASIS } from './sync/asis.js';
+import { syncSimpleInventory } from './sync/inventory.js';
 import type { SyncResult, AuthStatus } from './types/index.js';
 
 const app = express();
@@ -126,6 +127,92 @@ app.post('/sync/asis', async (req, res) => {
         pickedLoads: 0,
         changesLogged: 0,
       },
+    };
+
+    res.status(500).json(result);
+  }
+});
+
+// Sync FG (Finished Goods) data
+app.post('/sync/fg', async (req, res) => {
+  const startTime = Date.now();
+
+  try {
+    const { locationId } = req.body;
+
+    if (!locationId) {
+      return res.status(400).json({ error: 'locationId is required' });
+    }
+
+    console.log(`Starting FG sync for location: ${locationId}`);
+
+    const result: SyncResult = await syncSimpleInventory(locationId, 'FG');
+
+    console.log(`FG sync completed in ${Date.now() - startTime}ms`, result.stats);
+
+    res.json(result);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    console.error('FG sync failed:', message);
+
+    const result: SyncResult = {
+      success: false,
+      message: `FG sync failed: ${message}`,
+      stats: {
+        totalGEItems: 0,
+        itemsInLoads: 0,
+        unassignedItems: 0,
+        newItems: 0,
+        updatedItems: 0,
+        forSaleLoads: 0,
+        pickedLoads: 0,
+        changesLogged: 0,
+      },
+      changes: [],
+      error: message,
+    };
+
+    res.status(500).json(result);
+  }
+});
+
+// Sync STA (Staged) data
+app.post('/sync/sta', async (req, res) => {
+  const startTime = Date.now();
+
+  try {
+    const { locationId } = req.body;
+
+    if (!locationId) {
+      return res.status(400).json({ error: 'locationId is required' });
+    }
+
+    console.log(`Starting STA sync for location: ${locationId}`);
+
+    const result: SyncResult = await syncSimpleInventory(locationId, 'STA');
+
+    console.log(`STA sync completed in ${Date.now() - startTime}ms`, result.stats);
+
+    res.json(result);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    console.error('STA sync failed:', message);
+
+    const result: SyncResult = {
+      success: false,
+      message: `STA sync failed: ${message}`,
+      stats: {
+        totalGEItems: 0,
+        itemsInLoads: 0,
+        unassignedItems: 0,
+        newItems: 0,
+        updatedItems: 0,
+        forSaleLoads: 0,
+        pickedLoads: 0,
+        changesLogged: 0,
+      },
+      changes: [],
+      error: message,
     };
 
     res.status(500).json(result);

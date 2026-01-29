@@ -64,7 +64,7 @@ async function capturePositionForScan(
     }
 
     // Log position to map system
-    const { success, error, isGenesisScan } = await logProductLocation({
+    const { success, error } = await logProductLocation({
       product_id: productId,
       inventory_item_id: inventoryItemId,
       scanning_session_id: sessionId,
@@ -77,13 +77,9 @@ async function capturePositionForScan(
     });
 
     if (success) {
-      if (isGenesisScan) {
-        console.log('Genesis scan established - coordinate origin (0,0) set');
-      } else {
-        console.log(
-          `Position captured: (${position.latitude.toFixed(6)}, ${position.longitude.toFixed(6)}) ±${Math.round(position.accuracy)}m`
-        );
-      }
+      console.log(
+        `Position captured: (${position.latitude.toFixed(6)}, ${position.longitude.toFixed(6)}) ±${Math.round(position.accuracy)}m`
+      );
     } else {
       console.error('Failed to log position:', error);
     }
@@ -196,7 +192,7 @@ export function ScanningSessionView({ sessionId, onExit }: ScanningSessionViewPr
 
       // Capture position for fog of war map (non-blocking)
       capturePositionForScan(
-        result.items[0].products?.id,
+        result.items[0].products?.id ?? result.items[0].product_fk,
         itemId, // May not exist in inventory_items table (session snapshot)
         session.id,
         userDisplayName,
@@ -255,7 +251,7 @@ export function ScanningSessionView({ sessionId, onExit }: ScanningSessionViewPr
     const markedItems = updatedSession.items.filter(item => item.id && uniqueIds.includes(item.id));
     for (const item of markedItems) {
       capturePositionForScan(
-        item.products?.id,
+        item.products?.id ?? item.product_fk,
         item.id, // May not exist in inventory_items table (session snapshot)
         updatedSession.id,
         userDisplayName,

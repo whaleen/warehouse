@@ -1,6 +1,6 @@
 # TanStack Query Migration Guide
 
-**Status**: Phase 1 Complete (8/19 components migrated)
+**Status**: Phase 1 Complete + 1 Phase 3 component (9/19 components migrated)
 **Last Updated**: 2026-01-28
 **Target**: TanStack Query v5
 
@@ -42,6 +42,7 @@ const queryClient = new QueryClient({
 - [x] `src/hooks/queries/useActivity.ts` - Infinite query for activity log
 - [x] `src/hooks/queries/useRealtimeSync.ts` - Realtime subscriptions
 - [x] `src/hooks/queries/useInventory.ts` - Inventory item details
+- [x] `src/hooks/queries/useMap.ts` - 2 hooks (product locations + genesis point)
 
 ### ✅ Completed (Phase 1 - Core Inventory Components)
 
@@ -85,7 +86,13 @@ const queryClient = new QueryClient({
 | DisplayManager | `src/components/FloorDisplay/DisplayManager.tsx` | Low | New `useDisplays` hook |
 | FloorDisplayView | `src/components/FloorDisplay/FloorDisplayView.tsx` | Medium | Integration test |
 
-### ❌ Not Started (Phase 3 - Secondary: 6 components)
+### ✅ Completed (Phase 3 - Map Component)
+
+| Component | File | Changes | Benefits |
+|-----------|------|---------|----------|
+| MapView | `src/components/Map/MapView.tsx` | Uses `useProductLocations` + `useGenesisPoint` | Parallel queries, automatic caching |
+
+### ❌ Not Started (Phase 3 - Remaining: 5 components)
 
 | Component | File | Priority | Estimated Hooks Needed |
 |-----------|------|----------|------------------------|
@@ -94,7 +101,6 @@ const queryClient = new QueryClient({
 | CreateSessionView | `src/components/Session/CreateSessionView.tsx` | Medium | New `useSessions` hook |
 | ScanningSessionView | `src/components/Session/ScanningSessionView.tsx` | Medium | `useSessionDetail` hook |
 | SettingsView | `src/components/Settings/SettingsView.tsx` | Low | New `useSettings` hook |
-| MapView | `src/components/Map/MapView.tsx` | Low | New `useLocations` hook |
 
 ## Migration Patterns
 
