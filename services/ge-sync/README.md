@@ -54,10 +54,11 @@ pnpm install
 # Install Playwright browsers
 pnpm exec playwright install chromium
 
-# Set up Doppler (for environment variables)
-doppler setup
+# Copy .env.example to .env and fill in your values
+cp .env.example .env
+# Edit .env with your Supabase credentials
 
-# Run in development mode (secrets injected via Doppler)
+# Run in development mode
 pnpm run dev
 ```
 
@@ -222,32 +223,30 @@ Operational guidance (beta):
 
 1. Connect your GitHub repo to Railway
 2. Set the root directory to `services/ge-sync`
-3. Configure environment variables:
-   - **Option A**: Use Doppler integration (recommended)
-     - Install Doppler integration in Railway dashboard
-     - Link to your Doppler project/config
-   - **Option B**: Set variables manually in Railway dashboard:
-     - `SUPABASE_URL`
-     - `SUPABASE_SERVICE_KEY`
-     - `API_KEY`
+3. Configure environment variables in Railway dashboard:
+   - `SUPABASE_URL`
+   - `SUPABASE_SERVICE_KEY`
+   - `API_KEY`
+   - `PORT` (optional, defaults to 3001)
+   - `NODE_ENV=production`
 4. Deploy
 
 ## Frontend configuration (dev vs prod)
 
-The frontend reads the sync service URL at build time via Vite env vars (managed through Doppler).
+The frontend reads the sync service URL at build time via Vite env vars.
 
-- **Local dev** (frontend):
+- **Local dev** (frontend .env):
   - `VITE_GE_SYNC_URL=http://localhost:3001`
   - `VITE_GE_SYNC_API_KEY=your_api_key`
-- **Production** (frontend):
+- **Production** (Netlify env vars):
   - `VITE_GE_SYNC_URL=https://warehouse-production-02e6.up.railway.app`
   - `VITE_GE_SYNC_API_KEY=<same API_KEY as Railway>`
 
-These are stored in Doppler and injected at build time. If you change these values in Doppler, you must rebuild the frontend so Vite can bake them in.
+Set these in Netlify's dashboard. If you change these values, you must rebuild the frontend so Vite can bake them in.
 
 ## Environment Variables
 
-All environment variables are managed through Doppler. For local development, run `doppler setup` to configure your project.
+For local development, copy `.env.example` to `.env` and fill in your values. For production, set these in Railway's dashboard.
 
 | Variable | Required | Description |
 |----------|----------|-------------|
