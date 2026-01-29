@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, Upload, ArrowLeft, Trash2, Check, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, Check, AlertTriangle } from 'lucide-react';
 import { getLoadItemCount, getLoadConflictCount, deleteLoad } from '@/lib/loadManager';
 import { useLoads } from '@/hooks/queries/useLoads';
 import type { LoadMetadata } from '@/types/inventory';
@@ -11,7 +11,6 @@ import { AppHeader } from '@/components/Navigation/AppHeader';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { useToast } from '@/components/ui/toast';
 import { PageContainer } from '@/components/Layout/PageContainer';
-import { Switch } from '@/components/ui/switch';
 import supabase from '@/lib/supabase';
 import { getActiveLocationContext } from '@/lib/tenant';
 import { useAuth } from '@/context/AuthContext';
@@ -23,10 +22,6 @@ interface LoadWithCount extends LoadMetadata {
   conflict_count: number;
 }
 
-const GE_SYNC_URL =
-  (import.meta.env.VITE_GE_SYNC_URL as string | undefined) ?? 'http://localhost:3001';
-const GE_SYNC_API_KEY = import.meta.env.VITE_GE_SYNC_API_KEY as string | undefined;
-
 interface LoadManagementViewProps {
   onMenuClick?: () => void;
 }
@@ -37,11 +32,6 @@ export function LoadManagementView({ onMenuClick }: LoadManagementViewProps) {
   const { toast } = useToast();
   const { data: loadsData, isLoading: loading, refetch } = useLoads();
   const [loads, setLoads] = useState<LoadWithCount[]>([]);
-  const [importingLoads, setImportingLoads] = useState(false);
-  const [syncConfirmOpen, setSyncConfirmOpen] = useState(false);
-  const [wipeConfirmOpen, setWipeConfirmOpen] = useState(false);
-  const [wipingAsis, setWipingAsis] = useState(false);
-  const [preserveCustomFields, setPreserveCustomFields] = useState(true);
   const [showAway, setShowAway] = useState(false);
   const [pendingLoadSelection, setPendingLoadSelection] = useState<string | null>(null);
   const [isStandaloneDetail, setIsStandaloneDetail] = useState(false);
@@ -77,229 +67,6 @@ export function LoadManagementView({ onMenuClick }: LoadManagementViewProps) {
       fetchLoadCounts(loadsData);
     }
   }, [loadsData]);
-
-  const wipeAsisData = async () => {
-    const { error: conflictError } = await supabase
-      .from('load_conflicts')
-      .delete()
-      .eq('location_id', locationId)
-      .eq('inventory_type', 'ASIS');
-    if (conflictError) throw conflictError;
-
-    const { error: loadError } = await supabase
-      .from('load_metadata')
-      .delete()
-      .eq('location_id', locationId)
-      .eq('inventory_type', 'ASIS');
-    if (loadError) throw loadError;
-
-    const { error: itemError } = await supabase
-      .from('inventory_items')
-      .delete()
-      .eq('location_id', locationId)
-      .eq('inventory_type', 'ASIS');
-    if (itemError) throw itemError;
-
-    const { error: changesError } = await supabase
-      .from('ge_changes')
-      .delete()
-      .eq('location_id', locationId)
-      .eq('inventory_type', 'ASIS');
-    if (changesError) {
-      console.warn('Failed to delete ge_changes for ASIS:', changesError.message);
-    }
-  };
-
-  const fetchCustomLoadFields = async () => {
-    const { data, error } = await supabase
-      .from('load_metadata')
-      .select(
-        'sub_inventory_name, friendly_name, notes, primary_color, category, prep_tagged, prep_wrapped, sanity_check_requested, sanity_check_requested_at, sanity_check_requested_by, sanity_check_completed_at, sanity_check_completed_by, pickup_date, pickup_tba'
-      )
-      .eq('location_id', locationId)
-      .eq('inventory_type', 'ASIS');
-
-    if (error) throw error;
-
-    const map = new Map<string, {
-      friendly_name: string | null;
-      notes: string | null;
-      primary_color: string | null;
-      category: string | null;
-      prep_tagged: boolean | null;
-      prep_wrapped: boolean | null;
-      sanity_check_requested: boolean | null;
-      sanity_check_requested_at: string | null;
-      sanity_check_requested_by: string | null;
-      sanity_check_completed_at: string | null;
-      sanity_check_completed_by: string | null;
-      pickup_date: string | null;
-      pickup_tba: boolean | null;
-    }>();
-
-    (data ?? []).forEach((row) => {
-      map.set(row.sub_inventory_name, {
-        friendly_name: row.friendly_name ?? null,
-        notes: row.notes ?? null,
-        primary_color: row.primary_color ?? null,
-        category: row.category ?? null,
-        prep_tagged: row.prep_tagged ?? null,
-        prep_wrapped: row.prep_wrapped ?? null,
-        sanity_check_requested: row.sanity_check_requested ?? null,
-        sanity_check_requested_at: row.sanity_check_requested_at ?? null,
-        sanity_check_requested_by: row.sanity_check_requested_by ?? null,
-        sanity_check_completed_at: row.sanity_check_completed_at ?? null,
-        sanity_check_completed_by: row.sanity_check_completed_by ?? null,
-        pickup_date: row.pickup_date ?? null,
-        pickup_tba: row.pickup_tba ?? null,
-      });
-    });
-
-    return map;
-  };
-
-  const restoreCustomLoadFields = async (map: Map<string, {
-    friendly_name: string | null;
-    notes: string | null;
-    primary_color: string | null;
-    category: string | null;
-    prep_tagged: boolean | null;
-    prep_wrapped: boolean | null;
-    sanity_check_requested: boolean | null;
-    sanity_check_requested_at: string | null;
-    sanity_check_requested_by: string | null;
-    sanity_check_completed_at: string | null;
-    sanity_check_completed_by: string | null;
-    pickup_date: string | null;
-    pickup_tba: boolean | null;
-  }>) => {
-    let restored = 0;
-    for (const [loadNumber, fields] of map) {
-      const { error } = await supabase
-        .from('load_metadata')
-        .update({ ...fields, updated_at: new Date().toISOString() })
-        .eq('location_id', locationId)
-        .eq('inventory_type', 'ASIS')
-        .eq('sub_inventory_name', loadNumber);
-      if (!error) restored += 1;
-    }
-    return restored;
-  };
-
-  const handleSyncAsis = async () => {
-    if (importingLoads) return;
-    setImportingLoads(true);
-  
-    try {
-      const customFields = preserveCustomFields ? await fetchCustomLoadFields() : null;
-      await wipeAsisData();
-
-      const response = await fetch(`${GE_SYNC_URL}/sync/asis`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(GE_SYNC_API_KEY ? { 'X-API-Key': GE_SYNC_API_KEY } : {}),
-        },
-        body: JSON.stringify({ locationId }),
-      });
-
-      const payload = await response.json().catch(() => null);
-
-      if (!response.ok || !payload?.success) {
-        const errorMessage = payload?.error || response.statusText || 'Failed to sync loads';
-        throw new Error(errorMessage);
-      }
-
-      const stats = payload.stats ?? {};
-      const summary = [
-        `Total items: ${stats.totalGEItems ?? 0}.`,
-        `In loads: ${stats.itemsInLoads ?? 0}.`,
-        `Unassigned: ${stats.unassignedItems ?? 0}.`,
-        `New: ${stats.newItems ?? 0}.`,
-        `Updated: ${stats.updatedItems ?? 0}.`,
-        `For Sale loads: ${stats.forSaleLoads ?? 0}.`,
-        `Picked loads: ${stats.pickedLoads ?? 0}.`,
-      ].join(' ');
-
-      if (customFields && customFields.size > 0) {
-        const restored = await restoreCustomLoadFields(customFields);
-        if (restored > 0) {
-          toast({
-            title: 'Custom fields restored',
-            message: `${restored} load${restored === 1 ? '' : 's'} updated with preserved fields.`,
-          });
-        }
-      }
-
-      toast({
-        title: 'ASIS synced',
-        message: summary,
-        duration: Infinity,
-        dismissible: true,
-      });
-
-      const { error: activityError } = await logActivity({
-        companyId,
-        locationId,
-        user,
-        action: 'asis_sync',
-        entityType: 'ASIS',
-        details: {
-          stats,
-        },
-      });
-      if (activityError) {
-        console.warn('Failed to log activity (asis_sync):', activityError.message);
-      }
-  
-      refetch();
-    } catch (err) {
-      console.error('Failed to sync ASIS:', err);
-      toast({
-        variant: 'error',
-        title: 'ASIS sync failed',
-        message: err instanceof Error ? err.message : 'Unable to sync ASIS.',
-      });
-    } finally {
-      setImportingLoads(false);
-      setSyncConfirmOpen(false);
-    }
-  };
-
-  const handleWipeAsis = async () => {
-    if (wipingAsis) return;
-    setWipingAsis(true);
-    try {
-      await wipeAsisData();
-
-      toast({
-        title: 'ASIS cleared',
-        message: 'All ASIS items, loads, conflicts, and changes were removed.',
-      });
-
-      const { error: activityError } = await logActivity({
-        companyId,
-        locationId,
-        user,
-        action: 'asis_wipe',
-        entityType: 'ASIS',
-      });
-      if (activityError) {
-        console.warn('Failed to log activity (asis_wipe):', activityError.message);
-      }
-      refetch();
-    } catch (err) {
-      console.error('Failed to wipe ASIS:', err);
-      toast({
-        variant: 'error',
-        title: 'Wipe failed',
-        message: err instanceof Error ? err.message : 'Unable to wipe ASIS.',
-      });
-    } finally {
-      setWipingAsis(false);
-      setWipeConfirmOpen(false);
-    }
-  };
 
   const syncLocationFromUrl = () => {
     const params = new URLSearchParams(window.location.search);
@@ -484,34 +251,6 @@ export function LoadManagementView({ onMenuClick }: LoadManagementViewProps) {
               : "Load Management"
           }
           onMenuClick={onMenuClick}
-          actions={
-            isStandaloneDetail ? null : (
-              <div className="flex flex-wrap gap-2">
-                <Button
-                  size="responsive"
-                  variant="outline"
-                  onClick={() => setSyncConfirmOpen(true)}
-                  disabled={importingLoads || wipingAsis}
-                >
-                  {importingLoads ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  ) : (
-                    <Upload className="mr-2 h-4 w-4" />
-                  )}
-                  Sync ASIS
-                </Button>
-                <Button
-                  size="responsive"
-                  variant="destructive"
-                  onClick={() => setWipeConfirmOpen(true)}
-                  disabled={importingLoads || wipingAsis}
-                >
-                  <Trash2 className="mr-2 h-4 w-4" />
-                  Wipe ASIS
-                </Button>
-              </div>
-            )
-          }
         />
 
         <PageContainer className="py-4 pb-24 flex-1 min-h-0 overflow-hidden">
@@ -573,7 +312,7 @@ export function LoadManagementView({ onMenuClick }: LoadManagementViewProps) {
               ) : loads.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
                   <p>No loads found</p>
-                  <p className="text-sm mt-2">Sync ASIS to pull loads from GE.</p>
+                  <p className="text-sm mt-2">Use GE Sync in settings to import loads.</p>
                 </div>
               ) : isStandaloneDetail ? (
                 <div className="flex h-full min-h-0 flex-col gap-4">
@@ -847,45 +586,6 @@ export function LoadManagementView({ onMenuClick }: LoadManagementViewProps) {
         cancelText="Keep Load"
         destructive
         onConfirm={confirmDelete}
-      />
-
-      <ConfirmDialog
-        open={syncConfirmOpen}
-        onOpenChange={setSyncConfirmOpen}
-        title="Sync ASIS from GE?"
-        description="This will delete all ASIS items, loads, conflicts, and change logs for this location, then fetch fresh ASIS data from GE."
-        confirmText={importingLoads ? 'Syncing...' : 'Sync ASIS'}
-        cancelText="Cancel"
-        destructive
-        onConfirm={handleSyncAsis}
-      >
-        <div className="flex items-start gap-3">
-          <Switch
-            id="preserve-custom-fields"
-            checked={preserveCustomFields}
-            onCheckedChange={setPreserveCustomFields}
-            disabled={importingLoads}
-          />
-          <div className="space-y-1">
-            <label htmlFor="preserve-custom-fields" className="text-sm font-medium">
-              Preserve custom load fields
-            </label>
-            <p className="text-xs text-muted-foreground">
-              Keeps friendly name, notes, primary color, salvage, prep, and pickup details.
-            </p>
-          </div>
-        </div>
-      </ConfirmDialog>
-
-      <ConfirmDialog
-        open={wipeConfirmOpen}
-        onOpenChange={setWipeConfirmOpen}
-        title="Wipe all ASIS data?"
-        description="This deletes all ASIS items, loads, conflicts, and change logs for this location. This cannot be undone."
-        confirmText={wipingAsis ? 'Wiping...' : 'Wipe ASIS'}
-        cancelText="Cancel"
-        destructive
-        onConfirm={handleWipeAsis}
       />
     </>
   );
