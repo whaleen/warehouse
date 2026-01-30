@@ -20,10 +20,10 @@ export default defineConfig(({ mode }) => {
   return {
   server: {
     host: true, // <- key: exposes to LAN + prints Network URL
-    https: isDev && hasCerts ? {
+    https: isDev ? (hasCerts ? {
       key: fs.readFileSync(keyPath),
       cert: fs.readFileSync(certPath),
-    } : isDev, // Fallback to auto-generated cert if mkcert not available
+    } : true) : undefined, // Fallback to auto-generated cert if mkcert not available
   },
   build: {
     chunkSizeWarningLimit: 1400, // Sets the limit to 1000 KiB (1 MB)
