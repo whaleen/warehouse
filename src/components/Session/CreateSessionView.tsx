@@ -88,6 +88,7 @@ export function CreateSessionView({ onViewChange, onMenuClick, sessionId, onSess
   const [error, setError] = useState<string | null>(null);
   const [previewCount, setPreviewCount] = useState(0);
   const [subInventories, setSubInventories] = useState<string[]>([]);
+  const [loadMetadata, setLoadMetadata] = useState<Map<string, { friendly_name: string | null; primary_color: string | null; ge_cso: string | null }>>(new Map());
   const [sessions, setSessions] = useState<SessionSummary[]>([]);
   const [sessionsLoading, setSessionsLoading] = useState(true);
   const [sessionsError, setSessionsError] = useState<string | null>(null);
@@ -114,6 +115,36 @@ export function CreateSessionView({ onViewChange, onMenuClick, sessionId, onSess
 
     fetchSubInventories();
   }, [inventoryType, locationId]);
+
+  // Fetch load metadata for sub-inventories
+  useEffect(() => {
+    const fetchLoadMetadata = async () => {
+      if (subInventories.length === 0) {
+        setLoadMetadata(new Map());
+        return;
+      }
+
+      const { data } = await supabase
+        .from('load_metadata')
+        .select('sub_inventory_name, friendly_name, primary_color, ge_cso')
+        .eq('location_id', locationId)
+        .in('sub_inventory_name', subInventories);
+
+      if (data) {
+        const metadataMap = new Map<string, { friendly_name: string | null; primary_color: string | null; ge_cso: string | null }>();
+        for (const item of data) {
+          metadataMap.set(item.sub_inventory_name, {
+            friendly_name: item.friendly_name,
+            primary_color: item.primary_color,
+            ge_cso: item.ge_cso
+          });
+        }
+        setLoadMetadata(metadataMap);
+      }
+    };
+
+    fetchLoadMetadata();
+  }, [subInventories, locationId]);
 
   // Auto-generate session name when inventory type or sub-inventory changes
   useEffect(() => {
@@ -606,9 +637,30 @@ export function CreateSessionView({ onViewChange, onMenuClick, sessionId, onSess
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="all">All Items</SelectItem>
-                            {subInventories.map(sub => (
-                              <SelectItem key={sub} value={sub}>{sub}</SelectItem>
-                            ))}
+                            {subInventories.map(sub => {
+                              const metadata = loadMetadata.get(sub);
+                              const friendlyName = metadata?.friendly_name;
+                              const color = metadata?.primary_color;
+                              const cso = metadata?.ge_cso;
+                              const csoLast4 = cso ? cso.slice(-4) : null;
+
+                              return (
+                                <SelectItem key={sub} value={sub}>
+                                  <div className="flex items-center gap-2">
+                                    {color && (
+                                      <div
+                                        className="h-3 w-3 rounded-full flex-shrink-0"
+                                        style={{ backgroundColor: color }}
+                                      />
+                                    )}
+                                    <span>
+                                      {friendlyName || sub}
+                                      {csoLast4 && ` [${csoLast4}]`}
+                                    </span>
+                                  </div>
+                                </SelectItem>
+                              );
+                            })}
                           </SelectContent>
                         </Select>
                       </div>
