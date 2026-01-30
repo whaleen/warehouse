@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Globe, Package, Pencil, ScanLine, Trash2 } from 'lucide-react';
 import { Spinner } from '@/components/ui/spinner';
 import { useDeleteProductLocation } from '@/hooks/queries/useMap';
+import { useIsMobile } from '@/hooks/use-mobile';
 import type { ProductLocationForMap } from '@/types/map';
 import { blankMapStyle } from './BlankMapStyle';
 
@@ -29,6 +30,7 @@ type SavedViewState = {
 };
 
 export function WarehouseMapNew({ locations }: WarehouseMapNewProps) {
+  const isMobile = useIsMobile();
   const [mapInstance, setMapInstance] = useState<MapRef | null>(null);
   const [showWorldMap, setShowWorldMap] = useState(() => {
     if (typeof window === 'undefined') return false;
@@ -213,13 +215,25 @@ export function WarehouseMapNew({ locations }: WarehouseMapNewProps) {
           >
             <MarkerContent>
               <div
-                className="size-3 rounded-sm shadow-lg hover:scale-125 transition-transform cursor-pointer"
-                style={{ backgroundColor: location.load_color || '#94a3b8' }}
-              />
+                className={isMobile
+                  ? "p-2 cursor-pointer"
+                  : "cursor-pointer"
+                }
+              >
+                <div
+                  className={isMobile
+                    ? "size-8 rounded-sm shadow-lg transition-transform"
+                    : "size-3 rounded-sm shadow-lg hover:scale-125 transition-transform"
+                  }
+                  style={{ backgroundColor: location.load_color || '#94a3b8' }}
+                />
+              </div>
             </MarkerContent>
-            <MarkerTooltip className="px-2 py-1 text-xs font-medium">
-              {location.model ?? 'Unknown'}
-            </MarkerTooltip>
+            {!isMobile && (
+              <MarkerTooltip className="px-2 py-1 text-xs font-medium">
+                {location.model ?? 'Unknown'}
+              </MarkerTooltip>
+            )}
             <MarkerPopup className="p-3 min-w-[200px]">
               <div className="space-y-2">
                 <div className="flex gap-3">
