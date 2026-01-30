@@ -1,4 +1,5 @@
 import path from "path"
+import fs from "fs"
 import tailwindcss from "@tailwindcss/vite"
 import react from "@vitejs/plugin-react"
 import legacy from "@vitejs/plugin-legacy"
@@ -11,9 +12,18 @@ export default defineConfig(({ mode }) => {
   const appName = isDev ? 'Warehouse (Dev)' : 'Warehouse Inventory Scanner';
   const appShortName = isDev ? 'Warehouse Dev' : 'Warehouse';
 
+  // Check for mkcert certificates
+  const certPath = path.resolve(__dirname, 'localhost+3.pem');
+  const keyPath = path.resolve(__dirname, 'localhost+3-key.pem');
+  const hasCerts = fs.existsSync(certPath) && fs.existsSync(keyPath);
+
   return {
   server: {
     host: true, // <- key: exposes to LAN + prints Network URL
+    https: isDev && hasCerts ? {
+      key: fs.readFileSync(keyPath),
+      cert: fs.readFileSync(certPath),
+    } : isDev, // Fallback to auto-generated cert if mkcert not available
   },
   build: {
     chunkSizeWarningLimit: 1400, // Sets the limit to 1000 KiB (1 MB)

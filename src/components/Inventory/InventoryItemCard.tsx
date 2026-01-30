@@ -251,7 +251,7 @@ export const InventoryItemCard = memo(function InventoryItemCard({
           )}
 
           {showCopyFields && (
-            <div className="grid gap-2 text-xs sm:grid-cols-3">
+            <div className={variant === 'pending' || variant === 'scanned' ? 'grid gap-2 text-xs grid-cols-2' : 'grid gap-2 text-xs sm:grid-cols-3'}>
               <CopyField
                 label="Model"
                 value={item.model}
@@ -263,17 +263,19 @@ export const InventoryItemCard = memo(function InventoryItemCard({
                 value={item.serial ?? '-'}
                 copyValue={item.serial ?? ''}
               />
-              <CopyField
-                label="CSO"
-                value={
-                  item.cso &&
-                  !['ASIS', 'FG', 'STA', 'LOCALSTOCK', 'BACKHAUL', 'STAGED', 'INBOUND', 'WILLCALL']
-                    .includes(item.cso.toUpperCase())
-                    ? item.cso
-                    : ''
-                }
-                copyValue={item.cso ?? ''}
-              />
+              {variant !== 'pending' && variant !== 'scanned' && (
+                <CopyField
+                  label="CSO"
+                  value={
+                    item.cso &&
+                    !['ASIS', 'FG', 'STA', 'LOCALSTOCK', 'BACKHAUL', 'STAGED', 'INBOUND', 'WILLCALL']
+                      .includes(item.cso.toUpperCase())
+                      ? item.cso
+                      : ''
+                  }
+                  copyValue={item.cso ?? ''}
+                />
+              )}
             </div>
           )}
 

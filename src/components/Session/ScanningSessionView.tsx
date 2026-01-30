@@ -10,7 +10,7 @@ import { ItemSelectionDialog } from '@/components/Scanner/ItemSelectionDialog';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Checkbox } from '@/components/ui/checkbox';
-import { ScanBarcode, CheckCircle2, Circle, Loader2, Search, MapPin, X, Scan } from 'lucide-react';
+import { ScanBarcode, CheckCircle2, Loader2, Search, MapPin, X, Scan } from 'lucide-react';
 import type { InventoryItem } from '@/types/inventory';
 import type { ScanningSession } from '@/types/session';
 import { getSession, updateSessionScannedItems } from '@/lib/sessionManager';
@@ -26,6 +26,8 @@ import {
   feedbackError,
   feedbackWarning,
 } from '@/lib/feedback';
+import supabase from '@/lib/supabase';
+import { getActiveLocationContext } from '@/lib/tenant';
 
 interface ScanningSessionViewProps {
   sessionId: string;
@@ -100,6 +102,7 @@ export function ScanningSessionView({ sessionId, onExit }: ScanningSessionViewPr
   const { user } = useAuth();
   const userDisplayName = user?.username ?? user?.email ?? undefined;
   const [session, setSession] = useState<ScanningSession | null>(null);
+  const [loadMetadata, setLoadMetadata] = useState<{ friendly_name?: string | null; primary_color?: string | null; ge_cso?: string; ge_source_status?: string } | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [scannerOpen, setScannerOpen] = useState(false);
@@ -109,13 +112,12 @@ export function ScanningSessionView({ sessionId, onExit }: ScanningSessionViewPr
   const [scannedValue, setScannedValue] = useState('');
   const [alert, setAlert] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [itemTab, setItemTab] = useState<'pending' | 'scanned' | 'all'>('pending');
-  const [itemSearch, setItemSearch] = useState('');
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null); // Single-select only
-  const [manualInput, setManualInput] = useState('');
+  const [inputValue, setInputValue] = useState('');
+  const [inputMode, setInputMode] = useState<'scan' | 'search'>('scan');
   const [isProcessing, setIsProcessing] = useState(false);
   const [processingItemId, setProcessingItemId] = useState<string | null>(null);
-  const [scanInputMode, setScanInputMode] = useState<'manual' | 'camera'>('manual');
-  const manualInputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   const stopProcessingFeedbackRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
@@ -131,6 +133,22 @@ export function ScanningSessionView({ sessionId, onExit }: ScanningSessionViewPr
         setSession(null);
       } else {
         setSession(data);
+
+        // Fetch load metadata if session has subInventory
+        if (data.subInventory && data.inventoryType === 'ASIS') {
+          const { locationId } = getActiveLocationContext();
+          const { data: loadData } = await supabase
+            .from('load_metadata')
+            .select('friendly_name, primary_color, ge_cso, ge_source_status')
+            .eq('location_id', locationId)
+            .eq('inventory_type', data.inventoryType)
+            .eq('sub_inventory_name', data.subInventory)
+            .single();
+
+          if (loadData && isMounted) {
+            setLoadMetadata(loadData);
+          }
+        }
       }
       setLoading(false);
     };
@@ -314,13 +332,55 @@ export function ScanningSessionView({ sessionId, onExit }: ScanningSessionViewPr
     return { scannedItems: scanned, unscannedItems: unscanned };
   }, [session]);
 
+  // Use inputValue for search when in search mode
+  const searchQuery = inputMode === 'search' ? inputValue : '';
+
   const filteredPending = useMemo(() => {
-    return unscannedItems.filter(item => matchesItemSearch(item, itemSearch));
-  }, [unscannedItems, itemSearch]);
+    return unscannedItems
+      .filter(item => matchesItemSearch(item, searchQuery))
+      .sort((a, b) => {
+        const modelA = (a.model ?? a.product_type ?? '').toUpperCase();
+        const modelB = (b.model ?? b.product_type ?? '').toUpperCase();
+        return modelA.localeCompare(modelB);
+      });
+  }, [unscannedItems, searchQuery]);
 
   const filteredScanned = useMemo(() => {
-    return scannedItems.filter(item => matchesItemSearch(item, itemSearch));
-  }, [scannedItems, itemSearch]);
+    return scannedItems
+      .filter(item => matchesItemSearch(item, searchQuery))
+      .sort((a, b) => {
+        const modelA = (a.model ?? a.product_type ?? '').toUpperCase();
+        const modelB = (b.model ?? b.product_type ?? '').toUpperCase();
+        return modelA.localeCompare(modelB);
+      });
+  }, [scannedItems, searchQuery]);
+
+  // Group items by first letter of model number
+  const groupedPending = useMemo(() => {
+    const groups: Record<string, typeof filteredPending> = {};
+
+    filteredPending.forEach(item => {
+      const model = item.model ?? item.product_type ?? '';
+      const firstChar = model.charAt(0).toUpperCase();
+      const letter = /[A-Z]/.test(firstChar) ? firstChar : '#';
+
+      if (!groups[letter]) {
+        groups[letter] = [];
+      }
+      groups[letter].push(item);
+    });
+
+    return groups;
+  }, [filteredPending]);
+
+  const availableLetters = useMemo(() => {
+    return Object.keys(groupedPending).sort((a, b) => {
+      // Put '#' at the end
+      if (a === '#') return 1;
+      if (b === '#') return -1;
+      return a.localeCompare(b);
+    });
+  }, [groupedPending]);
 
   const toggleItemSelection = (id: string) => {
     setSelectedItemId(prev => prev === id ? null : id);
@@ -351,9 +411,12 @@ export function ScanningSessionView({ sessionId, onExit }: ScanningSessionViewPr
     );
   }
 
-  const statusLabel = session.status === 'closed' ? 'Closed' : session.status === 'draft' ? 'Draft' : 'Active';
-  const statusVariant = session.status === 'closed' ? 'secondary' : session.status === 'draft' ? 'outline' : 'default';
   const remainingCount = Math.max(progress.total - progress.scanned, 0);
+
+  // Format session name with load info if available
+  const displayName = loadMetadata
+    ? `${loadMetadata.friendly_name || session.subInventory} - ${session.inventoryType}${loadMetadata.ge_cso ? ` [${loadMetadata.ge_cso.slice(-4)}]` : ''}`
+    : session.name;
 
   return (
     <div className="min-h-screen bg-muted/30">
@@ -362,13 +425,23 @@ export function ScanningSessionView({ sessionId, onExit }: ScanningSessionViewPr
           {/* Title row */}
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2 min-w-0">
-              <h1 className="text-base font-semibold truncate">{session.name}</h1>
-              <Badge variant={statusVariant}>{statusLabel}</Badge>
+              {loadMetadata?.primary_color && (
+                <div
+                  className="w-4 h-4 rounded shrink-0 border border-border"
+                  style={{ backgroundColor: loadMetadata.primary_color }}
+                />
+              )}
+              <h1 className="text-base font-semibold truncate">{displayName}</h1>
+              {loadMetadata?.ge_source_status && (
+                <Badge variant="outline">{loadMetadata.ge_source_status}</Badge>
+              )}
             </div>
-            <Button variant="ghost" size="sm" onClick={onExit}>
-              <X className="h-4 w-4" />
-              <span className="sr-only sm:not-sr-only sm:ml-2">Exit</span>
-            </Button>
+            {session.status !== 'closed' && (
+              <Button variant="ghost" size="sm" onClick={onExit}>
+                <X className="h-4 w-4" />
+                <span className="sr-only sm:not-sr-only sm:ml-2">Exit</span>
+              </Button>
+            )}
           </div>
 
           {/* Progress bar with inline stats */}
@@ -389,78 +462,103 @@ export function ScanningSessionView({ sessionId, onExit }: ScanningSessionViewPr
             <Progress value={progress.percentage} className="h-2" />
           </div>
 
-          {/* Scanner Input with Mode Toggle */}
+          {/* Combined Input (Scan/Search with Mode Toggle) */}
           {session.status !== 'closed' && (
-            <div className="flex gap-2">
-              <div className="relative flex-1">
-                <Scan className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  ref={manualInputRef}
-                  type="text"
-                  value={manualInput}
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    setManualInput(value);
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && manualInput.trim()) {
-                      e.preventDefault();
-                      feedbackScanDetected();
-                      handleScan(manualInput.trim());
-                      setManualInput('');
+            <div className="space-y-2">
+              <div className="flex gap-2">
+                <div className="relative flex-1">
+                  {inputMode === 'scan' ? (
+                    <Scan className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
+                  ) : (
+                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  )}
+                  <Input
+                    ref={inputRef}
+                    type={inputMode === 'scan' ? 'text' : 'search'}
+                    inputMode={inputMode === 'scan' ? 'none' : 'text'}
+                    value={inputValue}
+                    onChange={(e) => {
+                      setInputValue(e.target.value);
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && inputMode === 'scan' && inputValue.trim()) {
+                        e.preventDefault();
+                        feedbackScanDetected();
+                        handleScan(inputValue.trim());
+                        setInputValue('');
+                      }
+                    }}
+                    placeholder={inputMode === 'scan' ? 'Scan barcode here...' : 'Search items...'}
+                    className={inputMode === 'scan' ? 'pl-10 h-12 text-base font-mono' : 'pl-9 h-12'}
+                    disabled={isProcessing}
+                    autoComplete={inputMode === 'scan' ? 'off' : 'on'}
+                    autoCorrect={inputMode === 'scan' ? 'off' : 'on'}
+                    autoCapitalize={inputMode === 'scan' ? 'off' : 'on'}
+                    spellCheck={inputMode === 'search'}
+                  />
+                  {isProcessing && (
+                    <Loader2 className="absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 animate-spin text-primary" />
+                  )}
+                </div>
+                <Button
+                  variant="outline"
+                  size="lg"
+                  className="h-12 px-4"
+                  onClick={() => {
+                    if (inputMode === 'scan') {
+                      setInputMode('search');
+                      setInputValue('');
+                    } else {
+                      setInputMode('scan');
+                      setInputValue('');
                     }
+                    inputRef.current?.focus();
                   }}
-                  placeholder="Scan barcode here..."
-                  className="pl-10 h-12 text-base font-mono"
                   disabled={isProcessing}
-                  autoComplete="off"
-                  autoCorrect="off"
-                  autoCapitalize="off"
-                  spellCheck={false}
-                />
-                {isProcessing && (
-                  <Loader2 className="absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 animate-spin text-primary" />
+                >
+                  {inputMode === 'scan' ? (
+                    <Search className="h-5 w-5" />
+                  ) : (
+                    <Scan className="h-5 w-5" />
+                  )}
+                </Button>
+                {inputMode === 'scan' && (
+                  <Button
+                    variant="outline"
+                    size="lg"
+                    className="h-12 px-4"
+                    onClick={() => {
+                      setScannerOpen(true);
+                    }}
+                    disabled={isProcessing}
+                  >
+                    <ScanBarcode className="h-5 w-5" />
+                  </Button>
                 )}
               </div>
-              <Button
-                variant="outline"
-                size="lg"
-                className="h-12 px-4"
-                onClick={() => {
-                  if (scanInputMode === 'manual') {
-                    setScanInputMode('camera');
-                    setScannerOpen(true);
-                  } else {
-                    setScanInputMode('manual');
-                    setScannerOpen(false);
-                    manualInputRef.current?.focus();
-                  }
-                }}
-                disabled={isProcessing}
-              >
-                <ScanBarcode className="h-5 w-5" />
-              </Button>
             </div>
           )}
 
-          {/* Tabs and search */}
-          <div className="flex flex-col sm:flex-row gap-2">
+          {/* Tabs */}
+          <div className="space-y-2">
             <Tabs value={itemTab} onValueChange={(v) => setItemTab(v as 'pending' | 'scanned' | 'all')}>
-              <TabsList className="grid grid-cols-3">
+              <TabsList className="grid grid-cols-3 w-full">
                 <TabsTrigger value="pending" className="text-xs sm:text-sm">Pending ({unscannedItems.length})</TabsTrigger>
                 <TabsTrigger value="scanned" className="text-xs sm:text-sm">Scanned ({scannedItems.length})</TabsTrigger>
                 <TabsTrigger value="all" className="text-xs sm:text-sm">All ({progress.total})</TabsTrigger>
               </TabsList>
             </Tabs>
-            <div className="relative flex-1 sm:max-w-sm">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                value={itemSearch}
-                onChange={(e) => setItemSearch(e.target.value)}
-                placeholder="Search items..."
-                className="pl-9"
-              />
-            </div>
+            {/* Count info */}
+            {(itemTab === 'pending' || itemTab === 'all') && filteredPending.length > 0 && (
+              <div className="text-right text-[10px] text-muted-foreground">
+                {filteredPending.length} shown
+              </div>
+            )}
+            {itemTab === 'scanned' && filteredScanned.length > 0 && (
+              <div className="text-right text-[10px] text-muted-foreground">
+                {filteredScanned.length} shown
+              </div>
+            )}
           </div>
         </PageContainer>
       </div>
@@ -486,11 +584,9 @@ export function ScanningSessionView({ sessionId, onExit }: ScanningSessionViewPr
       <PageContainer className="py-6 pb-32 space-y-6">
         {(itemTab === 'pending' || itemTab === 'all') && (
           <div className="space-y-3">
-            <div className="flex items-center justify-between text-xs">
-              <div className="flex items-center gap-2">
-                {itemTab === 'all' && (
-                  <span className="uppercase tracking-wide text-muted-foreground">Pending Items</span>
-                )}
+            {itemTab === 'all' && (
+              <div className="flex items-center justify-between text-xs">
+                <span className="uppercase tracking-wide text-muted-foreground">Pending Items</span>
                 {session.status !== 'closed' && selectedItemId && (
                   <Button size="sm" variant="default" onClick={handleMarkSelected}>
                     <CheckCircle2 className="h-3 w-3 mr-1.5" />
@@ -498,44 +594,55 @@ export function ScanningSessionView({ sessionId, onExit }: ScanningSessionViewPr
                   </Button>
                 )}
               </div>
-              <span className="text-muted-foreground">
-                {filteredPending.length} shown
-              </span>
-            </div>
+            )}
+            {session.status !== 'closed' && selectedItemId && itemTab === 'pending' && (
+              <div className="flex items-center justify-end text-xs">
+                <Button size="sm" variant="default" onClick={handleMarkSelected}>
+                  <CheckCircle2 className="h-3 w-3 mr-1.5" />
+                  Mark as Scanned
+                </Button>
+              </div>
+            )}
             {filteredPending.length === 0 ? (
               <Card className="p-4 text-sm text-muted-foreground">No pending items found.</Card>
             ) : (
-              <div className="space-y-2">
-                {filteredPending.map(item => (
-                  <div
-                    key={item.id}
-                    className={`relative ${processingItemId === item.id ? 'animate-pulse ring-2 ring-primary rounded-lg' : ''}`}
-                  >
-                      <InventoryItemCard
-                        item={item}
-                      leading={
-                        session.status !== 'closed' ? (
-                          <Checkbox
-                            checked={selectedItemId === item.id}
-                            onCheckedChange={() => toggleItemSelection(item.id!)}
-                            onClick={(event) => event.stopPropagation()}
+              <div className="space-y-6">
+                {availableLetters.map(letter => (
+                  <div key={letter}>
+                    {/* Items in this section */}
+                    <div className="space-y-2">
+                      {groupedPending[letter].map(item => (
+                        <div
+                          key={item.id}
+                          className={`relative ${processingItemId === item.id ? 'animate-pulse ring-2 ring-primary rounded-lg' : ''}`}
+                        >
+                          <InventoryItemCard
+                            item={item}
+                            onClick={session.status !== 'closed' ? () => toggleItemSelection(item.id!) : undefined}
+                            variant="pending"
+                            selected={selectedItemId === item.id}
+                            showInventoryTypeBadge={false}
+                            showProductMeta={false}
+                            showRouteBadge={false}
                           />
-                        ) : (
-                          <Circle className="h-5 w-5 text-muted-foreground/70" />
-                        )
-                      }
-                      onClick={session.status !== 'closed' ? () => toggleItemSelection(item.id!) : undefined}
-                      variant="pending"
-                      selected={selectedItemId === item.id}
-                      showInventoryTypeBadge={false}
-                      showProductMeta={false}
-                      routeValue={item.route_id ?? item.sub_inventory}
-                    />
-                    {processingItemId === item.id && (
-                      <div className="absolute inset-0 bg-primary/10 rounded-lg pointer-events-none flex items-center justify-center">
-                        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                      </div>
-                    )}
+                          {session.status !== 'closed' && (
+                            <div className="absolute top-3 right-3 pointer-events-auto">
+                              <Checkbox
+                                checked={selectedItemId === item.id}
+                                onCheckedChange={() => toggleItemSelection(item.id!)}
+                                onClick={(event) => event.stopPropagation()}
+                                className="bg-background border-2"
+                              />
+                            </div>
+                          )}
+                          {processingItemId === item.id && (
+                            <div className="absolute inset-0 bg-primary/10 rounded-lg pointer-events-none flex items-center justify-center">
+                              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 ))}
               </div>
@@ -556,15 +663,18 @@ export function ScanningSessionView({ sessionId, onExit }: ScanningSessionViewPr
             ) : (
               <div className="space-y-2">
                 {filteredScanned.map(item => (
-                  <InventoryItemCard
-                    key={item.id}
-                    item={item}
-                    leading={<CheckCircle2 className="h-5 w-5 text-emerald-600" />}
-                    variant="scanned"
-                    showInventoryTypeBadge={false}
-                    showProductMeta={false}
-                    routeValue={item.route_id ?? item.sub_inventory}
-                  />
+                  <div key={item.id} className="relative">
+                    <InventoryItemCard
+                      item={item}
+                      variant="scanned"
+                      showInventoryTypeBadge={false}
+                      showProductMeta={false}
+                      showRouteBadge={false}
+                    />
+                    <div className="absolute top-3 right-3">
+                      <CheckCircle2 className="h-5 w-5 text-emerald-600" />
+                    </div>
+                  </div>
                 ))}
               </div>
             )}

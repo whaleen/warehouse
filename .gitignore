@@ -48,6 +48,8 @@ dev-dist
 
 
 # Development
+localhost+*.pem
+localhost+*-key.pem
 
 migrations
 IDGAF_About_Auth_Security.md

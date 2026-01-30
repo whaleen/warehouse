@@ -1,9 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { Html5Qrcode } from 'html5-qrcode';
 import { Button } from '@/components/ui/button';
-import { X, Keyboard } from 'lucide-react';
-import { Input } from '@/components/ui/input';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { X, ScanBarcode, Maximize2, Minimize2, RotateCw } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface BarcodeScannerProps {
   onScan: (barcode: string) => void;
@@ -11,183 +10,256 @@ interface BarcodeScannerProps {
   inventoryType?: string;
 }
 
-type ScanSize = 'small' | 'medium' | 'large' | 'xl';
+type ScanSize = 'small' | 'medium' | 'large';
+type Orientation = 'horizontal' | 'vertical';
 
-const SCAN_SIZES: Record<ScanSize, { width: number; height: number; label: string }> = {
-  small: { width: 150, height: 150, label: 'Small' },
-  medium: { width: 250, height: 250, label: 'Medium' },
-  large: { width: 350, height: 350, label: 'Large' },
-  xl: { width: 450, height: 250, label: 'XL' }
+const SCAN_BOXES = {
+  horizontal: {
+    small: { width: 200, height: 80 },
+    medium: { width: 300, height: 100 },
+    large: { width: 400, height: 120 },
+  },
+  vertical: {
+    small: { width: 80, height: 200 },
+    medium: { width: 100, height: 300 },
+    large: { width: 120, height: 400 },
+  },
 };
 
 export function BarcodeScanner({ onScan, onClose, inventoryType }: BarcodeScannerProps) {
-  const [scanner, setScanner] = useState<Html5Qrcode | null>(null);
-  const [isScanning, setIsScanning] = useState(false);
-  const [manualEntry, setManualEntry] = useState(false);
-  const [manualValue, setManualValue] = useState('');
+  const [error, setError] = useState<string | null>(null);
   const [scanSize, setScanSize] = useState<ScanSize>('medium');
-  const scannerRef = useRef<HTMLDivElement>(null);
+  const [orientation, setOrientation] = useState<Orientation>('horizontal');
+  const [scanQueue, setScanQueue] = useState<string[]>([]);
+  const scannerRef = useRef<Html5Qrcode | null>(null);
+  const lastScannedRef = useRef<string>('');
 
+  // Initialize scanner
   useEffect(() => {
-    if (manualEntry) return; // Don't start scanner in manual entry mode
+    const scannerId = 'barcode-scanner-region';
+    let mounted = true;
+    let cleanup: (() => Promise<void>) | null = null;
 
     const initScanner = async () => {
-      if (!scannerRef.current) return;
+      // Clean up existing scanner and wait for it to complete
+      const existingScanner = scannerRef.current;
+      if (existingScanner) {
+        try {
+          const isScanning = existingScanner.getState() === 2; // 2 = SCANNING
+          if (isScanning) {
+            await existingScanner.stop();
+          }
+          existingScanner.clear();
+        } catch (err) {
+          console.error('Cleanup error:', err);
+        }
+        scannerRef.current = null;
+      }
 
-      const html5QrCode = new Html5Qrcode('barcode-scanner-region');
-      setScanner(html5QrCode);
+      // Clear any leftover video elements manually
+      const element = document.getElementById(scannerId);
+      if (element) {
+        element.innerHTML = '';
+      }
 
-      const scanBox = SCAN_SIZES[scanSize];
+      // Wait longer to ensure cleanup is complete
+      await new Promise(resolve => setTimeout(resolve, 300));
+
+      if (!mounted) return;
+
+      if (!element) {
+        if (mounted) setError('Scanner element not found');
+        return;
+      }
 
       try {
-        await html5QrCode.start(
+        const scanner = new Html5Qrcode(scannerId);
+        scannerRef.current = scanner;
+
+        const box = SCAN_BOXES[orientation][scanSize];
+
+        await scanner.start(
           { facingMode: 'environment' },
           {
             fps: 10,
-            qrbox: { width: scanBox.width, height: scanBox.height }
+            qrbox: box,
           },
           (decodedText) => {
-            onScan(decodedText);
+            if (mounted) {
+              // Add to queue if not already scanned
+              if (decodedText !== lastScannedRef.current) {
+                lastScannedRef.current = decodedText;
+                setScanQueue(prev => {
+                  // Prevent duplicates
+                  if (prev.includes(decodedText)) return prev;
+                  return [...prev, decodedText];
+                });
+              }
+            }
           },
           () => {
-            // Scan error - ignore
+            // Scan errors are normal
           }
         );
-        setIsScanning(true);
+
+        if (mounted) setError(null);
+
+        // Set up cleanup function
+        cleanup = async () => {
+          const isScanning = scanner.getState() === 2;
+          if (isScanning) {
+            await scanner.stop();
+          }
+          scanner.clear();
+          scannerRef.current = null;
+        };
       } catch (err) {
-        console.error('Failed to start scanner:', err);
-        setManualEntry(true);
+        if (mounted) {
+          setError(`Camera error: ${err instanceof Error ? err.message : 'Unknown error'}`);
+        }
       }
     };
 
     initScanner();
 
     return () => {
-      if (scanner && isScanning) {
-        scanner
-          .stop()
-          .then(() => {
+      mounted = false;
+      if (cleanup) {
+        cleanup().catch(console.error);
+      } else if (scannerRef.current) {
+        const scanner = scannerRef.current;
+        const cleanupPromise = (async () => {
+          try {
+            const isScanning = scanner.getState() === 2;
+            if (isScanning) {
+              await scanner.stop();
+            }
             scanner.clear();
-          })
-          .catch(console.error);
+          } catch (err) {
+            console.error('Cleanup error:', err);
+          }
+        })();
+        cleanupPromise.catch(console.error);
       }
     };
-  }, [scanSize, manualEntry]);
+  }, [orientation, scanSize]);
 
-  // Handle scan size change
-  const handleScanSizeChange = async (newSize: ScanSize) => {
-    if (!scanner || !isScanning) {
-      setScanSize(newSize);
-      return;
-    }
-
-    try {
-      // Stop current scanner
-      await scanner.stop();
-      scanner.clear();
-      setIsScanning(false);
-
-      // Update size
-      setScanSize(newSize);
-
-      // Scanner will restart via useEffect
-    } catch (err) {
-      console.error('Error changing scan size:', err);
-    }
+  const handleSubmitScan = (code: string) => {
+    onScan(code);
+    // Remove from queue after submitting
+    setScanQueue(prev => prev.filter(c => c !== code));
+    lastScannedRef.current = '';
   };
 
-  const handleManualSubmit = () => {
-    if (manualValue.trim()) {
-      onScan(manualValue.trim());
-      setManualValue('');
-    }
+  const handleClearQueue = () => {
+    setScanQueue([]);
+    lastScannedRef.current = '';
+  };
+
+  const cycleScanSize = () => {
+    setScanSize(prev => {
+      if (prev === 'small') return 'medium';
+      if (prev === 'medium') return 'large';
+      return 'small';
+    });
+  };
+
+  const toggleOrientation = () => {
+    setOrientation(prev => prev === 'horizontal' ? 'vertical' : 'horizontal');
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black text-white flex flex-col overflow-y-auto overscroll-contain">
-      <div className="px-4 pt-4 pb-3 bg-gradient-to-b from-black/80 to-transparent">
-        <div className="flex items-center justify-between">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onClose}
-            className="text-white hover:bg-background/20"
-          >
-            <X className="h-6 w-6" />
-          </Button>
-          <div className="text-lg font-semibold">{inventoryType || 'Scan Barcode'}</div>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setManualEntry(!manualEntry)}
-            className="text-white hover:bg-background/20"
-          >
-            <Keyboard className="h-6 w-6" />
-          </Button>
+    <div className="fixed inset-0 z-50 bg-black flex flex-col">
+      {/* Header */}
+      <div className="flex items-center justify-between p-4">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={onClose}
+          className="text-white hover:bg-white/10"
+        >
+          <X className="h-6 w-6" />
+        </Button>
+        <div className="text-white text-lg font-semibold">
+          {inventoryType || 'Scan Barcode'}
         </div>
+        <div className="w-10" />
       </div>
 
-      {!manualEntry && (
-        <div className="flex-1 flex flex-col items-center justify-center gap-4 px-4 pb-6">
-          <div className="hidden sm:flex">
-            <Tabs value={scanSize} onValueChange={(value) => handleScanSizeChange(value as ScanSize)}>
-              <TabsList className="bg-black/60 backdrop-blur-sm">
-                {(Object.keys(SCAN_SIZES) as ScanSize[]).map((size) => (
-                  <TabsTrigger
-                    key={size}
-                    value={size}
-                    className="text-white data-[state=active]:bg-white/20 data-[state=active]:text-white"
-                  >
-                    {SCAN_SIZES[size].label}
-                  </TabsTrigger>
-                ))}
-              </TabsList>
-            </Tabs>
-          </div>
-
-          <div id="barcode-scanner-region" ref={scannerRef} className="w-full max-w-md" />
-
-          <div className="text-center text-white/90">
-            <p className="text-sm">Point camera at barcode on label</p>
-            <p className="hidden sm:block text-xs text-white/70 mt-1">
-              Scanning: Serial, CSO, or Model Number
-            </p>
-          </div>
-        </div>
-      )}
-
-      {manualEntry && (
-        <div className="flex-1 flex items-start justify-center px-4 pb-6">
-          <div className="bg-background text-foreground rounded-lg p-6 w-full max-w-md space-y-4">
-            <h3 className="text-lg font-semibold">Manual Entry</h3>
-            <p className="text-sm text-muted-foreground">
-              Enter the barcode value manually if the camera cannot scan it.
-            </p>
-            <Input
-              type="text"
-              placeholder="Enter barcode..."
-              value={manualValue}
-              onChange={(e) => setManualValue(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  handleManualSubmit();
-                }
-              }}
-              autoFocus
-              className="text-lg"
-            />
-            <div className="flex gap-2">
-              <Button onClick={handleManualSubmit} className="flex-1">
-                Submit
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => setManualEntry(false)}
-                className="flex-1"
-              >
-                Back to Camera
-              </Button>
+      {/* Scanner or Error */}
+      <div className="flex-1 flex flex-col items-center justify-center p-4">
+        {error ? (
+          <Alert variant="destructive" className="max-w-md">
+            <AlertDescription>
+              {error}
+              <div className="mt-3">
+                <Button variant="outline" onClick={onClose} className="w-full">
+                  Close & Use Manual Entry
+                </Button>
+              </div>
+            </AlertDescription>
+          </Alert>
+        ) : (
+          <div className="w-full max-w-lg flex flex-col items-center gap-4">
+            <div id="barcode-scanner-region" className="w-full" />
+            <div className="text-white/70 text-sm text-center">
+              {scanQueue.length > 0
+                ? `${scanQueue.length} barcode${scanQueue.length > 1 ? 's' : ''} detected`
+                : 'Align barcode in frame'}
             </div>
+          </div>
+        )}
+      </div>
+
+      {/* Controls and Queue */}
+      {!error && (
+        <div className="p-4 space-y-3 flex flex-col">
+          {/* Scan Queue - scrollable */}
+          {scanQueue.length > 0 && (
+            <div className="max-h-[30vh] overflow-y-auto space-y-2 -mx-4 px-4">
+              {scanQueue.map((code, idx) => (
+                <Button
+                  key={idx}
+                  onClick={() => handleSubmitScan(code)}
+                  className="w-full justify-between h-auto py-3 px-4"
+                  variant="default"
+                >
+                  <span className="font-mono text-sm truncate">{code}</span>
+                  <ScanBarcode className="h-4 w-4 ml-2 shrink-0" />
+                </Button>
+              ))}
+            </div>
+          )}
+
+          {/* Clear queue button */}
+          {scanQueue.length > 1 && (
+            <Button
+              variant="outline"
+              onClick={handleClearQueue}
+              className="w-full text-white border-white/20 hover:bg-white/10"
+            >
+              Clear All ({scanQueue.length})
+            </Button>
+          )}
+
+          {/* Size and orientation controls */}
+          <div className="flex gap-2 shrink-0">
+            <Button
+              variant="outline"
+              onClick={cycleScanSize}
+              className="flex-1 text-white border-white/20 hover:bg-white/10"
+            >
+              {scanSize === 'small' ? <Minimize2 className="h-4 w-4 mr-2" /> : <Maximize2 className="h-4 w-4 mr-2" />}
+              Size: {scanSize}
+            </Button>
+            <Button
+              variant="outline"
+              onClick={toggleOrientation}
+              className="flex-1 text-white border-white/20 hover:bg-white/10"
+            >
+              <RotateCw className="h-4 w-4 mr-2" />
+              {orientation}
+            </Button>
           </div>
         </div>
       )}

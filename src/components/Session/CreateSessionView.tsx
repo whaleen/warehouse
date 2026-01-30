@@ -424,7 +424,7 @@ export function CreateSessionView({ onViewChange, onMenuClick, sessionId, onSess
     // Mobile: Full-screen overlay for camera-focused scanning
     if (isMobile) {
       return (
-        <MobileOverlay title="Scanning Session" onClose={handleExitSession}>
+        <MobileOverlay title="" onClose={handleExitSession} showHeader={false}>
           <ScanningSessionView
             sessionId={activeSessionId}
             onExit={handleExitSession}

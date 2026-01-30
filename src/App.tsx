@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
+// import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { ThemeProvider } from "@/components/theme-provider";
 import { useAuth } from "@/context/AuthContext";
 import { useCallback, useEffect, useState, lazy, Suspense, useTransition } from "react";
@@ -362,7 +362,7 @@ function App() {
           </SidebarInset>
         </SidebarProvider>
       </ThemeProvider>
-      <ReactQueryDevtools initialIsOpen={false} />
+      
     </QueryClientProvider>
   );
 }
