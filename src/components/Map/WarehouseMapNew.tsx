@@ -125,10 +125,14 @@ export function WarehouseMapNew({ locations }: WarehouseMapNewProps) {
   // Group locations by session for legend
   const sessionGroups = useMemo(() => {
     const groups = new Map<string, { sessionId: string; name: string; color: string; count: number; createdAt: string }>();
+    let noSessionCount = 0;
 
     validLocations.forEach(loc => {
       const sessionId = loc.scanning_session_id;
-      if (!sessionId) return;
+      if (!sessionId) {
+        noSessionCount++;
+        return;
+      }
 
       const metadata = sessionMetadata.get(sessionId);
       const name = metadata?.name || sessionId.slice(0, 8);
@@ -142,9 +146,22 @@ export function WarehouseMapNew({ locations }: WarehouseMapNewProps) {
       }
     });
 
-    return Array.from(groups.values()).sort((a, b) =>
+    const sorted = Array.from(groups.values()).sort((a, b) =>
       new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     );
+
+    // Add "No Session" group at the end if there are orphaned scans
+    if (noSessionCount > 0) {
+      sorted.push({
+        sessionId: '',
+        name: 'No Session',
+        color: '#64748b',
+        count: noSessionCount,
+        createdAt: '',
+      });
+    }
+
+    return sorted;
   }, [validLocations, sessionMetadata]);
 
   const mapStyles = useMemo(

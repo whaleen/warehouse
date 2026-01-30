@@ -57,11 +57,15 @@ export function useDeleteSessionScans() {
 
   return useMutation({
     mutationFn: async (sessionId: string) => {
-      const { error } = await supabase
+      // Empty sessionId means delete scans without a session
+      const query = supabase
         .from('product_location_history')
         .delete()
-        .eq('location_id', locationId)
-        .eq('scanning_session_id', sessionId);
+        .eq('location_id', locationId);
+
+      const { error } = sessionId
+        ? await query.eq('scanning_session_id', sessionId)
+        : await query.is('scanning_session_id', null);
 
       if (error) throw error;
     },
