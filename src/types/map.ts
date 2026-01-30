@@ -60,6 +60,7 @@ export interface ProductLocationForMap {
   load_color: string;
   created_at: string;
   accuracy: number | null;
+  scanning_session_id?: string | null;
 }
 
 /**

@@ -50,3 +50,23 @@ export function useClearAllScans() {
     },
   });
 }
+
+export function useDeleteSessionScans() {
+  const queryClient = useQueryClient();
+  const { locationId } = getActiveLocationContext();
+
+  return useMutation({
+    mutationFn: async (sessionId: string) => {
+      const { error } = await supabase
+        .from('product_location_history')
+        .delete()
+        .eq('location_id', locationId)
+        .eq('scanning_session_id', sessionId);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['product-locations', locationId] });
+    },
+  });
+}

@@ -69,7 +69,7 @@ export async function logProductLocation(input: {
   scanned_by?: string;
   product_type?: string;
   sub_inventory?: string;
-}): Promise<{ success: boolean; error?: any }> {
+}): Promise<{ success: boolean; error?: unknown }> {
   const { locationId, companyId } = getActiveLocationContext();
 
   // Insert location record
@@ -101,13 +101,13 @@ export async function logProductLocation(input: {
  */
 export async function getProductLocations(): Promise<{
   data: ProductLocationForMap[];
-  error: any;
+  error: unknown;
 }> {
   const { locationId } = getActiveLocationContext();
 
   const { data, error } = await supabase
     .from('product_location_history')
-    .select('id, position_x, position_y, raw_lat, raw_lng, accuracy, created_at, product_type, sub_inventory, inventory_item_id, product_id')
+    .select('id, position_x, position_y, raw_lat, raw_lng, accuracy, created_at, product_type, sub_inventory, inventory_item_id, product_id, scanning_session_id')
     .eq('location_id', locationId)
     .order('created_at', { ascending: false });
 
@@ -276,13 +276,14 @@ export async function getProductLocations(): Promise<{
       load_color: loadColor,
       created_at: item.created_at,
       accuracy: item.accuracy,
+      scanning_session_id: item.scanning_session_id,
     };
   });
 
   return { data: locationsWithColors, error: null };
 }
 
-export async function deleteProductLocation(locationId: string): Promise<{ error?: any }> {
+export async function deleteProductLocation(locationId: string): Promise<{ error?: unknown }> {
   const { locationId: activeLocationId } = getActiveLocationContext();
 
   const { error } = await supabase
@@ -301,7 +302,7 @@ export async function getSessionLocationHistory(
   sessionId: string
 ): Promise<{
   data: ProductLocationHistory[];
-  error: any;
+  error: unknown;
 }> {
   const { locationId } = getActiveLocationContext();
 

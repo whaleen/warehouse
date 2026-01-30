@@ -8,12 +8,14 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Map as MapComponent, MapMarker, MarkerContent, MarkerPopup, MarkerTooltip, MapControls, type MapRef } from '@/components/ui/map';
 import { Button } from '@/components/ui/button';
-import { Globe, Package, Pencil, ScanLine, Trash2 } from 'lucide-react';
+import { Globe, Package, Pencil, ScanLine, Trash2, X } from 'lucide-react';
 import { Spinner } from '@/components/ui/spinner';
-import { useDeleteProductLocation, useClearAllScans } from '@/hooks/queries/useMap';
+import { useDeleteProductLocation, useClearAllScans, useDeleteSessionScans } from '@/hooks/queries/useMap';
 import { useIsMobile } from '@/hooks/use-mobile';
 import type { ProductLocationForMap } from '@/types/map';
 import { blankMapStyle } from './BlankMapStyle';
+import supabase from '@/lib/supabase';
+import { getActiveLocationContext } from '@/lib/tenant';
 
 interface WarehouseMapNewProps {
   locations: ProductLocationForMap[];
@@ -32,12 +34,14 @@ type SavedViewState = {
 export function WarehouseMapNew({ locations }: WarehouseMapNewProps) {
   const isMobile = useIsMobile();
   const [mapInstance, setMapInstance] = useState<MapRef | null>(null);
+  const [sessionMetadata, setSessionMetadata] = useState<Map<string, { name: string; created_at: string }>>(new Map());
   const [showWorldMap, setShowWorldMap] = useState(() => {
     if (typeof window === 'undefined') return false;
     return window.localStorage.getItem(WORLD_MAP_STORAGE_KEY) === 'true';
   });
   const deleteLocation = useDeleteProductLocation();
   const clearAllScans = useClearAllScans();
+  const deleteSessionScans = useDeleteSessionScans();
   const savedView = useMemo<SavedViewState | null>(() => {
     if (typeof window === 'undefined') return null;
     const raw = window.localStorage.getItem(VIEW_STATE_STORAGE_KEY);
@@ -85,24 +89,63 @@ export function WarehouseMapNew({ locations }: WarehouseMapNewProps) {
     return locations.filter(l => l.raw_lat != null && l.raw_lng != null);
   }, [locations]);
 
-  // Group locations by load for legend
-  const loadGroups = useMemo(() => {
-    const groups = new Map<string, { name: string; color: string; count: number }>();
+  // Fetch session metadata for legend
+  useEffect(() => {
+    const sessionIds = Array.from(new Set(
+      validLocations
+        .map(loc => loc.scanning_session_id)
+        .filter(Boolean)
+    )) as string[];
+
+    if (sessionIds.length === 0) return;
+
+    const fetchSessions = async () => {
+      const { locationId } = getActiveLocationContext();
+      const { data } = await supabase
+        .from('scanning_sessions')
+        .select('id, name, created_at')
+        .eq('location_id', locationId)
+        .in('id', sessionIds);
+
+      if (data) {
+        const metadata = new Map<string, { name: string; created_at: string }>();
+        data.forEach((session: { id: string; name: string; created_at: string }) => {
+          metadata.set(session.id, {
+            name: session.name,
+            created_at: session.created_at,
+          });
+        });
+        setSessionMetadata(metadata);
+      }
+    };
+
+    fetchSessions();
+  }, [validLocations]);
+
+  // Group locations by session for legend
+  const sessionGroups = useMemo(() => {
+    const groups = new Map<string, { sessionId: string; name: string; color: string; count: number; createdAt: string }>();
 
     validLocations.forEach(loc => {
-      const key = loc.sub_inventory || 'no-load';
-      const name = loc.load_friendly_name || loc.sub_inventory || 'No Load';
-      const color = loc.load_color || '#94a3b8';
+      const sessionId = loc.scanning_session_id;
+      if (!sessionId) return;
 
-      if (groups.has(key)) {
-        groups.get(key)!.count++;
+      const metadata = sessionMetadata.get(sessionId);
+      const name = metadata?.name || sessionId.slice(0, 8);
+      const color = loc.load_color || '#94a3b8';
+      const createdAt = metadata?.created_at || '';
+
+      if (groups.has(sessionId)) {
+        groups.get(sessionId)!.count++;
       } else {
-        groups.set(key, { name, color, count: 1 });
+        groups.set(sessionId, { sessionId, name, color, count: 1, createdAt });
       }
     });
 
-    return Array.from(groups.values()).sort((a, b) => b.count - a.count);
-  }, [validLocations]);
+    return Array.from(groups.values()).sort((a, b) =>
+      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
+  }, [validLocations, sessionMetadata]);
 
   const mapStyles = useMemo(
     () => ({
@@ -155,6 +198,7 @@ export function WarehouseMapNew({ locations }: WarehouseMapNewProps) {
       { padding: 48, maxZoom: 19, duration: 0 }
     );
     hasFitRef.current = true;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [validLocations]);
 
   useEffect(() => {
@@ -376,19 +420,38 @@ export function WarehouseMapNew({ locations }: WarehouseMapNewProps) {
           )}
         </div>
 
-        {/* Legend */}
-        {loadGroups.length > 0 && (
+        {/* Sessions Legend */}
+        {sessionGroups.length > 0 && (
           <div className="space-y-1.5 border-t pt-2">
-            <div className="text-xs text-muted-foreground font-medium">Legend</div>
-            <div className="space-y-1 max-h-32 overflow-y-auto">
-              {loadGroups.map((group, idx) => (
-                <div key={idx} className="flex items-center gap-2 text-xs">
+            <div className="text-xs text-muted-foreground font-medium">Sessions</div>
+            <div className="space-y-1 max-h-40 overflow-y-auto">
+              {sessionGroups.map((group) => (
+                <div key={group.sessionId} className="flex items-center gap-2 text-xs group">
                   <div
                     className="size-3 rounded-sm shrink-0"
                     style={{ backgroundColor: group.color }}
                   />
-                  <span className="truncate flex-1">{group.name}</span>
+                  <span className="truncate flex-1 min-w-0">{group.name}</span>
                   <span className="text-muted-foreground shrink-0">({group.count})</span>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="h-5 w-5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                    onClick={() => {
+                      if (confirm(`Delete ${group.count} scans from "${group.name}"?`)) {
+                        deleteSessionScans.mutate(group.sessionId);
+                      }
+                    }}
+                    disabled={deleteSessionScans.isPending}
+                    aria-label={`Delete session ${group.name}`}
+                  >
+                    {deleteSessionScans.isPending ? (
+                      <Spinner size="sm" />
+                    ) : (
+                      <X className="h-3 w-3" />
+                    )}
+                  </Button>
                 </div>
               ))}
             </div>
