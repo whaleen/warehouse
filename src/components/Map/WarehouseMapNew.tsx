@@ -8,7 +8,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Map as MapComponent, MapMarker, MarkerContent, MarkerPopup, MarkerTooltip, MapControls, type MapRef } from '@/components/ui/map';
 import { Button } from '@/components/ui/button';
-import { Globe, Package, Pencil, ScanLine, Trash2, X } from 'lucide-react';
+import { Globe, Package, Pencil, ScanLine, Trash2, X, ChevronUp, ChevronDown } from 'lucide-react';
 import { Spinner } from '@/components/ui/spinner';
 import { useDeleteProductLocation, useClearAllScans, useDeleteSessionScans } from '@/hooks/queries/useMap';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -37,6 +37,7 @@ export function WarehouseMapNew({ locations }: WarehouseMapNewProps) {
   const [sessionMetadata, setSessionMetadata] = useState<Map<string, { name: string; created_at: string }>>(new Map());
   const [loadMetadata, setLoadMetadata] = useState<Map<string, { friendly_name: string | null; ge_cso: string | null }>>(new Map());
   const [hiddenSessions, setHiddenSessions] = useState<Set<string>>(new Set());
+  const [legendExpanded, setLegendExpanded] = useState(() => !isMobile);
   const [showWorldMap, setShowWorldMap] = useState(() => {
     if (typeof window === 'undefined') return false;
     return window.localStorage.getItem(WORLD_MAP_STORAGE_KEY) === 'true';
@@ -489,115 +490,137 @@ export function WarehouseMapNew({ locations }: WarehouseMapNewProps) {
       </MapComponent>
 
       {/* Scans count overlay */}
-      <div className="absolute bottom-4 left-4 bg-card/95 backdrop-blur border border-border p-3 rounded-lg shadow-lg space-y-3 max-w-xs">
-        <div>
-          <div className="text-xs text-muted-foreground">Inventory</div>
-          <div className="text-2xl font-bold">
-            {visibleLocations.length}
-            {hiddenSessions.size > 0 && (
-              <span className="text-sm text-muted-foreground ml-1">/ {validLocations.length}</span>
+      <div className="absolute bottom-4 left-4 bg-card/95 backdrop-blur border border-border rounded-lg shadow-lg max-w-xs w-full sm:w-auto">
+        {/* Always visible header */}
+        <div className="p-3 space-y-2">
+          <div className="flex items-start justify-between gap-2">
+            <div className="flex-1 min-w-0">
+              <div className="text-xs text-muted-foreground">Inventory</div>
+              <div className="text-2xl font-bold">
+                {visibleLocations.length}
+                {hiddenSessions.size > 0 && (
+                  <span className="text-sm text-muted-foreground ml-1">/ {validLocations.length}</span>
+                )}
+              </div>
+              {validLocations.length !== locations.length && (
+                <div className="text-xs text-amber-500">
+                  {locations.length - validLocations.length} without GPS
+                </div>
+              )}
+            </div>
+            {sessionGroups.length > 0 && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 shrink-0"
+                onClick={() => setLegendExpanded(!legendExpanded)}
+                aria-label={legendExpanded ? 'Collapse legend' : 'Expand legend'}
+              >
+                {legendExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
+              </Button>
             )}
           </div>
-          {validLocations.length !== locations.length && (
-            <div className="text-xs text-amber-500">
-              {locations.length - validLocations.length} without GPS
-            </div>
-          )}
         </div>
 
-        {/* Sessions Legend */}
-        {sessionGroups.length > 0 && (
-          <div className="space-y-1.5 border-t pt-2">
-            <div className="text-xs text-muted-foreground font-medium">Sessions (click to toggle)</div>
-            <div className="space-y-1 max-h-40 overflow-y-auto">
-              {sessionGroups.map((group) => {
-                const isHidden = hiddenSessions.has(group.sessionId);
-                return (
-                  <div key={group.sessionId} className="flex items-center gap-2 text-xs group">
-                    <button
-                      type="button"
-                      className="flex items-center gap-2 flex-1 min-w-0 hover:bg-accent/50 rounded px-1 -mx-1 py-0.5"
-                      onClick={() => toggleSessionVisibility(group.sessionId)}
-                    >
-                      <div
-                        className="size-3 rounded-sm shrink-0 transition-opacity"
-                        style={{
-                          backgroundColor: group.color,
-                          opacity: isHidden ? 0.3 : 1
-                        }}
-                      />
-                      <span className={`truncate flex-1 min-w-0 text-left transition-opacity ${isHidden ? 'opacity-40 line-through' : ''}`}>
-                        {group.name}
-                      </span>
-                      <span className={`text-muted-foreground shrink-0 transition-opacity ${isHidden ? 'opacity-40' : ''}`}>
-                        ({group.count})
-                      </span>
-                    </button>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      className="h-5 w-5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        if (confirm(`Delete ${group.count} scans from "${group.name}"?`)) {
-                          deleteSessionScans.mutate(group.sessionId);
-                        }
-                      }}
-                      disabled={deleteSessionScans.isPending}
-                      aria-label={`Delete session ${group.name}`}
-                    >
-                      {deleteSessionScans.isPending ? (
-                        <Spinner size="sm" />
-                      ) : (
-                        <X className="h-3 w-3" />
-                      )}
-                    </Button>
-                  </div>
-                );
-              })}
+        {/* Collapsible content */}
+        {legendExpanded && (
+          <>
+            {/* Sessions Legend */}
+            {sessionGroups.length > 0 && (
+              <div className="px-3 pb-2 space-y-1.5 border-t pt-2">
+                <div className="text-xs text-muted-foreground font-medium">Sessions (tap to toggle)</div>
+                <div className={`space-y-1 overflow-y-auto ${isMobile ? 'max-h-[40vh]' : 'max-h-40'}`}>
+                  {sessionGroups.map((group) => {
+                    const isHidden = hiddenSessions.has(group.sessionId);
+                    return (
+                      <div key={group.sessionId} className="flex items-center gap-2 group">
+                        <button
+                          type="button"
+                          className={`flex items-center gap-2 flex-1 min-w-0 hover:bg-accent/50 active:bg-accent rounded px-2 -mx-2 transition-colors ${isMobile ? 'py-2 min-h-[44px]' : 'py-1'}`}
+                          onClick={() => toggleSessionVisibility(group.sessionId)}
+                        >
+                          <div
+                            className={`rounded-sm shrink-0 transition-opacity ${isMobile ? 'size-4' : 'size-3'}`}
+                            style={{
+                              backgroundColor: group.color,
+                              opacity: isHidden ? 0.3 : 1
+                            }}
+                          />
+                          <span className={`truncate flex-1 min-w-0 text-left transition-opacity text-xs ${isHidden ? 'opacity-40 line-through' : ''}`}>
+                            {group.name}
+                          </span>
+                          <span className={`text-muted-foreground shrink-0 transition-opacity text-xs ${isHidden ? 'opacity-40' : ''}`}>
+                            ({group.count})
+                          </span>
+                        </button>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className={`shrink-0 opacity-0 group-hover:opacity-100 transition-opacity ${isMobile ? 'h-8 w-8' : 'h-5 w-5'}`}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (confirm(`Delete ${group.count} scans from "${group.name}"?`)) {
+                              deleteSessionScans.mutate(group.sessionId);
+                            }
+                          }}
+                          disabled={deleteSessionScans.isPending}
+                          aria-label={`Delete session ${group.name}`}
+                        >
+                          {deleteSessionScans.isPending ? (
+                            <Spinner size="sm" />
+                          ) : (
+                            <X className="h-3 w-3" />
+                          )}
+                        </Button>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            <div className="flex gap-2 border-t p-3">
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className={`${isMobile ? 'h-10 w-10' : 'h-8 w-8'} ${showWorldMap ? '' : 'opacity-50'}`}
+                onClick={() => {
+                  setShowWorldMap((prev) => {
+                    const next = !prev;
+                    if (typeof window !== 'undefined') {
+                      window.localStorage.setItem(WORLD_MAP_STORAGE_KEY, String(next));
+                    }
+                    return next;
+                  });
+                }}
+                aria-label="Toggle world map"
+              >
+                <Globe className="h-4 w-4" />
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size={isMobile ? 'default' : 'sm'}
+                className="flex-1"
+                onClick={handleClearAllScans}
+                disabled={clearAllScans.isPending || validLocations.length === 0}
+                aria-label="Clear all scans"
+              >
+                {clearAllScans.isPending ? (
+                  <Spinner size="sm" />
+                ) : (
+                  <>
+                    <Trash2 className="h-3 w-3 mr-1" />
+                    Clear All
+                  </>
+                )}
+              </Button>
             </div>
-          </div>
+          </>
         )}
-
-        <div className="flex gap-2 border-t pt-2">
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className={showWorldMap ? '' : 'opacity-50'}
-            onClick={() => {
-              setShowWorldMap((prev) => {
-                const next = !prev;
-                if (typeof window !== 'undefined') {
-                  window.localStorage.setItem(WORLD_MAP_STORAGE_KEY, String(next));
-                }
-                return next;
-              });
-            }}
-            aria-label="Toggle world map"
-          >
-            <Globe className="h-4 w-4" />
-          </Button>
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            className="flex-1"
-            onClick={handleClearAllScans}
-            disabled={clearAllScans.isPending || validLocations.length === 0}
-            aria-label="Clear all scans"
-          >
-            {clearAllScans.isPending ? (
-              <Spinner size="sm" />
-            ) : (
-              <>
-                <Trash2 className="h-3 w-3 mr-1" />
-                Clear All
-              </>
-            )}
-          </Button>
-        </div>
       </div>
 
       <div className="absolute bottom-4 right-4">
