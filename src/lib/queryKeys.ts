@@ -33,6 +33,17 @@ export const queryKeys = {
   },
   activity: {
     all: (locationId: string) => ['activity', locationId] as const,
+    recent: (locationId: string, limit: number) => ['activity', locationId, 'recent', limit] as const,
+  },
+  dashboard: {
+    items: (locationId: string) => ['dashboard', locationId, 'items'] as const,
+    conflicts: (locationId: string) => ['dashboard', locationId, 'conflicts'] as const,
+  },
+  map: {
+    sessionMetadata: (locationId: string, sessionIds: string[]) =>
+      ['map', locationId, 'sessions', sessionIds] as const,
+    loadMetadata: (locationId: string, loadNames: string[]) =>
+      ['map', locationId, 'loads', loadNames] as const,
   },
   displays: {
     all: (locationId: string) => ['displays', locationId] as const,

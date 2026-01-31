@@ -16,6 +16,7 @@ import {
   Truck,
 } from "lucide-react";
 import { WarehouseLogo } from "@/components/Brand/WarehouseLogo";
+import { getAppUrl } from "@/lib/appLinks";
 
 export function LandingPage() {
   return (
@@ -90,7 +91,7 @@ function HeroSection() {
               className="mt-10 flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 marketing-fade-up"
               style={{ ['--marketing-delay' as string]: "190ms" }}
             >
-            <a href="/signup">
+            <a href={getAppUrl("/signup")}>
               <Button
                 size="lg"
                 className="text-white shadow-lg px-8 hover:opacity-90"
@@ -498,7 +499,7 @@ function CtaSection() {
           warehouse floor management.
         </p>
         <div className="mt-10">
-          <a href="/signup">
+          <a href={getAppUrl("/signup")}>
             <Button
               size="lg"
               className="bg-white hover:bg-gray-50 shadow-lg px-8"

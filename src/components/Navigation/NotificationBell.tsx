@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Bell } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -11,44 +11,17 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
 import { useReorderAlerts } from '@/hooks/queries/useParts';
-import supabase from '@/lib/supabase';
-import { getActiveLocationContext } from '@/lib/tenant';
 import { cn } from '@/lib/utils';
+import { useReorderAlertsRealtime } from '@/hooks/queries/useRealtimeSync';
 
 interface NotificationBellProps {
   className?: string;
 }
 
 export function NotificationBell({ className }: NotificationBellProps) {
-  const { data: alerts = [], refetch } = useReorderAlerts();
+  const { data: alerts = [] } = useReorderAlerts();
   const [open, setOpen] = useState(false);
-  const { locationId } = getActiveLocationContext();
-
-  // Subscribe to real-time updates
-  useEffect(() => {
-    if (!locationId) return;
-
-    const channel = supabase
-      .channel('parts-notifications')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'tracked_parts',
-          filter: `location_id=eq.${locationId}`,
-        },
-        () => {
-          // Refetch alerts when tracked parts change
-          refetch();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [locationId, refetch]);
+  useReorderAlertsRealtime();
 
   const activeAlerts = alerts.filter(alert => !alert.reordered_at);
   const alertCount = activeAlerts.length;

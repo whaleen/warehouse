@@ -82,3 +82,68 @@ export function useInventoryRealtime() {
     };
   }, [locationId, queryClient]);
 }
+
+export function useReorderAlertsRealtime() {
+  const queryClient = useQueryClient();
+  const { locationId } = getActiveLocationContext();
+
+  useEffect(() => {
+    if (!locationId) return;
+
+    const channel = supabase
+      .channel(`parts-notifications-${locationId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'tracked_parts',
+          filter: `location_id=eq.${locationId}`,
+        },
+        () => {
+          queryClient.invalidateQueries({ queryKey: queryKeys.parts.alerts(locationId) });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [locationId, queryClient]);
+}
+
+export function useRecentActivityRealtime(limit: number = 20) {
+  const queryClient = useQueryClient();
+  const { locationId } = getActiveLocationContext();
+
+  useEffect(() => {
+    if (!locationId) return;
+
+    const channel = supabase
+      .channel(`activity-recent-${locationId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'activity_log',
+          filter: `location_id=eq.${locationId}`,
+        },
+        (payload) => {
+          const entry = payload.new;
+          queryClient.setQueryData(queryKeys.activity.recent(locationId, limit), (old: unknown) => {
+            const previous = Array.isArray(old) ? old : [];
+            if (previous.some((item: { id?: string }) => item.id === entry.id)) {
+              return previous;
+            }
+            return [entry, ...previous].slice(0, limit);
+          });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [locationId, limit, queryClient]);
+}

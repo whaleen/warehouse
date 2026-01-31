@@ -14,8 +14,7 @@ import { useDeleteProductLocation, useClearAllScans, useDeleteSessionScans } fro
 import { useIsMobile } from '@/hooks/use-mobile';
 import type { ProductLocationForMap } from '@/types/map';
 import { blankMapStyle } from './BlankMapStyle';
-import supabase from '@/lib/supabase';
-import { getActiveLocationContext } from '@/lib/tenant';
+import { useLoadMetadata, useSessionMetadata } from '@/hooks/queries/useMapMetadata';
 
 interface WarehouseMapNewProps {
   locations: ProductLocationForMap[];
@@ -34,8 +33,6 @@ type SavedViewState = {
 export function WarehouseMapNew({ locations }: WarehouseMapNewProps) {
   const isMobile = useIsMobile();
   const [mapInstance, setMapInstance] = useState<MapRef | null>(null);
-  const [sessionMetadata, setSessionMetadata] = useState<Map<string, { name: string; created_at: string }>>(new Map());
-  const [loadMetadata, setLoadMetadata] = useState<Map<string, { friendly_name: string | null; ge_cso: string | null }>>(new Map());
   const [hiddenSessions, setHiddenSessions] = useState<Set<string>>(new Set());
   const [legendExpanded, setLegendExpanded] = useState(() => !isMobile);
   const [showWorldMap, setShowWorldMap] = useState(() => {
@@ -112,66 +109,38 @@ export function WarehouseMapNew({ locations }: WarehouseMapNewProps) {
     });
   };
 
-  // Fetch session and load metadata for legend
-  useEffect(() => {
-    const sessionIds = Array.from(new Set(
-      validLocations
-        .map(loc => loc.scanning_session_id)
-        .filter(Boolean)
-    )) as string[];
-
-    const loadNames = Array.from(new Set(
-      validLocations
-        .map(loc => loc.sub_inventory)
-        .filter(Boolean)
-    )) as string[];
-
-    const fetchMetadata = async () => {
-      const { locationId } = getActiveLocationContext();
-
-      // Fetch sessions
-      if (sessionIds.length > 0) {
-        const { data: sessionData } = await supabase
-          .from('scanning_sessions')
-          .select('id, name, created_at')
-          .eq('location_id', locationId)
-          .in('id', sessionIds);
-
-        if (sessionData) {
-          const metadata = new Map<string, { name: string; created_at: string }>();
-          sessionData.forEach((session: { id: string; name: string; created_at: string }) => {
-            metadata.set(session.id, {
-              name: session.name,
-              created_at: session.created_at,
-            });
-          });
-          setSessionMetadata(metadata);
-        }
-      }
-
-      // Fetch loads
-      if (loadNames.length > 0) {
-        const { data: loadData } = await supabase
-          .from('load_metadata')
-          .select('sub_inventory_name, friendly_name, ge_cso')
-          .eq('location_id', locationId)
-          .in('sub_inventory_name', loadNames);
-
-        if (loadData) {
-          const metadata = new Map<string, { friendly_name: string | null; ge_cso: string | null }>();
-          loadData.forEach((load: { sub_inventory_name: string; friendly_name: string | null; ge_cso: string | null }) => {
-            metadata.set(load.sub_inventory_name, {
-              friendly_name: load.friendly_name,
-              ge_cso: load.ge_cso,
-            });
-          });
-          setLoadMetadata(metadata);
-        }
-      }
-    };
-
-    fetchMetadata();
-  }, [validLocations]);
+  const sessionIds = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          validLocations
+            .map(loc => loc.scanning_session_id)
+            .filter(Boolean)
+        )
+      ) as string[],
+    [validLocations]
+  );
+  const loadNames = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          validLocations
+            .map(loc => loc.sub_inventory)
+            .filter(Boolean)
+        )
+      ) as string[],
+    [validLocations]
+  );
+  const sessionMetadataQuery = useSessionMetadata(sessionIds);
+  const loadMetadataQuery = useLoadMetadata(loadNames);
+  const sessionMetadata = useMemo(
+    () => sessionMetadataQuery.data ?? new Map(),
+    [sessionMetadataQuery.data]
+  );
+  const loadMetadata = useMemo(
+    () => loadMetadataQuery.data ?? new Map(),
+    [loadMetadataQuery.data]
+  );
 
   // Group locations by session for legend
   const sessionGroups = useMemo(() => {

@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { WarehouseLogo } from "@/components/Brand/WarehouseLogo";
+import { getAppUrl } from "@/lib/appLinks";
 
 // Color palette for loads - edit these to refine contrast
 // Export for use in other marketing components
@@ -41,7 +42,7 @@ interface MarketingLayoutProps {
 export function MarketingLayout({ children }: MarketingLayoutProps) {
   return (
     <div className="min-h-screen flex flex-col bg-white marketing-root">
-      <MarketingHeader  />
+      <MarketingHeader />
       <ColorSwatchBar />
       <main className="flex-1">{children}</main>
       <MarketingFooter />
@@ -93,12 +94,12 @@ function MarketingHeader() {
           </nav>
 
           <div className="flex items-center gap-4">
-            <a href="/login">
+            <a href={getAppUrl("/login")}>
               <Button variant="ghost" size="sm" className="text-gray-600 hover:text-gray-900">
                 Sign in
               </Button>
             </a>
-            <a href="/signup">
+            <a href={getAppUrl("/signup")}>
               <Button
                 size="sm"
                 style={{

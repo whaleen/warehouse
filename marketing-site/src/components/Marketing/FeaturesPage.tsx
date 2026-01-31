@@ -18,6 +18,7 @@ import {
   Cloud,
   Clock,
 } from "lucide-react";
+import { getAppUrl } from "@/lib/appLinks";
 
 export function FeaturesPage() {
   return (
@@ -330,7 +331,7 @@ function FloorControls() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {controls.map((control, index) => {
             const colorKeys = Object.keys(COLORS) as (keyof typeof COLORS)[];
-            const colorKey = colorKeys[(index + 5) % colorKeys.length]; // Offset to get different colors
+            const colorKey = colorKeys[(index + 5) % colorKeys.length];
             const color = COLORS[colorKey];
             return (
               <div
@@ -423,7 +424,7 @@ function CtaSection() {
           the first to try it.
         </p>
         <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
-          <a href="/signup">
+          <a href={getAppUrl("/signup")}>
             <Button
               size="lg"
               className="text-white shadow-lg px-8 hover:opacity-90"

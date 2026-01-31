@@ -197,10 +197,52 @@
     @apply bg-background text-foreground;
     letter-spacing: var(--tracking-normal);
   }
-  .maplibregl-popup-content {
-    @apply bg-transparent! shadow-none! p-0! rounded-none!;
+}
+
+@layer utilities {
+  .marketing-root {
+    font-feature-settings: "ss01";
   }
-  .maplibregl-popup-tip {
-    @apply hidden!;
+
+  @keyframes marketing-fade-up {
+    from {
+      opacity: 0;
+      transform: translateY(16px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes marketing-fade-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  .marketing-grid {
+    background-image:
+      linear-gradient(rgba(148, 163, 184, 0.15) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(148, 163, 184, 0.15) 1px, transparent 1px);
+    background-size: 48px 48px;
+  }
+
+  .marketing-fade-up {
+    animation: marketing-fade-up 0.8s ease-out both;
+    animation-delay: var(--marketing-delay, 0ms);
+  }
+
+  .marketing-fade-in {
+    animation: marketing-fade-in 0.6s ease-out both;
+    animation-delay: var(--marketing-delay, 0ms);
+  }
+
+  .marketing-fade-up,
+  .marketing-fade-in {
+    will-change: transform, opacity;
   }
 }

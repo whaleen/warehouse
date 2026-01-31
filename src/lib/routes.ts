@@ -1,7 +1,4 @@
 export type AppView =
-  | 'landing'
-  | 'pricing'
-  | 'features'
   | 'login'
   | 'reset-password'
   | 'update-password'
@@ -42,12 +39,6 @@ export function getPathForView(view: AppView, sessionId?: string | null, display
   }
 
   switch (view) {
-    case 'landing':
-      return '/';
-    case 'pricing':
-      return '/pricing';
-    case 'features':
-      return '/features';
     case 'login':
       return '/login';
     case 'reset-password':
@@ -94,16 +85,12 @@ export function parseRoute(pathname: string): RouteState {
   const segments = normalized.split('/').filter(Boolean);
 
   if (segments.length === 0) {
-    return { view: 'landing' };
+    return { view: 'dashboard' };
   }
 
   const [first, second ] = segments;
 
   switch (first) {
-    case 'pricing':
-      return { view: 'pricing' };
-    case 'features':
-      return { view: 'features' };
     case 'login':
       return { view: 'login' };
     case 'reset-password':
@@ -153,32 +140,17 @@ export function parseRoute(pathname: string): RouteState {
     case 'display':
       return { view: 'floor-display', displayId: second ?? null };
     default:
-      return { view: 'landing' };
+      return { view: 'dashboard' };
   }
 }
 
 export function isPublicRoute(pathname: string): boolean {
   const normalized = pathname.replace(/\/+$/, '');
   return (
-    normalized === '' ||
-    normalized === '/' ||
-    normalized.startsWith('/pricing') ||
-    normalized.startsWith('/features') ||
     normalized.startsWith('/login') ||
     normalized.startsWith('/reset-password') ||
     normalized.startsWith('/update-password') ||
     normalized.startsWith('/signup') ||
     normalized.startsWith('/display')
-  );
-}
-
-export function isMarketingRoute(pathname: string): boolean {
-  const normalized = pathname.replace(/\/+$/, '');
-  return (
-    normalized === '' ||
-    normalized === '/' ||
-    normalized.startsWith('/pricing') ||
-    normalized.startsWith('/features')
-    || normalized.startsWith('/signup')
   );
 }

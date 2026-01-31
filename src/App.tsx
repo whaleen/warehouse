@@ -4,7 +4,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { useAuth } from "@/context/AuthContext";
 import { useCallback, useEffect, useState, lazy, Suspense, useTransition } from "react";
 import { AppSidebar } from "./components/app-sidebar";
-import { getPathForView, parseRoute, isPublicRoute, isMarketingRoute, type AppView } from "@/lib/routes";
+import { getPathForView, parseRoute, isPublicRoute, type AppView } from "@/lib/routes";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { useUiHandedness } from "@/hooks/useUiHandedness";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -21,13 +21,10 @@ const DashboardView = lazy(() => import("./components/Dashboard/DashboardView").
 const SettingsView = lazy(() => import("./components/Settings/SettingsView").then(m => ({ default: m.SettingsView })));
 const GESyncView = lazy(() => import("./components/Settings/GESyncView").then(m => ({ default: m.GESyncView })));
 const FloorDisplayView = lazy(() => import("@/components/FloorDisplay/FloorDisplayView").then(m => ({ default: m.FloorDisplayView })));
-const LandingPage = lazy(() => import("@/components/Marketing/LandingPage").then(m => ({ default: m.LandingPage })));
-const PricingPage = lazy(() => import("@/components/Marketing/PricingPage").then(m => ({ default: m.PricingPage })));
-const FeaturesPage = lazy(() => import("@/components/Marketing/FeaturesPage").then(m => ({ default: m.FeaturesPage })));
 const LoginView = lazy(() => import("@/components/Auth/LoginView").then(m => ({ default: m.LoginView })));
+const SignupView = lazy(() => import("@/components/Auth/SignupView").then(m => ({ default: m.SignupView })));
 const ResetPasswordView = lazy(() => import("@/components/Auth/ResetPasswordView").then(m => ({ default: m.ResetPasswordView })));
 const UpdatePasswordView = lazy(() => import("@/components/Auth/UpdatePasswordView").then(m => ({ default: m.UpdatePasswordView })));
-const SignupPage = lazy(() => import("@/components/Marketing/SignupPage").then(m => ({ default: m.SignupPage })));
 const ActivityLogView = lazy(() => import("@/components/Activity/ActivityLogView").then(m => ({ default: m.ActivityLogView })));
 const MapView = lazy(() => import("@/components/Map/MapView").then(m => ({ default: m.MapView })));
 
@@ -163,41 +160,6 @@ function App() {
   // Handle public routes BEFORE auth loading check
   // These pages don't need auth state to render
   if (isPublicRoute(pathname)) {
-    // Marketing routes
-    if (isMarketingRoute(pathname)) {
-      // If auth finished loading and user is logged in, redirect to app
-      if (!loading && user) {
-        if (isPending) {
-          return (
-            <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme-marketing">
-              <PendingAccess email={user.email} onLogout={logout} />
-            </ThemeProvider>
-          );
-        }
-        navigate('dashboard', { replace: true });
-        return null;
-      }
-      // Show marketing pages (even while auth is loading)
-      const normalizedPath = pathname.replace(/\/+$/, '');
-      return (
-        <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme-marketing">
-          <Suspense fallback={null}>
-            <PageTransition>
-              {normalizedPath.startsWith('/pricing') ? (
-                <PricingPage />
-              ) : normalizedPath.startsWith('/features') ? (
-                <FeaturesPage />
-              ) : normalizedPath.startsWith('/signup') ? (
-                <SignupPage />
-              ) : (
-                <LandingPage />
-              )}
-            </PageTransition>
-          </Suspense>
-        </ThemeProvider>
-      );
-    }
-
     // Login route
     if (pathname.startsWith('/login')) {
       // If auth finished loading and user is logged in, redirect to app
@@ -250,6 +212,30 @@ function App() {
       );
     }
 
+    // Signup route
+    if (pathname.startsWith('/signup')) {
+      if (!loading && user) {
+        if (isPending) {
+          return (
+            <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme-marketing">
+              <PendingAccess email={user.email} onLogout={logout} />
+            </ThemeProvider>
+          );
+        }
+        navigate('dashboard', { replace: true });
+        return null;
+      }
+      return (
+        <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme-marketing">
+          <Suspense fallback={null}>
+            <PageTransition>
+              <SignupView />
+            </PageTransition>
+          </Suspense>
+        </ThemeProvider>
+      );
+    }
+
     // Floor display route - ONLY for /display paths
     if (pathname.startsWith('/display')) {
       return (
@@ -265,12 +251,7 @@ function App() {
       );
     }
 
-    // Fallback for any other public route - show landing page
-    return (
-      <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme-marketing">
-        <LandingPage />
-      </ThemeProvider>
-    );
+    return null;
   }
 
   // Protected routes: wait for auth to load

@@ -1,20 +1,19 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Package, TruckIcon, PackageOpen, User, ScanBarcode, ArrowRight, Check, AlertTriangle } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend } from 'recharts';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
-import supabase from '@/lib/supabase';
 import { useLoads } from '@/hooks/queries/useLoads';
-import { useActivityRealtime } from '@/hooks/queries/useRealtimeSync';
+import { useRecentActivityRealtime } from '@/hooks/queries/useRealtimeSync';
+import { useDashboardInventoryItems, useDashboardLoadConflicts, useRecentActivity } from '@/hooks/queries/useDashboard';
 import { AppHeader } from '@/components/Navigation/AppHeader';
 import { ReorderAlertsCard } from './ReorderAlertsCard';
 import { useAuth } from '@/context/AuthContext';
 import { PageContainer } from '@/components/Layout/PageContainer';
 import { getPathForView } from '@/lib/routes';
 import type { AppView } from '@/lib/routes';
-import { getActiveLocationContext } from '@/lib/tenant';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 interface DashboardViewProps {
@@ -69,6 +68,39 @@ interface DetailedStats {
   };
 }
 
+const EMPTY_STATS: DetailedStats = {
+  totalItems: 0,
+  localStock: { total: 0, unassigned: 0, staged: 0, inbound: 0, routes: 0 },
+  fg: { total: 0, regular: 0, backhaul: 0 },
+  asis: { total: 0, unassigned: 0, regular: 0, salvage: 0, scrap: 0 },
+  asisLoads: {
+    total: 0,
+    forSale: 0,
+    sold: 0,
+    forSaleNeedsWrap: 0,
+    soldNeedsTag: 0,
+    soldNeedsWrap: 0,
+    soldNeedsBoth: 0,
+    pickupSoonNeedsPrep: 0,
+  },
+  loads: { total: 0, active: 0, byType: { localStock: 0, fg: 0, asis: 0 } },
+};
+
+const EMPTY_LOAD_DETAILS: Record<string, { loadName: string; count: number; category?: string }[]> = {
+  'LocalStock-routes': [],
+  'FG-backhaul': [],
+  'ASIS-regular': [],
+  'ASIS-salvage': [],
+  'ASIS-scrap': [],
+};
+
+const EMPTY_ASIS_ACTION_LOADS = {
+  forSaleNeedsWrap: [] as AsisActionLoad[],
+  soldNeedsPrep: [] as AsisActionLoad[],
+  sanityCheckRequested: [] as AsisActionLoad[],
+  pickupSoonNeedsPrep: [] as AsisActionLoad[],
+};
+
 type AsisActionLoad = {
   id?: string;
   sub_inventory_name: string;
@@ -96,47 +128,17 @@ type ActivityLogEntry = {
 
 export function DashboardView({ onViewChange, onMenuClick }: DashboardViewProps) {
   const { user } = useAuth();
-  const { locationId } = getActiveLocationContext();
   const userDisplayName = user?.username ?? user?.email ?? "User";
   const isMobile = useIsMobile();
 
-  const { data: loadsData } = useLoads();
-  useActivityRealtime();
+  const { data: loadsData, isLoading: loadsLoading } = useLoads();
+  useRecentActivityRealtime(20);
+  const inventoryItemsQuery = useDashboardInventoryItems();
+  const conflictsQuery = useDashboardLoadConflicts();
+  const recentActivityQuery = useRecentActivity(20);
 
-  const [stats, setStats] = useState<DetailedStats>({
-    totalItems: 0,
-    localStock: { total: 0, unassigned: 0, staged: 0, inbound: 0, routes: 0 },
-    fg: { total: 0, regular: 0, backhaul: 0 },
-    asis: { total: 0, unassigned: 0, regular: 0, salvage: 0, scrap: 0 },
-    asisLoads: {
-      total: 0,
-      forSale: 0,
-      sold: 0,
-      forSaleNeedsWrap: 0,
-      soldNeedsTag: 0,
-      soldNeedsWrap: 0,
-      soldNeedsBoth: 0,
-      pickupSoonNeedsPrep: 0,
-    },
-    loads: { total: 0, active: 0, byType: { localStock: 0, fg: 0, asis: 0 } },
-  });
-  const [loading, setLoading] = useState(true);
   const [selectedChartType, setSelectedChartType] = useState<'overview' | 'LocalStock' | 'FG' | 'ASIS'>('overview');
   const [selectedDrilldown, setSelectedDrilldown] = useState<string | null>(null);
-  const [loadDetails, setLoadDetails] = useState<Record<string, { loadName: string; count: number; category?: string }[]>>({});
-  const [asisActionLoads, setAsisActionLoads] = useState<{
-    forSaleNeedsWrap: AsisActionLoad[];
-    soldNeedsPrep: AsisActionLoad[];
-    sanityCheckRequested: AsisActionLoad[];
-    pickupSoonNeedsPrep: AsisActionLoad[];
-  }>({
-    forSaleNeedsWrap: [],
-    soldNeedsPrep: [],
-    sanityCheckRequested: [],
-    pickupSoonNeedsPrep: [],
-  });
-  const [activityLogs, setActivityLogs] = useState<ActivityLogEntry[]>([]);
-  const [activityLoading, setActivityLoading] = useState(false);
   // const [isCompact, setIsCompact] = useState(false);
 
   // Helper to navigate to inventory with filter
@@ -200,13 +202,6 @@ export function DashboardView({ onViewChange, onMenuClick }: DashboardViewProps)
   };
 
 
-  useEffect(() => {
-    if (loadsData) {
-      fetchData(loadsData);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [locationId, loadsData]);
-
   // useEffect(() => {
   //   const updateLayout = () => {
   //     setIsCompact(window.innerWidth < 640);
@@ -216,287 +211,180 @@ export function DashboardView({ onViewChange, onMenuClick }: DashboardViewProps)
   //   return () => window.removeEventListener('resize', updateLayout);
   // }, []);
 
-  useEffect(() => {
-    if (!locationId) return;
-    const channel = supabase
-      .channel(`activity-log-${locationId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'activity_log',
-          filter: `location_id=eq.${locationId}`,
-        },
-        (payload) => {
-          const entry = payload.new as ActivityLogEntry;
-          setActivityLogs((prev) => {
-            if (prev.some((item) => item.id === entry.id)) return prev;
-            const next = [entry, ...prev];
-            return next.slice(0, 20);
-          });
-        }
-      )
-      .subscribe();
+  const { stats, loadDetails, asisActionLoads } = useMemo(() => {
+    const itemsData = inventoryItemsQuery.data ?? [];
+    const conflictCountMap = conflictsQuery.data ?? new Map<string, number>();
+    const loads = (loadsData ?? []).map((load) => ({
+      ...load,
+      conflict_count: conflictCountMap.get(load.sub_inventory_name) ?? 0,
+    }));
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [locationId]);
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const fetchData = async (baseLoadsData: any[]) => {
-    try {
-      // Fetch ALL inventory items in batches
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      let allItems: any[] = [];
-      let from = 0;
-      const batchSize = 1000;
-      let hasMore = true;
-
-      while (hasMore) {
-        const { data, error } = await supabase
-          .from('inventory_items')
-          .select('*')
-          .eq('location_id', locationId)
-          .range(from, from + batchSize - 1);
-
-        if (error) throw error;
-
-        if (data && data.length > 0) {
-          allItems = [...allItems, ...data];
-          from += batchSize;
-          hasMore = data.length === batchSize;
-        } else {
-          hasMore = false;
-        }
-      }
-
-      const itemsData = allItems;
-
-      // Get conflicts
-      const { data: conflictsData } = await supabase
-        .from('load_conflicts')
-        .select('load_number')
-        .eq('location_id', locationId)
-        .eq('status', 'open');
-
-      const conflictCountMap = new Map<string, number>();
-      (conflictsData ?? []).forEach((row) => {
-        if (!row?.load_number) return;
-        conflictCountMap.set(row.load_number, (conflictCountMap.get(row.load_number) ?? 0) + 1);
-      });
-
-      const loads = (baseLoadsData ?? []).map((load) => ({
-        ...load,
-        conflict_count: conflictCountMap.get(load.sub_inventory_name) ?? 0,
-      }));
-
-      // Calculate detailed stats
-      const newStats: DetailedStats = {
-        totalItems: (itemsData || []).length,
-        localStock: { total: 0, unassigned: 0, staged: 0, inbound: 0, routes: 0 },
-        fg: { total: 0, regular: 0, backhaul: 0 },
-        asis: { total: 0, unassigned: 0, regular: 0, salvage: 0, scrap: 0 },
-        asisLoads: {
-          total: 0,
-          forSale: 0,
-          sold: 0,
-          forSaleNeedsWrap: 0,
-          soldNeedsTag: 0,
-          soldNeedsWrap: 0,
-          soldNeedsBoth: 0,
-          pickupSoonNeedsPrep: 0,
-        },
-        loads: { total: loads.length || 0, active: 0, byType: { localStock: 0, fg: 0, asis: 0 } },
-      };
-
-      // Build a map of load categories for quick lookup
-      const loadCategoryMap = new Map<string, string>();
-      loads.forEach(load => {
-        if (load.category && load.sub_inventory_name) {
-          loadCategoryMap.set(load.sub_inventory_name, load.category);
-        }
-      });
-
-      // Count all items
-      (itemsData || []).forEach((item) => {
-        // Local Stock (includes LocalStock, Staged, Inbound)
-        if (item.inventory_type === 'LocalStock' || item.inventory_type === 'Staged' || item.inventory_type === 'STA' || item.inventory_type === 'Inbound') {
-          newStats.localStock.total++;
-          if (!item.sub_inventory) {
-            newStats.localStock.unassigned++;
-          } else {
-            newStats.localStock.routes++;
-          }
-          if (item.inventory_type === 'Staged' || item.inventory_type === 'STA') newStats.localStock.staged++;
-          if (item.inventory_type === 'Inbound') newStats.localStock.inbound++;
-        }
-        // FG (includes FG and BackHaul)
-        else if (item.inventory_type === 'FG') {
-          newStats.fg.total++;
-          newStats.fg.regular++;
-        }
-        else if (item.inventory_type === 'BackHaul') {
-          newStats.fg.total++;
-          newStats.fg.backhaul++;
-        }
-        // ASIS
-        else if (item.inventory_type === 'ASIS') {
-          newStats.asis.total++;
-
-          if (!item.sub_inventory) {
-            // No load assigned
-            newStats.asis.unassigned++;
-          } else {
-            // In a load - categorize by load category
-            const category = loadCategoryMap.get(item.sub_inventory);
-            if (category === 'Regular') {
-              newStats.asis.regular++;
-            } else if (category === 'Salvage') {
-              newStats.asis.salvage++;
-            } else if (category === 'Scrap') {
-              newStats.asis.scrap++;
-            }
-          }
-        }
-      });
-
-      // Count loads by type and collect load details
-      const now = new Date();
-      const pickupSoonThreshold = new Date(now);
-      pickupSoonThreshold.setDate(pickupSoonThreshold.getDate() + 3);
-      const normalizeStatus = (value?: string | null) => value?.toLowerCase().trim() ?? '';
-
-      const loadsByCategory: Record<string, { loadName: string; count: number; category?: string }[]> = {
-        'LocalStock-routes': [],
-        'FG-backhaul': [],
-        'ASIS-regular': [],
-        'ASIS-salvage': [],
-        'ASIS-scrap': [],
-      };
-      const nextAsisActions = {
-        forSaleNeedsWrap: [] as AsisActionLoad[],
-        soldNeedsPrep: [] as AsisActionLoad[],
-        sanityCheckRequested: [] as AsisActionLoad[],
-        pickupSoonNeedsPrep: [] as AsisActionLoad[],
-      };
-
-      loads.forEach((load) => {
-        if (load.status === 'active') newStats.loads.active++;
-
-        const itemsInLoad = (itemsData || []).filter(
-          item => item.sub_inventory === load.sub_inventory_name
-        ).length;
-
-        if (load.inventory_type === 'ASIS') {
-          newStats.loads.byType.asis++;
-          newStats.asisLoads.total += 1;
-
-          const status = normalizeStatus(load.ge_source_status);
-          const tagged = Boolean(load.prep_tagged);
-          const wrapped = Boolean(load.prep_wrapped);
-          const needsTag = !tagged;
-          const needsWrap = !wrapped;
-          const needsBoth = needsTag && needsWrap;
-
-          const pickupDateValue = load.pickup_date ? new Date(load.pickup_date) : null;
-          const pickupSoon =
-            pickupDateValue && pickupDateValue <= pickupSoonThreshold && pickupDateValue >= now;
-
-          const csoStatus = normalizeStatus(load.ge_cso_status);
-          const isShippedOrDelivered = csoStatus === 'delivered' || csoStatus === 'shipped';
-
-          if (load.sanity_check_requested && !isShippedOrDelivered) {
-            nextAsisActions.sanityCheckRequested.push(load as AsisActionLoad);
-          }
-
-          if (status === 'for sale') {
-            newStats.asisLoads.forSale += 1;
-            if (needsWrap) {
-              newStats.asisLoads.forSaleNeedsWrap += 1;
-              nextAsisActions.forSaleNeedsWrap.push(load as AsisActionLoad);
-            }
-          } else if (status === 'sold') {
-            if (!isShippedOrDelivered) {
-              newStats.asisLoads.sold += 1;
-              if (needsTag) newStats.asisLoads.soldNeedsTag += 1;
-              if (needsWrap) newStats.asisLoads.soldNeedsWrap += 1;
-              if (needsBoth || needsTag || needsWrap) {
-                newStats.asisLoads.soldNeedsBoth += 1;
-                nextAsisActions.soldNeedsPrep.push(load as AsisActionLoad);
-              }
-              if (pickupSoon && (needsTag || needsWrap)) {
-                newStats.asisLoads.pickupSoonNeedsPrep += 1;
-                nextAsisActions.pickupSoonNeedsPrep.push(load as AsisActionLoad);
-              }
-            }
-          }
-
-          if (load.category === 'Regular') {
-            loadsByCategory['ASIS-regular'].push({
-              loadName: load.friendly_name || load.sub_inventory_name,
-              count: itemsInLoad,
-              category: load.category
-            });
-          } else if (load.category === 'Salvage') {
-            loadsByCategory['ASIS-salvage'].push({
-              loadName: load.friendly_name || load.sub_inventory_name,
-              count: itemsInLoad,
-              category: load.category
-            });
-          } else if (load.category === 'Scrap') {
-            loadsByCategory['ASIS-scrap'].push({
-              loadName: load.friendly_name || load.sub_inventory_name,
-              count: itemsInLoad,
-              category: load.category
-            });
-          }
-        } else if (load.inventory_type === 'BackHaul') {
-          newStats.loads.byType.fg++;
-          loadsByCategory['FG-backhaul'].push({
-            loadName: load.friendly_name || load.sub_inventory_name,
-            count: itemsInLoad
-          });
-        } else if (
-          load.inventory_type === 'LocalStock' ||
-          load.inventory_type === 'Staged' ||
-          load.inventory_type === 'STA' ||
-          load.inventory_type === 'Inbound'
-        ) {
-          newStats.loads.byType.localStock++;
-          loadsByCategory['LocalStock-routes'].push({
-            loadName: load.friendly_name || load.sub_inventory_name,
-            count: itemsInLoad
-          });
-        }
-      });
-
-      setStats(newStats);
-      setLoadDetails(loadsByCategory);
-      setAsisActionLoads(nextAsisActions);
-
-      setActivityLoading(true);
-      const { data: activityData, error: activityError } = await supabase
-        .from('activity_log')
-        .select('id, action, entity_type, entity_id, details, actor_name, actor_image, created_at')
-        .eq('location_id', locationId)
-        .order('created_at', { ascending: false })
-        .limit(20);
-      if (activityError) {
-        console.error('Failed to load activity log:', activityError);
-        setActivityLogs([]);
-      } else {
-        setActivityLogs(activityData ?? []);
-      }
-      setActivityLoading(false);
-    } catch (err) {
-      console.error('Error fetching dashboard data:', err);
-    } finally {
-      setLoading(false);
-      setActivityLoading(false);
+    if (itemsData.length === 0 && loads.length === 0) {
+      return { stats: EMPTY_STATS, loadDetails: EMPTY_LOAD_DETAILS, asisActionLoads: EMPTY_ASIS_ACTION_LOADS };
     }
-  };
+
+    const newStats: DetailedStats = {
+      ...EMPTY_STATS,
+      totalItems: itemsData.length,
+      loads: { ...EMPTY_STATS.loads, total: loads.length || 0 },
+    };
+
+    const loadCategoryMap = new Map<string, string>();
+    loads.forEach(load => {
+      if (load.category && load.sub_inventory_name) {
+        loadCategoryMap.set(load.sub_inventory_name, load.category);
+      }
+    });
+
+    itemsData.forEach((item) => {
+      if (item.inventory_type === 'LocalStock' || item.inventory_type === 'Staged' || item.inventory_type === 'STA' || item.inventory_type === 'Inbound') {
+        newStats.localStock.total++;
+        if (!item.sub_inventory) {
+          newStats.localStock.unassigned++;
+        } else {
+          newStats.localStock.routes++;
+        }
+        if (item.inventory_type === 'Staged' || item.inventory_type === 'STA') newStats.localStock.staged++;
+        if (item.inventory_type === 'Inbound') newStats.localStock.inbound++;
+      } else if (item.inventory_type === 'FG') {
+        newStats.fg.total++;
+        newStats.fg.regular++;
+      } else if (item.inventory_type === 'BackHaul') {
+        newStats.fg.total++;
+        newStats.fg.backhaul++;
+      } else if (item.inventory_type === 'ASIS') {
+        newStats.asis.total++;
+
+        if (!item.sub_inventory) {
+          newStats.asis.unassigned++;
+        } else {
+          const category = loadCategoryMap.get(item.sub_inventory);
+          if (category === 'Regular') {
+            newStats.asis.regular++;
+          } else if (category === 'Salvage') {
+            newStats.asis.salvage++;
+          } else if (category === 'Scrap') {
+            newStats.asis.scrap++;
+          }
+        }
+      }
+    });
+
+    const now = new Date();
+    const pickupSoonThreshold = new Date(now);
+    pickupSoonThreshold.setDate(pickupSoonThreshold.getDate() + 3);
+    const normalizeStatus = (value?: string | null) => value?.toLowerCase().trim() ?? '';
+
+    const loadsByCategory: Record<string, { loadName: string; count: number; category?: string }[]> = {
+      'LocalStock-routes': [],
+      'FG-backhaul': [],
+      'ASIS-regular': [],
+      'ASIS-salvage': [],
+      'ASIS-scrap': [],
+    };
+    const nextAsisActions = {
+      forSaleNeedsWrap: [] as AsisActionLoad[],
+      soldNeedsPrep: [] as AsisActionLoad[],
+      sanityCheckRequested: [] as AsisActionLoad[],
+      pickupSoonNeedsPrep: [] as AsisActionLoad[],
+    };
+
+    loads.forEach((load) => {
+      if (load.status === 'active') newStats.loads.active++;
+
+      const itemsInLoad = itemsData.filter(
+        item => item.sub_inventory === load.sub_inventory_name
+      ).length;
+
+      if (load.inventory_type === 'ASIS') {
+        newStats.loads.byType.asis++;
+        newStats.asisLoads.total += 1;
+
+        const status = normalizeStatus(load.ge_source_status);
+        const tagged = Boolean(load.prep_tagged);
+        const wrapped = Boolean(load.prep_wrapped);
+        const needsTag = !tagged;
+        const needsWrap = !wrapped;
+        const needsBoth = needsTag && needsWrap;
+
+        const pickupDateValue = load.pickup_date ? new Date(load.pickup_date) : null;
+        const pickupSoon =
+          pickupDateValue && pickupDateValue <= pickupSoonThreshold && pickupDateValue >= now;
+
+        const csoStatus = normalizeStatus(load.ge_cso_status);
+        const isShippedOrDelivered = csoStatus === 'delivered' || csoStatus === 'shipped';
+
+        if (load.sanity_check_requested && !isShippedOrDelivered) {
+          nextAsisActions.sanityCheckRequested.push(load as AsisActionLoad);
+        }
+
+        if (status === 'for sale') {
+          newStats.asisLoads.forSale += 1;
+          if (needsWrap) {
+            newStats.asisLoads.forSaleNeedsWrap += 1;
+            nextAsisActions.forSaleNeedsWrap.push(load as AsisActionLoad);
+          }
+        } else if (status === 'sold') {
+          if (!isShippedOrDelivered) {
+            newStats.asisLoads.sold += 1;
+            if (needsTag) newStats.asisLoads.soldNeedsTag += 1;
+            if (needsWrap) newStats.asisLoads.soldNeedsWrap += 1;
+            if (needsBoth || needsTag || needsWrap) {
+              newStats.asisLoads.soldNeedsBoth += 1;
+              nextAsisActions.soldNeedsPrep.push(load as AsisActionLoad);
+            }
+            if (pickupSoon && (needsTag || needsWrap)) {
+              newStats.asisLoads.pickupSoonNeedsPrep += 1;
+              nextAsisActions.pickupSoonNeedsPrep.push(load as AsisActionLoad);
+            }
+          }
+        }
+
+        if (load.category === 'Regular') {
+          loadsByCategory['ASIS-regular'].push({
+            loadName: load.friendly_name || load.sub_inventory_name,
+            count: itemsInLoad,
+            category: load.category
+          });
+        } else if (load.category === 'Salvage') {
+          loadsByCategory['ASIS-salvage'].push({
+            loadName: load.friendly_name || load.sub_inventory_name,
+            count: itemsInLoad,
+            category: load.category
+          });
+        } else if (load.category === 'Scrap') {
+          loadsByCategory['ASIS-scrap'].push({
+            loadName: load.friendly_name || load.sub_inventory_name,
+            count: itemsInLoad,
+            category: load.category
+          });
+        }
+      } else if (load.inventory_type === 'BackHaul') {
+        newStats.loads.byType.fg++;
+        loadsByCategory['FG-backhaul'].push({
+          loadName: load.friendly_name || load.sub_inventory_name,
+          count: itemsInLoad
+        });
+      } else if (
+        load.inventory_type === 'LocalStock' ||
+        load.inventory_type === 'Staged' ||
+        load.inventory_type === 'STA' ||
+        load.inventory_type === 'Inbound'
+      ) {
+        newStats.loads.byType.localStock++;
+        loadsByCategory['LocalStock-routes'].push({
+          loadName: load.friendly_name || load.sub_inventory_name,
+          count: itemsInLoad
+        });
+      }
+    });
+
+    return { stats: newStats, loadDetails: loadsByCategory, asisActionLoads: nextAsisActions };
+  }, [conflictsQuery.data, inventoryItemsQuery.data, loadsData]);
+
+  const activityLogs = (recentActivityQuery.data ?? []) as ActivityLogEntry[];
+  const activityLoading = recentActivityQuery.isLoading;
+  const loading = loadsLoading || inventoryItemsQuery.isLoading || conflictsQuery.isLoading;
 
   // Prepare chart data
   const chartData = useMemo(() => {

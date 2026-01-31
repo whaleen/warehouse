@@ -1,6 +1,9 @@
 import { ArrowLeft } from "lucide-react";
 import { WarehouseLogo } from "@/components/Brand/WarehouseLogo";
-import { COLORS } from "@/components/Marketing/MarketingLayout";
+const COLORS = {
+  blue: '#1E88E5',
+  blueViolet: '#5E35B1',
+};
 
 interface AuthLayoutProps {
   children: React.ReactNode;
@@ -11,7 +14,7 @@ interface AuthLayoutProps {
 export function AuthLayout({ children, title, description }: AuthLayoutProps) {
   return (
     <div
-      className="min-h-screen marketing-root"
+      className="min-h-screen"
       style={{
         background: `linear-gradient(to bottom right, ${COLORS.blue}10, white, ${COLORS.blueViolet}10)`,
       }}

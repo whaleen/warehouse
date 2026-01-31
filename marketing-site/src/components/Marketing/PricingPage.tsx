@@ -2,6 +2,7 @@ import { MarketingLayout, COLORS } from "./MarketingLayout";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Check, ArrowRight, Sparkles, Map, Users, Rocket } from "lucide-react";
+import { getAppUrl } from "@/lib/appLinks";
 
 export function PricingPage() {
   return (
@@ -129,7 +130,7 @@ function PricingCards() {
                 </p>
               </div>
 
-              <a href="/signup">
+              <a href={getAppUrl("/signup")}>
                 <Button
                   size="lg"
                   className="w-full sm:w-auto text-white shadow-lg px-8 hover:opacity-90"

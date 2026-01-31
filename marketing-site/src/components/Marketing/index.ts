@@ -1,5 +1,4 @@
 export { LandingPage } from "./LandingPage";
-export { PricingPage } from "./PricingPage";
 export { FeaturesPage } from "./FeaturesPage";
-export { SignupPage } from "./SignupPage";
+export { PricingPage } from "./PricingPage";
 export { MarketingLayout } from "./MarketingLayout";
