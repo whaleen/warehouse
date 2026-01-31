@@ -2,6 +2,13 @@
 
 Node.js service for syncing data from GE DMS to Supabase. Uses Playwright for SSO authentication.
 
+## 📚 Documentation
+
+**→ [SECRETS.md](./docs/SECRETS.md)** - **START HERE** for setup (local, deployed, exploration)
+- [EXPLORATION_GUIDE.md](./docs/EXPLORATION_GUIDE.md) - Explore GE DMS system
+- [GE_DMS_PAGES.md](./docs/GE_DMS_PAGES.md) - 30 documented GE DMS pages
+- [auth.md](./docs/auth.md) - Authentication details
+
 ## Architecture
 
 ```
@@ -246,7 +253,14 @@ Set these in Netlify's dashboard. If you change these values, you must rebuild t
 
 ## Environment Variables
 
-For local development, copy `.env.example` to `.env` and fill in your values. For production, set these in Railway's dashboard.
+**See [SECRETS.md](./docs/SECRETS.md) for complete setup guide including:**
+- Local development setup
+- Railway deployment configuration
+- Exploration scripts setup
+- GE SSO credentials (stored in Supabase, not `.env`)
+- Troubleshooting and verification
+
+Quick reference:
 
 | Variable | Required | Description |
 |----------|----------|-------------|
@@ -255,6 +269,8 @@ For local development, copy `.env.example` to `.env` and fill in your values. Fo
 | `API_KEY` | No | API key for authenticating requests |
 | `PORT` | No | Server port (default: 3001) |
 | `NODE_ENV` | No | Environment (development/production) |
+
+**IMPORTANT**: GE SSO credentials are stored in Supabase `location_configs` table, not environment variables.
 
 ## Database Requirements
 
