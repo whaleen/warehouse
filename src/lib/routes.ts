@@ -48,7 +48,7 @@ export function getPathForView(view: AppView, sessionId?: string | null, display
     case 'signup':
       return '/signup';
     case 'dashboard':
-      return '/app';
+      return '/';
     case 'inventory':
       return '/inventory';
     case 'parts':
@@ -76,7 +76,7 @@ export function getPathForView(view: AppView, sessionId?: string | null, display
     case 'settings-gesync':
       return '/settings/gesync';
     default:
-      return '/app';
+      return '/';
   }
 }
 

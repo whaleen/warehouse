@@ -23,8 +23,8 @@ export function LoginView() {
       setError(result.error?.message || "Login failed");
       setLoading(false);
     } else {
-      // Success - redirect to app
-      window.location.href = "/app";
+      // Success - redirect to dashboard
+      window.location.href = "/";
     }
   };
 
