@@ -1,5 +1,7 @@
 import { ArrowLeft } from "lucide-react";
 import { WarehouseLogo } from "@/components/Brand/WarehouseLogo";
+import { getMarketingUrl } from "@/lib/marketingLinks";
+
 const COLORS = {
   blue: '#1E88E5',
   blueViolet: '#5E35B1',
@@ -23,13 +25,13 @@ export function AuthLayout({ children, title, description }: AuthLayoutProps) {
       <header className="border-b border-gray-100 bg-white/80 backdrop-blur-lg">
         <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center justify-between">
-            <a href="/" className="flex items-center gap-2.5">
+            <a href={getMarketingUrl()} className="flex items-center gap-2.5">
               <WarehouseLogo className="h-9 w-9 text-gray-900" aria-hidden="true" />
               <span className="text-xl font-bold text-gray-900">Warehouse</span>
             </a>
 
             <a
-              href="/"
+              href={getMarketingUrl()}
               className="flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
             >
               <ArrowLeft className="h-4 w-4" />

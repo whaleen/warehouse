@@ -4,9 +4,9 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { useAuth } from "@/context/AuthContext";
 import { useCallback, useEffect, useState, lazy, Suspense, useTransition } from "react";
 import { AppSidebar } from "./components/app-sidebar";
+import { MobileNav } from "./components/Navigation/MobileNav";
 import { getPathForView, parseRoute, isPublicRoute, type AppView } from "@/lib/routes";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
-import { useUiHandedness } from "@/hooks/useUiHandedness";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { PendingAccess } from "@/components/Auth/PendingAccess";
 import { PageTransition } from "@/components/ui/page-transition";
@@ -45,7 +45,6 @@ const queryClient = new QueryClient({
 function App() {
   const { user, loading, logout } = useAuth();
   const [, startTransition] = useTransition();
-  const uiHandedness = useUiHandedness();
   const isMobile = useIsMobile();
   const isPending = user?.role === "pending";
 
@@ -274,78 +273,143 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
-        <SidebarProvider
-          className={isMobile && uiHandedness === "right" ? "flex-row-reverse" : undefined}
-        >
-          <AppSidebar
-            currentView={currentView}
-            onViewChange={navigate}
-            side={isMobile && uiHandedness === "right" ? "right" : "left"}
-          />
-          <SidebarInset className="bg-muted/40">
-            <div className="flex min-h-screen flex-col min-w-0">
-              <Suspense fallback={null}>
-                <PageTransition className="flex-1 min-h-0">
-                  {currentView === "dashboard" && (
-                    <DashboardView
-                      onViewChange={handleViewChange}
-                    />
-                  )}
-                  {currentView === "inventory" && (
-                    <InventoryView />
-                  )}
-                  {currentView === "parts" && (
-                    <PartsView />
-                  )}
-                  {currentView === "products" && (
-                    <ProductEnrichment
-                    />
-                  )}
-                  {currentView === "loads" && (
-                    <LoadManagementView
-                    />
-                  )}
-                  {currentView === "activity" && (
-                    <ActivityLogView />
-                  )}
-                  {currentView === "map" && (
-                    <MapView />
-                  )}
-                  {currentView === "create-session" && (
-                    <CreateSessionView
-                      onViewChange={handleViewChange}
-                      sessionId={sessionId}
-                      onSessionChange={handleSessionChange}
-                    />
-                  )}
-                  {currentView === "settings-locations" && (
-                    <SettingsView section="locations" />
-                  )}
-                  {currentView === "settings-location" && (
-                    <SettingsView section="location" />
-                  )}
-                  {currentView === "settings-company" && (
-                    <SettingsView section="company" />
-                  )}
-                  {currentView === "settings-users" && (
-                    <SettingsView section="users" />
-                  )}
-                  {currentView === "settings-profile" && (
-                    <SettingsView section="profile" />
-                  )}
-                  {currentView === "settings-displays" && (
-                    <SettingsView section="displays" />
-                  )}
-                  {currentView === "settings-gesync" && (
-                    <GESyncView />
-                  )}
-                </PageTransition>
-              </Suspense>
-            </div>
-          </SidebarInset>
-        </SidebarProvider>
+        {isMobile ? (
+          <>
+            <SidebarInset className="bg-muted/40">
+              <div className="flex min-h-screen flex-col min-w-0">
+                <Suspense fallback={null}>
+                  <PageTransition className="flex-1 min-h-0">
+                    {currentView === "dashboard" && (
+                      <DashboardView
+                        onViewChange={handleViewChange}
+                      />
+                    )}
+                    {currentView === "inventory" && (
+                      <InventoryView />
+                    )}
+                    {currentView === "parts" && (
+                      <PartsView />
+                    )}
+                    {currentView === "products" && (
+                      <ProductEnrichment
+                      />
+                    )}
+                    {currentView === "loads" && (
+                      <LoadManagementView
+                      />
+                    )}
+                    {currentView === "activity" && (
+                      <ActivityLogView />
+                    )}
+                    {currentView === "map" && (
+                      <MapView />
+                    )}
+                    {currentView === "create-session" && (
+                      <CreateSessionView
+                        onViewChange={handleViewChange}
+                        sessionId={sessionId}
+                        onSessionChange={handleSessionChange}
+                      />
+                    )}
+                    {currentView === "settings-locations" && (
+                      <SettingsView section="locations" />
+                    )}
+                    {currentView === "settings-location" && (
+                      <SettingsView section="location" />
+                    )}
+                    {currentView === "settings-company" && (
+                      <SettingsView section="company" />
+                    )}
+                    {currentView === "settings-users" && (
+                      <SettingsView section="users" />
+                    )}
+                    {currentView === "settings-profile" && (
+                      <SettingsView section="profile" />
+                    )}
+                    {currentView === "settings-displays" && (
+                      <SettingsView section="displays" />
+                    )}
+                    {currentView === "settings-gesync" && (
+                      <GESyncView />
+                    )}
+                  </PageTransition>
+                </Suspense>
+              </div>
+            </SidebarInset>
+            <MobileNav currentView={currentView} onViewChange={navigate} />
+          </>
+        ) : (
+          <SidebarProvider>
+            <AppSidebar
+              currentView={currentView}
+              onViewChange={navigate}
+              side="left"
+            />
+            <SidebarInset className="bg-muted/40">
+              <div className="flex min-h-screen flex-col min-w-0">
+                <Suspense fallback={null}>
+                  <PageTransition className="flex-1 min-h-0">
+                    {currentView === "dashboard" && (
+                      <DashboardView
+                        onViewChange={handleViewChange}
+                      />
+                    )}
+                    {currentView === "inventory" && (
+                      <InventoryView />
+                    )}
+                    {currentView === "parts" && (
+                      <PartsView />
+                    )}
+                    {currentView === "products" && (
+                      <ProductEnrichment
+                      />
+                    )}
+                    {currentView === "loads" && (
+                      <LoadManagementView
+                      />
+                    )}
+                    {currentView === "activity" && (
+                      <ActivityLogView />
+                    )}
+                    {currentView === "map" && (
+                      <MapView />
+                    )}
+                    {currentView === "create-session" && (
+                      <CreateSessionView
+                        onViewChange={handleViewChange}
+                        sessionId={sessionId}
+                        onSessionChange={handleSessionChange}
+                      />
+                    )}
+                    {currentView === "settings-locations" && (
+                      <SettingsView section="locations" />
+                    )}
+                    {currentView === "settings-location" && (
+                      <SettingsView section="location" />
+                    )}
+                    {currentView === "settings-company" && (
+                      <SettingsView section="company" />
+                    )}
+                    {currentView === "settings-users" && (
+                      <SettingsView section="users" />
+                    )}
+                    {currentView === "settings-profile" && (
+                      <SettingsView section="profile" />
+                    )}
+                    {currentView === "settings-displays" && (
+                      <SettingsView section="displays" />
+                    )}
+                    {currentView === "settings-gesync" && (
+                      <GESyncView />
+                    )}
+                  </PageTransition>
+                </Suspense>
+              </div>
+            </SidebarInset>
+          </SidebarProvider>
+        )}
       </ThemeProvider>
-      
+
     </QueryClientProvider>
   );
 }
