@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -8,13 +8,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { Monitor, Trash2 } from 'lucide-react';
 import {
-  getAllDisplays,
-  deleteDisplay,
-  pairDisplay,
-  updateDisplayName,
-  updateDisplayState,
-} from '@/lib/displayManager';
-import type { FloorDisplaySummary, LoadBoardConfig } from '@/types/display';
+  useDeleteDisplay,
+  useDisplays,
+  usePairDisplay,
+  useUpdateDisplayName,
+  useUpdateDisplayState,
+} from '@/hooks/queries/useDisplays';
+import type { LoadBoardConfig } from '@/types/display';
 import { InputOTP, InputOTPGroup, InputOTPSlot, InputOTPSeparator } from '@/components/ui/input-otp';
 import { REGEXP_ONLY_DIGITS } from 'input-otp';
 
@@ -32,8 +32,6 @@ const defaultLoadBoard: LoadBoardConfig = {
 };
 
 export function DisplayManager({ section = 'all' }: DisplayManagerProps) {
-  const [displays, setDisplays] = useState<FloorDisplaySummary[]>([]);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [pairError, setPairError] = useState<string | null>(null);
@@ -54,49 +52,53 @@ export function DisplayManager({ section = 'all' }: DisplayManagerProps) {
   const showList = section === 'list' || section === 'all';
   const showSettings = section === 'settings' || section === 'all';
 
-  const fetchDisplays = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    const { data, error } = await getAllDisplays();
-    if (error) {
-      setError('Failed to load displays');
-      setDisplays([]);
-    } else {
-      setDisplays(data ?? []);
-      setNameDrafts((prev) => {
-        const next = { ...prev };
-        (data ?? []).forEach((display) => {
-          if (!next[display.id]) {
-            next[display.id] = display.name ?? '';
-          }
-        });
-        return next;
-      });
-      setThemeDrafts((prev) => {
-        const next = { ...prev };
-        (data ?? []).forEach((display) => {
-          next[display.id] = display.stateJson?.theme ?? 'light';
-        });
-        return next;
-      });
-      setLoadBoardDrafts((prev) => {
-        const next = { ...prev };
-        (data ?? []).forEach((display) => {
-          next[display.id] = { ...defaultLoadBoard, ...(display.stateJson?.loadBoard ?? {}) };
-        });
-        return next;
-      });
-      setSelectedDisplayId((prev) => {
-        if (!data || data.length === 0) return null;
-        return data.some((display) => display.id === prev) ? prev : data[0].id;
-      });
-    }
-    setLoading(false);
-  }, []);
+  const displaysQuery = useDisplays();
+  const deleteMutation = useDeleteDisplay();
+  const pairMutation = usePairDisplay();
+  const updateNameMutation = useUpdateDisplayName();
+  const updateStateMutation = useUpdateDisplayState();
+  const displays = displaysQuery.data ?? [];
+  const loading = displaysQuery.isLoading;
+  const queryError = displaysQuery.error instanceof Error ? displaysQuery.error.message : null;
+  const displayError = error ?? queryError;
+  const selectedDisplay = useMemo(
+    () => (selectedDisplayId ? displays.find((display) => display.id === selectedDisplayId) ?? null : null),
+    [displays, selectedDisplayId]
+  );
 
   useEffect(() => {
-    fetchDisplays();
-  }, [fetchDisplays]);
+    if (displays.length === 0) {
+      setSelectedDisplayId(null);
+      return;
+    }
+    setSelectedDisplayId((prev) => (displays.some((display) => display.id === prev) ? prev : displays[0].id));
+  }, [displays]);
+
+  useEffect(() => {
+    setNameDrafts((prev) => {
+      const next = { ...prev };
+      displays.forEach((display) => {
+        if (!next[display.id]) {
+          next[display.id] = display.name ?? '';
+        }
+      });
+      return next;
+    });
+    setThemeDrafts((prev) => {
+      const next = { ...prev };
+      displays.forEach((display) => {
+        next[display.id] = display.stateJson?.theme ?? 'light';
+      });
+      return next;
+    });
+    setLoadBoardDrafts((prev) => {
+      const next = { ...prev };
+      displays.forEach((display) => {
+        next[display.id] = { ...defaultLoadBoard, ...(display.stateJson?.loadBoard ?? {}) };
+      });
+      return next;
+    });
+  }, [displays]);
 
   const handleDelete = async (id: string) => {
     setDeletingId(id);
@@ -105,17 +107,14 @@ export function DisplayManager({ section = 'all' }: DisplayManagerProps) {
     setPairError(null);
     setPairSuccess(null);
 
-    const { success, error } = await deleteDisplay(id);
-
-    if (error || !success) {
-      setError('Failed to delete display');
+    try {
+      await deleteMutation.mutateAsync(id);
+      setSuccess('Display deleted');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to delete display');
+    } finally {
       setDeletingId(null);
-      return;
     }
-
-    setSuccess('Display deleted');
-    setDeletingId(null);
-    await fetchDisplays();
   };
 
   const handleSaveName = async (id: string) => {
@@ -127,15 +126,14 @@ export function DisplayManager({ section = 'all' }: DisplayManagerProps) {
     setSavingId(id);
     setError(null);
     setSuccess(null);
-    const { data, error } = await updateDisplayName(id, name);
-    if (error || !data) {
-      setError('Failed to update display name');
+    try {
+      await updateNameMutation.mutateAsync({ displayId: id, name });
+      setSuccess('Display updated.');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to update display name');
+    } finally {
       setSavingId(null);
-      return;
     }
-    setSuccess('Display updated.');
-    setSavingId(null);
-    await fetchDisplays();
   };
 
   const handleThemeChange = async (id: string, theme: 'light' | 'dark') => {
@@ -146,17 +144,15 @@ export function DisplayManager({ section = 'all' }: DisplayManagerProps) {
 
     const display = displays.find((item) => item.id === id);
     const nextState = { ...(display?.stateJson ?? {}), theme };
-    const { data, error } = await updateDisplayState(id, nextState);
 
-    if (error || !data) {
-      setError('Failed to update display theme');
+    try {
+      await updateStateMutation.mutateAsync({ displayId: id, stateJson: nextState });
+      setSuccess('Display updated.');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to update display theme');
+    } finally {
       setSavingThemeId(null);
-      return;
     }
-
-    setSuccess('Display updated.');
-    setSavingThemeId(null);
-    await fetchDisplays();
   };
 
   const handleLoadBoardChange = (id: string, updates: Partial<LoadBoardConfig>) => {
@@ -178,17 +174,15 @@ export function DisplayManager({ section = 'all' }: DisplayManagerProps) {
     const display = displays.find((item) => item.id === id);
     const draft = loadBoardDrafts[id] ?? defaultLoadBoard;
     const nextState = { ...(display?.stateJson ?? {}), loadBoard: draft };
-    const { data, error } = await updateDisplayState(id, nextState);
 
-    if (error || !data) {
-      setError('Failed to update load board settings');
+    try {
+      await updateStateMutation.mutateAsync({ displayId: id, stateJson: nextState });
+      setSuccess('Display updated.');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to update load board settings');
+    } finally {
       setSavingLoadBoardId(null);
-      return;
     }
-
-    setSuccess('Display updated.');
-    setSavingLoadBoardId(null);
-    await fetchDisplays();
   };
 
   const handlePair = async () => {
@@ -201,33 +195,27 @@ export function DisplayManager({ section = 'all' }: DisplayManagerProps) {
     setPairError(null);
     setPairSuccess(null);
 
-    const { data, error } = await pairDisplay(pairingCode);
-    if (error || !data) {
-      const message = error instanceof Error ? error.message : String(error ?? '');
+    try {
+      await pairMutation.mutateAsync(pairingCode);
+      setPairSuccess('Display paired.');
+      setPairingCode('');
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err ?? '');
       const isDuplicate = message.toLowerCase().includes('pairing_code');
       setPairError(isDuplicate
         ? 'Code already in use. Refresh the TV to get a new code.'
         : 'Invalid pairing code or display already paired');
+    } finally {
       setPairing(false);
-      return;
     }
-
-    setPairSuccess('Display paired.');
-    setPairingCode('');
-    setPairing(false);
-    await fetchDisplays();
   };
-
-  const selectedDisplay = selectedDisplayId
-    ? displays.find((display) => display.id === selectedDisplayId) ?? null
-    : null;
 
   return (
     <div className="space-y-6">
-      {(error || success) && (
+      {(displayError || success) && (
         <div className="text-sm">
-          {error && <span className="text-destructive">{error}</span>}
-          {!error && success && <span className="text-primary">{success}</span>}
+          {displayError && <span className="text-destructive">{displayError}</span>}
+          {!displayError && success && <span className="text-primary">{success}</span>}
         </div>
       )}
 
@@ -298,7 +286,7 @@ export function DisplayManager({ section = 'all' }: DisplayManagerProps) {
             <h2 className="text-xl font-semibold text-foreground">Displays</h2>
             <p className="text-sm text-muted-foreground">All paired displays for this location.</p>
           </div>
-          <Button variant="outline" size="responsive" onClick={fetchDisplays}>
+          <Button variant="outline" size="responsive" onClick={() => displaysQuery.refetch()}>
             Refresh
           </Button>
         </div>

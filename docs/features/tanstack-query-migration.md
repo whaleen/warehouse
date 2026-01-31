@@ -1,6 +1,6 @@
 # TanStack Query Migration Guide
 
-**Status**: Phase 1 Complete + Phase 2/3 partial (16/19 components migrated)
+**Status**: Phase 1 Complete + Phase 2/3 partial (17/19 components migrated)
 **Last Updated**: 2026-01-31
 **Target**: TanStack Query v5
 
@@ -45,6 +45,7 @@ const queryClient = new QueryClient({
 - [x] `src/hooks/queries/useMap.ts` - 2 hooks (product locations + genesis point)
 - [x] `src/hooks/queries/useProducts.ts` - Product search + upsert
 - [x] `src/hooks/queries/useSessions.ts` - Sessions queries + mutations
+- [x] `src/hooks/queries/useDisplays.ts` - Display management queries + mutations
 - [x] `src/hooks/queries/useSettings.ts` - Locations, companies, users, settings
 - [x] `src/hooks/queries/useInventoryImport.ts` - Inventory import mutation hooks
 - [x] `src/hooks/queries/useGeSync.ts` - GE sync mutation hooks
@@ -97,6 +98,7 @@ const queryClient = new QueryClient({
 | ProductEnrichment | `src/components/Products/ProductEnrichment.tsx` | Uses `useProductSearch` + `useUpsertProduct` | Debounced search + cache invalidation |
 | CreateSessionView | `src/components/Session/CreateSessionView.tsx` | Uses session + inventory hooks | Cached lists + mutations |
 | ScanningSessionView | `src/components/Session/ScanningSessionView.tsx` | Uses session detail + mutation hooks | Cache-backed scans |
+| DisplayManager | `src/components/FloorDisplay/DisplayManager.tsx` | Uses `useDisplays` + mutation hooks | Shared cache + refetch |
 
 ### ✅ Phase 3 Complete
 
