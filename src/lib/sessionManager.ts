@@ -1,5 +1,6 @@
 import supabase from '@/lib/supabase';
 import { getActiveLocationContext } from '@/lib/tenant';
+import type { PostgrestError } from '@supabase/supabase-js';
 import type { InventoryItem } from '@/types/inventory';
 import type { ScanningSession, SessionStatus, SessionSummary } from '@/types/session';
 
@@ -58,7 +59,7 @@ function toSummary(record: SessionRecord): SessionSummary {
   };
 }
 
-export async function getAllSessions(): Promise<{ data: ScanningSession[] | null; error: any }> {
+export async function getAllSessions(): Promise<{ data: ScanningSession[] | null; error: PostgrestError | null }> {
   const { locationId } = getActiveLocationContext();
   const { data, error } = await supabase
     .from(SESSION_TABLE)
@@ -76,7 +77,7 @@ export async function getAllSessions(): Promise<{ data: ScanningSession[] | null
   };
 }
 
-export async function getSessionSummaries(): Promise<{ data: SessionSummary[] | null; error: any }> {
+export async function getSessionSummaries(): Promise<{ data: SessionSummary[] | null; error: PostgrestError | null }> {
   const { locationId } = getActiveLocationContext();
   const { data, error } = await supabase
     .from(SESSION_TABLE)
@@ -94,7 +95,7 @@ export async function getSessionSummaries(): Promise<{ data: SessionSummary[] | 
   };
 }
 
-export async function getSession(sessionId: string): Promise<{ data: ScanningSession | null; error: any }> {
+export async function getSession(sessionId: string): Promise<{ data: ScanningSession | null; error: PostgrestError | null }> {
   const { locationId } = getActiveLocationContext();
   const { data, error } = await supabase
     .from(SESSION_TABLE)
@@ -117,7 +118,7 @@ export async function createSession(input: {
   items: InventoryItem[];
   status?: SessionStatus;
   createdBy?: string;
-}): Promise<{ data: ScanningSession | null; error: any }> {
+}): Promise<{ data: ScanningSession | null; error: PostgrestError | null }> {
   const { locationId, companyId } = getActiveLocationContext();
   const { data, error } = await supabase
     .from(SESSION_TABLE)
@@ -148,7 +149,7 @@ export async function updateSessionScannedItems(input: {
   sessionId: string;
   scannedItemIds: string[];
   updatedBy?: string;
-}): Promise<{ data: ScanningSession | null; error: any }> {
+}): Promise<{ data: ScanningSession | null; error: PostgrestError | null }> {
   const { locationId } = getActiveLocationContext();
   const { data, error } = await supabase
     .from(SESSION_TABLE)
@@ -173,7 +174,7 @@ export async function updateSessionStatus(input: {
   sessionId: string;
   status: SessionStatus;
   updatedBy?: string;
-}): Promise<{ data: ScanningSession | null; error: any }> {
+}): Promise<{ data: ScanningSession | null; error: PostgrestError | Error | null }> {
   const { locationId } = getActiveLocationContext();
   const { data: current, error: currentError } = await supabase
     .from(SESSION_TABLE)
@@ -191,7 +192,13 @@ export async function updateSessionStatus(input: {
     return { data: null, error: new Error('Session is closed and cannot be reopened') };
   }
 
-  const updates: Record<string, any> = {
+  const updates: {
+    status: SessionStatus;
+    updated_by: string | null;
+    updated_at: string;
+    closed_at?: string;
+    closed_by?: string | null;
+  } = {
     status: input.status,
     updated_by: input.updatedBy ?? null,
     updated_at: new Date().toISOString()
@@ -217,7 +224,7 @@ export async function updateSessionStatus(input: {
   return { data: toSession(data as SessionRecord), error: null };
 }
 
-export async function deleteSession(sessionId: string): Promise<{ success: boolean; error?: any }> {
+export async function deleteSession(sessionId: string): Promise<{ success: boolean; error?: PostgrestError | null }> {
   const { locationId } = getActiveLocationContext();
   const { error } = await supabase
     .from(SESSION_TABLE)

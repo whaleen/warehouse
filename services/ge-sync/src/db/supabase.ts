@@ -70,7 +70,8 @@ export async function getProductLookup(companyId: string) {
 
   const { data: products, error } = await db
     .from('products')
-    .select('id, model, product_type');
+    .select('id, model, product_type')
+    .eq('company_id', companyId);
 
   if (error) {
     throw new Error(`Failed to fetch products: ${error.message}`);

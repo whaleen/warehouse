@@ -30,7 +30,7 @@ export function AppHeader({ title, actions, onMenuClick }: AppHeaderProps) {
             )}
           </div>
           <div className="flex items-center gap-2 sm:shrink-0">
-            <NotificationBell />
+            <NotificationBell className="hidden lg:flex" />
             {actions && (
               <div className="flex items-center gap-2 overflow-x-auto max-w-full pr-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                 {actions}

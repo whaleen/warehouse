@@ -18,6 +18,7 @@ import {
 
 import type { AppView } from "@/lib/routes"
 import { LocationSwitcher } from "@/components/Navigation/LocationSwitcher"
+import { NotificationBell } from "@/components/Navigation/NotificationBell"
 import { NavUser } from "@/components/nav-user"
 import supabase from "@/lib/supabase"
 import { getActiveCompanyId, getActiveLocationId } from "@/lib/tenant"
@@ -300,6 +301,9 @@ export function AppSidebar({ currentView, onViewChange, ...props }: AppSidebarPr
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
         <LocationSwitcher onManageLocations={handleManageLocations} />
+        <div className="lg:hidden px-2 pt-2">
+          <NotificationBell />
+        </div>
       </SidebarHeader>
       <SidebarSeparator />
       <SidebarContent>

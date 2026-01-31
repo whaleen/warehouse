@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -24,13 +24,14 @@ type DisplayManagerProps = {
   section?: DisplaySection;
 };
 
+const defaultLoadBoard: LoadBoardConfig = {
+  statusFilter: 'both',
+  pageSize: 8,
+  autoRotate: false,
+  rotateIntervalSec: 12,
+};
+
 export function DisplayManager({ section = 'all' }: DisplayManagerProps) {
-  const defaultLoadBoard: LoadBoardConfig = {
-    statusFilter: 'both',
-    pageSize: 8,
-    autoRotate: false,
-    rotateIntervalSec: 12,
-  };
   const [displays, setDisplays] = useState<FloorDisplaySummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -53,7 +54,7 @@ export function DisplayManager({ section = 'all' }: DisplayManagerProps) {
   const showList = section === 'list' || section === 'all';
   const showSettings = section === 'settings' || section === 'all';
 
-  const fetchDisplays = async () => {
+  const fetchDisplays = useCallback(async () => {
     setLoading(true);
     setError(null);
     const { data, error } = await getAllDisplays();
@@ -91,11 +92,11 @@ export function DisplayManager({ section = 'all' }: DisplayManagerProps) {
       });
     }
     setLoading(false);
-  };
+  }, []);
 
   useEffect(() => {
     fetchDisplays();
-  }, []);
+  }, [fetchDisplays]);
 
   const handleDelete = async (id: string) => {
     setDeletingId(id);

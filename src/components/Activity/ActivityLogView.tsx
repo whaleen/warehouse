@@ -11,10 +11,20 @@ type ActivityLogEntry = {
   action: string;
   entity_type?: string | null;
   entity_id?: string | null;
-  details?: Record<string, any> | null;
+  details?: ActivityDetails | null;
   actor_name?: string | null;
   actor_image?: string | null;
   created_at: string;
+};
+
+type ActivityDetails = {
+  stats?: {
+    totalGEItems?: number;
+    totalItems?: number;
+  };
+  loadNumber?: string;
+  friendlyName?: string;
+  fields?: string[];
 };
 
 export function ActivityLogView() {

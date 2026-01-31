@@ -94,6 +94,7 @@ export function CreateSessionView({ onViewChange, onMenuClick, sessionId, onSess
   const [sessionsError, setSessionsError] = useState<string | null>(null);
   const [activeSessionId, setActiveSessionId] = useState<string | null>(sessionId ?? null);
   const [creatorAvatars, setCreatorAvatars] = useState<Record<string, string | null>>({});
+  const [sessionLoadMetadata, setSessionLoadMetadata] = useState<Map<string, { friendly_name: string | null; primary_color: string | null; ge_cso: string | null }>>(new Map());
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [sessionToDelete, setSessionToDelete] = useState<SessionSummary | null>(null);
 
@@ -216,6 +217,40 @@ export function CreateSessionView({ onViewChange, onMenuClick, sessionId, onSess
     fetchSessions();
   }, [fetchSessions]);
 
+  // Fetch load metadata for all sessions with sub_inventory
+  useEffect(() => {
+    const fetchSessionLoadMetadata = async () => {
+      const subInventoryNames = Array.from(
+        new Set(sessions.map(s => s.subInventory).filter(Boolean) as string[])
+      );
+
+      if (subInventoryNames.length === 0) {
+        setSessionLoadMetadata(new Map());
+        return;
+      }
+
+      const { data } = await supabase
+        .from('load_metadata')
+        .select('sub_inventory_name, friendly_name, primary_color, ge_cso')
+        .eq('location_id', locationId)
+        .in('sub_inventory_name', subInventoryNames);
+
+      if (data) {
+        const metadataMap = new Map<string, { friendly_name: string | null; primary_color: string | null; ge_cso: string | null }>();
+        for (const item of data) {
+          metadataMap.set(item.sub_inventory_name, {
+            friendly_name: item.friendly_name,
+            primary_color: item.primary_color,
+            ge_cso: item.ge_cso
+          });
+        }
+        setSessionLoadMetadata(metadataMap);
+      }
+    };
+
+    fetchSessionLoadMetadata();
+  }, [sessions, locationId]);
+
   useEffect(() => {
     setActiveSessionId(sessionId ?? null);
   }, [sessionId]);
@@ -268,10 +303,7 @@ export function CreateSessionView({ onViewChange, onMenuClick, sessionId, onSess
 
   const renderSessionCard = (session: SessionSummary) => {
     const isClosed = session.status === 'closed';
-    const isComplete = session.totalItems > 0 && session.scannedCount === session.totalItems;
     const progress = session.totalItems > 0 ? Math.round((session.scannedCount / session.totalItems) * 100) : 0;
-    const statusLabel = isClosed ? 'Closed' : session.status === 'draft' ? 'Draft' : 'Active';
-    const statusVariant = isClosed ? 'secondary' : session.status === 'draft' ? 'outline' : 'default';
     const timestamp = isClosed
       ? formatSessionTimestamp(session.closedAt || session.updatedAt || session.createdAt)
       : formatSessionTimestamp(session.createdAt);
@@ -280,18 +312,34 @@ export function CreateSessionView({ onViewChange, onMenuClick, sessionId, onSess
       <Card key={session.id} className="p-4 space-y-4 border-border/60 bg-background/90">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="min-w-0 space-y-2">
-            <div className="flex flex-wrap items-center gap-2">
-              <h3 className="text-base font-semibold truncate">{session.name}</h3>
-              <Badge variant={statusVariant}>{statusLabel}</Badge>
-              {isClosed && !isComplete && (
-                <Badge variant="destructive">Incomplete</Badge>
-              )}
-            </div>
             <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
               <Badge variant="outline">{inventoryTypeLabels[session.inventoryType]}</Badge>
-              {session.subInventory && (
-                <Badge variant="secondary">{session.subInventory}</Badge>
-              )}
+              {session.subInventory && (() => {
+                const metadata = sessionLoadMetadata.get(session.subInventory);
+                const friendlyName = metadata?.friendly_name;
+                const color = metadata?.primary_color;
+                const cso = metadata?.ge_cso;
+                const csoDisplay = cso
+                  ? isMobile
+                    ? `...${cso.slice(-4)}`
+                    : cso
+                  : null;
+
+                return (
+                  <Badge variant="secondary" className="flex items-center gap-1.5">
+                    {color && (
+                      <div
+                        className="h-2.5 w-2.5 rounded-sm flex-shrink-0"
+                        style={{ backgroundColor: color }}
+                      />
+                    )}
+                    <span>
+                      {friendlyName || session.subInventory}
+                      {csoDisplay && ` - ${csoDisplay}`}
+                    </span>
+                  </Badge>
+                );
+              })()}
             </div>
             <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
               <div className="h-6 w-6 rounded-full bg-muted flex items-center justify-center overflow-hidden text-[10px] font-semibold text-foreground">
@@ -492,21 +540,24 @@ export function CreateSessionView({ onViewChange, onMenuClick, sessionId, onSess
           </div>
 
           <div className="grid gap-6 lg:grid-cols-[1.35fr_0.9fr]">
-            <div className={`${pageTab === 'sessions' ? 'block' : 'hidden'} lg:block space-y-4`}>
-              <Card className="p-3 sm:p-4 space-y-3 sm:space-y-4">
-                <div>
-                  <h2 className="text-base sm:text-lg font-semibold">Sessions</h2>
-                  <p className="text-xs sm:text-sm text-muted-foreground">
-                    Track open scanning work and review completed sessions.
-                  </p>
+            <div className={`${pageTab === 'sessions' ? 'block' : 'hidden'} lg:block space-y-3`}>
+              <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:gap-3">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    placeholder="Search sessions"
+                    value={sessionSearch}
+                    onChange={(e) => setSessionSearch(e.target.value)}
+                    className="pl-9 h-10"
+                  />
                 </div>
 
-                <div className="grid gap-3 grid-cols-2">
+                <div className="flex gap-2">
                   <Select
                     value={sessionTypeFilter}
                     onValueChange={(value) => setSessionTypeFilter(value as 'all' | InventoryType)}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="h-10 flex-1 lg:w-[140px]">
                       <SelectValue placeholder="All types" />
                     </SelectTrigger>
                     <SelectContent>
@@ -523,7 +574,7 @@ export function CreateSessionView({ onViewChange, onMenuClick, sessionId, onSess
                     value={sessionListTab}
                     onValueChange={(value) => setSessionListTab(value as 'active' | 'closed' | 'all')}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="h-10 flex-1 lg:w-[140px]">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -533,17 +584,7 @@ export function CreateSessionView({ onViewChange, onMenuClick, sessionId, onSess
                     </SelectContent>
                   </Select>
                 </div>
-
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                  <Input
-                    placeholder="Search by name, type, or user"
-                    value={sessionSearch}
-                    onChange={(e) => setSessionSearch(e.target.value)}
-                    className="pl-9"
-                  />
-                </div>
-              </Card>
+              </div>
 
               {sessionsLoading && (
                 <Card className="p-4 text-sm text-muted-foreground flex items-center gap-2">

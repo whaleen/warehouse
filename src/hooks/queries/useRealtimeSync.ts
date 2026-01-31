@@ -24,17 +24,26 @@ export function useActivityRealtime() {
         (payload) => {
           const newEntry = payload.new;
 
-          queryClient.setQueryData(queryKeys.activity.all(locationId), (old: any) => {
-            if (!old?.pages) return old;
+          type ActivityLogPage = { data: unknown[] };
+          type ActivityLogQueryData = {
+            pages: ActivityLogPage[];
+            pageParams?: unknown[];
+          };
 
-            const newPages = [...old.pages];
-            newPages[0] = {
-              ...newPages[0],
-              data: [newEntry, ...newPages[0].data],
-            };
+          queryClient.setQueryData<ActivityLogQueryData | undefined>(
+            queryKeys.activity.all(locationId),
+            (old) => {
+              if (!old?.pages?.length) return old;
 
-            return { ...old, pages: newPages };
-          });
+              const newPages = [...old.pages];
+              newPages[0] = {
+                ...newPages[0],
+                data: [newEntry, ...newPages[0].data],
+              };
+
+              return { ...old, pages: newPages };
+            }
+          );
         }
       )
       .subscribe();

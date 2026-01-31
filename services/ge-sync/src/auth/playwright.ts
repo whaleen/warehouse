@@ -82,8 +82,11 @@ export async function refreshAuth(locationId: string): Promise<AuthStatus> {
   let context: BrowserContext | null = null;
 
   try {
+    const headless = process.env.PLAYWRIGHT_HEADLESS !== 'false';
+    console.log(`Launching browser in ${headless ? 'headless' : 'headed'} mode`);
+
     browser = await chromium.launch({
-      headless: true,
+      headless,
       args: ['--no-sandbox', '--disable-setuid-sandbox'],
     });
 

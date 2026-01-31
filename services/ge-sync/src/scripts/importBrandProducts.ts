@@ -291,7 +291,7 @@ async function scrapeBigCommerceProduct(
       (await page.$eval('h1', (el) => el.textContent?.trim()).catch(() => null));
 
     const ogImage = await page
-      .$eval('meta[property=\"og:image\"]', (el) => el.getAttribute('content'))
+      .$eval('meta[property="og:image"]', (el) => el.getAttribute('content'))
       .catch(() => null);
 
     const images = await page.$$eval('img', (imgs) =>
@@ -305,19 +305,19 @@ async function scrapeBigCommerceProduct(
       null;
 
     const modelFromPage = await page.evaluate(() => {
-      const text = (globalThis as any)?.document?.body?.textContent || '';
-      const match = text.match(/Model\\s*#:\\s*([A-Z0-9-]+)/i);
+      const text = document?.body?.textContent ?? '';
+      const match = text.match(/Model\s*#:\s*([A-Z0-9-]+)/i);
       return match?.[1] || null;
     });
 
     const breadcrumbs = await page.$$eval(
-      'nav.breadcrumb, .breadcrumbs, [aria-label=\"breadcrumb\"], nav[aria-label=\"Breadcrumb\"]',
+      'nav.breadcrumb, .breadcrumbs, [aria-label="breadcrumb"], nav[aria-label="Breadcrumb"]',
       (nodes) => {
         const items: string[] = [];
-        (nodes as any[]).forEach((node) => {
-          const texts = Array.from((node as any).querySelectorAll('a, span, li'))
-            .map((el: any) => el.textContent?.trim())
-            .filter(Boolean) as string[];
+        nodes.forEach((node) => {
+          const texts = Array.from(node.querySelectorAll('a, span, li'))
+            .map((el) => el.textContent?.trim())
+            .filter((text): text is string => Boolean(text));
           items.push(...texts);
         });
         return Array.from(new Set(items));

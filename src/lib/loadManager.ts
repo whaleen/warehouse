@@ -1,4 +1,5 @@
 import supabase from './supabase';
+import type { PostgrestError } from '@supabase/supabase-js';
 import type { LoadMetadata, LoadWithItems, InventoryType, LoadStatus, InventoryItem, LoadConflict } from '@/types/inventory';
 import { getActiveLocationContext } from '@/lib/tenant';
 
@@ -26,7 +27,7 @@ export async function mergeLoads(
   inventoryType: InventoryType,
   sourceNames: string[],
   targetName: string
-): Promise<{ success: boolean; error?: any }> {
+): Promise<{ success: boolean; error?: PostgrestError | null }> {
   const { locationId } = getActiveLocationContext();
 
   // Update all items from source loads to target
@@ -59,7 +60,7 @@ export async function updateLoadStatus(
   inventoryType: InventoryType,
   subInventoryName: string,
   newStatus: LoadStatus
-): Promise<{ success: boolean; error?: any }> {
+): Promise<{ success: boolean; error?: PostgrestError | null }> {
   const { locationId } = getActiveLocationContext();
   const { error } = await supabase
     .from('load_metadata')
@@ -92,7 +93,7 @@ export async function updateLoadMetadata(
     pickup_date?: string | null;
     pickup_tba?: boolean;
   }
-): Promise<{ success: boolean; error?: any }> {
+): Promise<{ success: boolean; error?: PostgrestError | null }> {
   const { locationId } = getActiveLocationContext();
   const { error } = await supabase
     .from('load_metadata')
@@ -110,7 +111,7 @@ export async function updateLoadMetadata(
 export async function getLoadWithItems(
   inventoryType: InventoryType,
   subInventoryName: string
-): Promise<{ data: LoadWithItems | null; error: any }> {
+): Promise<{ data: LoadWithItems | null; error: PostgrestError | null }> {
   const { locationId } = getActiveLocationContext();
   // Fetch metadata
   const { data: metadata, error: metadataError } = await supabase
@@ -159,7 +160,7 @@ export async function getLoadWithItems(
  */
 export async function getAllLoads(
   inventoryType?: InventoryType
-): Promise<{ data: LoadMetadata[] | null; error: any }> {
+): Promise<{ data: LoadMetadata[] | null; error: PostgrestError | null }> {
   const { locationId } = getActiveLocationContext();
   let query = supabase
     .from('load_metadata')
@@ -187,7 +188,7 @@ export async function getAllLoads(
 export async function getLoadItemCount(
   inventoryType: InventoryType,
   subInventoryName: string
-): Promise<{ count: number; error: any }> {
+): Promise<{ count: number; error: PostgrestError | null }> {
   const { locationId } = getActiveLocationContext();
   const { count, error } = await supabase
     .from('inventory_items')
@@ -202,7 +203,7 @@ export async function getLoadItemCount(
 export async function getLoadConflictCount(
   inventoryType: InventoryType,
   loadNumber: string
-): Promise<{ count: number; error: any }> {
+): Promise<{ count: number; error: PostgrestError | null }> {
   const { locationId } = getActiveLocationContext();
   const { count, error } = await supabase
     .from('load_conflicts')
@@ -218,7 +219,7 @@ export async function getLoadConflictCount(
 export async function getLoadConflicts(
   inventoryType: InventoryType,
   loadNumber: string
-): Promise<{ data: LoadConflict[]; error: any }> {
+): Promise<{ data: LoadConflict[]; error: PostgrestError | null }> {
   const { locationId } = getActiveLocationContext();
   const { data, error } = await supabase
     .from('load_conflicts')
@@ -238,7 +239,7 @@ export async function deleteLoad(
   inventoryType: InventoryType,
   subInventoryName: string,
   clearItems = false
-): Promise<{ success: boolean; error?: any }> {
+): Promise<{ success: boolean; error?: PostgrestError | null }> {
   const { locationId } = getActiveLocationContext();
   // Optionally clear sub_inventory from items
   if (clearItems) {

@@ -91,7 +91,7 @@ function App() {
       return { view: mappedView as AppView, sessionId: null };
     }
     return route;
-  }, [startTransition]);
+  }, []);
 
   const initialRoute = getRouteFromLocation();
 

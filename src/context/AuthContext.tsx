@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useMemo, useState } from "react"
+import { createContext, useContext, useEffect, useState } from "react"
 import supabase from "@/lib/supabase"
 
 export type UserProfile = {
@@ -278,21 +278,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(null)
   }
 
-  const value = useMemo(
-    () => ({
-      user,
-      login,
-      logout,
-      sendPasswordReset,
-      verifyOtpAndUpdatePassword,
-      setPasswordFromRecovery,
-      updateUser,
-      updatePassword,
-      refreshUser,
-      loading
-    }),
-    [user, loading]
-  )
+  const value = {
+    user,
+    login,
+    logout,
+    sendPasswordReset,
+    verifyOtpAndUpdatePassword,
+    setPasswordFromRecovery,
+    updateUser,
+    updatePassword,
+    refreshUser,
+    loading
+  }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }

@@ -28,6 +28,8 @@ export function FloorDisplayView({ displayId }: Props) {
     companyName?: string | null;
   } | null>(null);
   const [liveStatus, setLiveStatus] = useState<'live' | 'connecting' | 'offline'>('connecting');
+  const displayIdValue = display?.id ?? null;
+  const displayLocationId = display?.locationId ?? null;
 
   const generatePairingCode = useCallback(() => {
     return Math.floor(100000 + Math.random() * 900000).toString();
@@ -70,12 +72,12 @@ export function FloorDisplayView({ displayId }: Props) {
   }, [displayId, initializePairingCode, loadDisplay]);
 
   useEffect(() => {
-    if (!display) return;
+    if (!displayIdValue) return;
 
     setLiveStatus('connecting');
 
     const unsubscribe = subscribeToDisplay(
-      display.id,
+      displayIdValue,
       (updatedDisplay) => {
         setDisplay(updatedDisplay);
       },
@@ -91,7 +93,7 @@ export function FloorDisplayView({ displayId }: Props) {
     );
 
     return unsubscribe;
-  }, [display?.id]);
+  }, [displayIdValue]);
 
   useEffect(() => {
     const nextTheme = display?.stateJson?.theme ?? 'light';
@@ -99,7 +101,7 @@ export function FloorDisplayView({ displayId }: Props) {
   }, [display?.stateJson?.theme, setTheme]);
 
   useEffect(() => {
-    if (display || !pendingCode) return;
+    if (displayIdValue || !pendingCode) return;
     let cancelled = false;
     const interval = setInterval(async () => {
       const { data } = await getDisplayByCode(pendingCode);
@@ -115,22 +117,22 @@ export function FloorDisplayView({ displayId }: Props) {
       cancelled = true;
       clearInterval(interval);
     };
-  }, [display, pendingCode]);
+  }, [displayIdValue, pendingCode]);
 
   useEffect(() => {
-    if (!display) return;
+    if (!displayIdValue) return;
 
     const interval = setInterval(() => {
-      recordHeartbeat(display.id);
+      recordHeartbeat(displayIdValue);
     }, 30000);
 
-    recordHeartbeat(display.id);
+    recordHeartbeat(displayIdValue);
 
     return () => clearInterval(interval);
-  }, [display?.id]);
+  }, [displayIdValue]);
 
   useEffect(() => {
-    if (!display?.locationId) {
+    if (!displayLocationId) {
       setLocationLabel(null);
       return;
     }
@@ -141,7 +143,7 @@ export function FloorDisplayView({ displayId }: Props) {
       const { data, error } = await supabase
         .from('locations')
         .select('name, companies:company_id (name)')
-        .eq('id', display.locationId)
+        .eq('id', displayLocationId)
         .maybeSingle();
 
       if (cancelled) return;
@@ -163,7 +165,7 @@ export function FloorDisplayView({ displayId }: Props) {
     return () => {
       cancelled = true;
     };
-  }, [display?.locationId]);
+  }, [displayLocationId]);
 
   // Loading state
   if (loading) {
