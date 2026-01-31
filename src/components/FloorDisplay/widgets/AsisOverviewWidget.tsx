@@ -1,6 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import supabase from '@/lib/supabase';
 import { Card } from '@/components/ui/card';
+import { getActiveLocationContext } from '@/lib/tenant';
+import { useInventoryRealtime } from '@/hooks/queries/useRealtimeSync';
 
 type Props = {
   title?: string;
@@ -20,35 +22,32 @@ type OverviewStats = {
 const normalize = (value?: string | null) => value?.toLowerCase().trim() ?? '';
 
 export function AsisOverviewWidget({ title = 'ASIS Overview', locationId, variant = 'default', className }: Props) {
-  const [stats, setStats] = useState<OverviewStats | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { locationId: activeLocationId } = getActiveLocationContext();
+  const effectiveLocationId = locationId ?? activeLocationId;
 
-  useEffect(() => {
-    let cancelled = false;
-
-    const fetchStats = async () => {
-      if (!locationId) {
-        setStats(null);
-        setLoading(false);
-        return;
+  const { data: stats, isLoading: loading } = useQuery<OverviewStats | null>({
+    queryKey: ['asis-overview', effectiveLocationId],
+    queryFn: async () => {
+      if (!effectiveLocationId) {
+        return null;
       }
 
       const [{ count: totalItems }, { count: unassignedItems }, loadsResult] = await Promise.all([
         supabase
           .from('inventory_items')
           .select('*', { head: true, count: 'exact' })
-          .eq('location_id', locationId)
+          .eq('location_id', effectiveLocationId)
           .eq('inventory_type', 'ASIS'),
         supabase
           .from('inventory_items')
           .select('*', { head: true, count: 'exact' })
-          .eq('location_id', locationId)
+          .eq('location_id', effectiveLocationId)
           .eq('inventory_type', 'ASIS')
           .or('sub_inventory.is.null,sub_inventory.eq.""'),
         supabase
           .from('load_metadata')
           .select('ge_source_status, ge_cso_status')
-          .eq('location_id', locationId)
+          .eq('location_id', effectiveLocationId)
           .eq('inventory_type', 'ASIS'),
       ]);
 
@@ -65,73 +64,19 @@ export function AsisOverviewWidget({ title = 'ASIS Overview', locationId, varian
 
       const onFloorLoads = forSaleLoads + pickedLoads;
 
-      if (!cancelled) {
-        setStats({
-          totalItems: totalItems ?? 0,
-          unassignedItems: unassignedItems ?? 0,
-          onFloorLoads,
-          forSaleLoads,
-          pickedLoads,
-        });
-        setLoading(false);
-      }
-    };
+      return {
+        totalItems: totalItems ?? 0,
+        unassignedItems: unassignedItems ?? 0,
+        onFloorLoads,
+        forSaleLoads,
+        pickedLoads,
+      };
+    },
+    enabled: !!effectiveLocationId,
+  });
 
-    fetchStats();
-    const inventoryChannel = locationId
-      ? supabase
-          .channel(`asis-overview-items:${locationId}`)
-          .on(
-            'postgres_changes',
-            {
-              event: '*',
-              schema: 'public',
-              table: 'inventory_items',
-              filter: `location_id=eq.${locationId}`,
-            },
-            (payload) => {
-              const nextType = (payload.new as { inventory_type?: string } | null)?.inventory_type;
-              const prevType = (payload.old as { inventory_type?: string } | null)?.inventory_type;
-              if (nextType !== 'ASIS' && prevType !== 'ASIS') return;
-              if (!cancelled) {
-                fetchStats();
-              }
-            }
-          )
-          .subscribe()
-      : null;
-    const loadsChannel = locationId
-      ? supabase
-          .channel(`asis-overview-loads:${locationId}`)
-          .on(
-            'postgres_changes',
-            {
-              event: '*',
-              schema: 'public',
-              table: 'load_metadata',
-              filter: `location_id=eq.${locationId}`,
-            },
-            (payload) => {
-              const nextType = (payload.new as { inventory_type?: string } | null)?.inventory_type;
-              const prevType = (payload.old as { inventory_type?: string } | null)?.inventory_type;
-              if (nextType !== 'ASIS' && prevType !== 'ASIS') return;
-              if (!cancelled) {
-                fetchStats();
-              }
-            }
-          )
-          .subscribe()
-      : null;
-    return () => {
-      cancelled = true;
-      if (inventoryChannel) {
-        supabase.removeChannel(inventoryChannel);
-      }
-      if (loadsChannel) {
-        supabase.removeChannel(loadsChannel);
-      }
-    };
-  }, [locationId]);
+  // Realtime sync for inventory changes
+  useInventoryRealtime();
 
   const isCompact = variant === 'compact';
 
@@ -151,25 +96,25 @@ export function AsisOverviewWidget({ title = 'ASIS Overview', locationId, varian
           <div className={`grid w-full ${isCompact ? 'grid-cols-4 gap-3' : 'grid-cols-2 gap-4'}`}>
             <div className="rounded-lg border border-border bg-muted p-3 flex flex-col gap-1">
               <span className={`${isCompact ? 'text-2xl' : 'text-3xl'} font-bold text-foreground`}>
-                {stats.unassignedItems}
+                {(stats ?? {}).unassignedItems ?? 0}
               </span>
               <span className="text-xs text-muted-foreground">Unassigned items</span>
             </div>
             <div className="rounded-lg border border-border bg-muted p-3 flex flex-col gap-1">
               <span className={`${isCompact ? 'text-2xl' : 'text-3xl'} font-bold text-foreground`}>
-                {stats.onFloorLoads}
+                {(stats ?? {}).onFloorLoads ?? 0}
               </span>
               <span className="text-xs text-muted-foreground">On-floor loads</span>
             </div>
             <div className="rounded-lg border border-border bg-muted p-3 flex flex-col gap-1">
               <span className={`${isCompact ? 'text-xl' : 'text-2xl'} font-semibold text-foreground`}>
-                {stats.forSaleLoads}
+                {(stats ?? {}).forSaleLoads ?? 0}
               </span>
               <span className="text-xs text-muted-foreground">FOR SALE loads</span>
             </div>
             <div className="rounded-lg border border-border bg-muted p-3 flex flex-col gap-1">
               <span className={`${isCompact ? 'text-xl' : 'text-2xl'} font-semibold text-foreground`}>
-                {stats.pickedLoads}
+                {(stats ?? {}).pickedLoads ?? 0}
               </span>
               <span className="text-xs text-muted-foreground">SOLD • Picked loads</span>
             </div>
