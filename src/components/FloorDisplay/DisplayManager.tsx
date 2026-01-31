@@ -210,6 +210,11 @@ export function DisplayManager({ section = 'all' }: DisplayManagerProps) {
     }
   };
 
+  const handleViewDisplay = (id: string) => {
+    const url = `${window.location.origin}/display/${id}?preview=1`;
+    window.open(url, '_blank', 'noopener,noreferrer');
+  };
+
   return (
     <div className="space-y-6">
       {(displayError || success) && (
@@ -323,6 +328,13 @@ export function DisplayManager({ section = 'all' }: DisplayManagerProps) {
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
+                      <Button
+                        size="responsive"
+                        variant="outline"
+                        onClick={() => handleViewDisplay(display.id)}
+                      >
+                        View
+                      </Button>
                       {showSettings && (
                         <Button
                           size="responsive"

@@ -253,13 +253,15 @@ function App() {
     // Floor display route - ONLY for /display paths
     if (pathname.startsWith('/display')) {
       return (
-        <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme-display">
-          <Suspense fallback={null}>
-            <PageTransition>
-              <FloorDisplayView displayId={displayId} />
-            </PageTransition>
-          </Suspense>
-        </ThemeProvider>
+        <QueryClientProvider client={queryClient}>
+          <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme-display">
+            <Suspense fallback={null}>
+              <PageTransition>
+                <FloorDisplayView displayId={displayId} />
+              </PageTransition>
+            </Suspense>
+          </ThemeProvider>
+        </QueryClientProvider>
       );
     }
 

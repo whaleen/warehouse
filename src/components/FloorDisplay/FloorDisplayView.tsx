@@ -1,35 +1,39 @@
 import { useEffect, useState, useCallback } from 'react';
 import {
-  getDisplayByIdPublic,
-  getDisplayByCode,
   subscribeToDisplay,
-  recordHeartbeat,
 } from '@/lib/displayManager';
 import type { FloorDisplay } from '@/types/display';
 import { AsisOverviewWidget } from './widgets/AsisOverviewWidget';
 import { AsisLoadsWidget } from './widgets/AsisLoadsWidget';
 import { Card } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
-import supabase from '@/lib/supabase';
 import { useTheme } from '@/components/theme-provider';
+import {
+  useDisplayByCode,
+  useDisplayLocationLabel,
+  usePublicDisplay,
+  useRecordDisplayHeartbeat,
+} from '@/hooks/queries/useDisplays';
 
 type Props = {
   displayId: string | null;
 };
 
 export function FloorDisplayView({ displayId }: Props) {
+  const isPreview = new URLSearchParams(window.location.search).get('preview') === '1';
   const [display, setDisplay] = useState<FloorDisplay | null>(null);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [pendingCode, setPendingCode] = useState<string | null>(null);
+  const [resolvedDisplayId, setResolvedDisplayId] = useState<string | null>(null);
   const { setTheme } = useTheme();
-  const [locationLabel, setLocationLabel] = useState<{
-    locationName: string;
-    companyName?: string | null;
-  } | null>(null);
   const [liveStatus, setLiveStatus] = useState<'live' | 'connecting' | 'offline'>('connecting');
   const displayIdValue = display?.id ?? null;
   const displayLocationId = display?.locationId ?? null;
+  const displayQuery = usePublicDisplay(resolvedDisplayId);
+  const pairingQuery = useDisplayByCode(pendingCode, pendingCode ? 3000 : undefined);
+  const heartbeatMutation = useRecordDisplayHeartbeat();
+  const locationLabel = useDisplayLocationLabel(displayLocationId).data ?? null;
+  const loading = displayQuery.isLoading && !!resolvedDisplayId;
 
   const generatePairingCode = useCallback(() => {
     return Math.floor(100000 + Math.random() * 900000).toString();
@@ -42,34 +46,43 @@ export function FloorDisplayView({ displayId }: Props) {
     setPendingCode(nextCode);
   }, [generatePairingCode]);
 
-  const loadDisplay = useCallback(async (id: string) => {
-    setLoading(true);
-    const { data, error } = await getDisplayByIdPublic(id);
-    if (error || !data) {
-      setError('Display not found');
-      localStorage.removeItem('floor_display_id');
-      setDisplay(null);
-      initializePairingCode();
-      setLoading(false);
-      return;
-    }
-    setDisplay(data);
-    setLoading(false);
-
-    localStorage.setItem('floor_display_id', id);
-  }, [initializePairingCode]);
-
   useEffect(() => {
     const storedId = localStorage.getItem('floor_display_id');
     const idToLoad = displayId || storedId;
 
     if (idToLoad) {
-      loadDisplay(idToLoad);
+      setResolvedDisplayId(idToLoad);
+      setPendingCode(null);
     } else {
-      initializePairingCode();
-      setLoading(false);
+      if (!isPreview) {
+        initializePairingCode();
+      }
     }
-  }, [displayId, initializePairingCode, loadDisplay]);
+  }, [displayId, initializePairingCode, isPreview]);
+
+  useEffect(() => {
+    if (!displayQuery.data) return;
+    setDisplay(displayQuery.data);
+    setError(null);
+    setPendingCode(null);
+    setResolvedDisplayId(displayQuery.data.id);
+    if (!isPreview) {
+      localStorage.setItem('floor_display_id', displayQuery.data.id);
+    }
+  }, [displayQuery.data]);
+
+  useEffect(() => {
+    if (!displayQuery.error || !resolvedDisplayId) return;
+    setError('Display not found');
+    setDisplay(null);
+    if (!isPreview) {
+      localStorage.removeItem('floor_display_id');
+      if (!displayId) {
+        setResolvedDisplayId(null);
+      }
+      initializePairingCode();
+    }
+  }, [displayQuery.error, resolvedDisplayId, displayId, initializePairingCode, isPreview]);
 
   useEffect(() => {
     if (!displayIdValue) return;
@@ -102,70 +115,29 @@ export function FloorDisplayView({ displayId }: Props) {
 
   useEffect(() => {
     if (displayIdValue || !pendingCode) return;
-    let cancelled = false;
-    const interval = setInterval(async () => {
-      const { data } = await getDisplayByCode(pendingCode);
-      if (!cancelled && data?.paired) {
-        setDisplay(data);
-        localStorage.setItem('floor_display_id', data.id);
+    if (pairingQuery.data?.paired) {
+      setDisplay(pairingQuery.data);
+      setResolvedDisplayId(pairingQuery.data.id);
+      if (!isPreview) {
+        localStorage.setItem('floor_display_id', pairingQuery.data.id);
         localStorage.removeItem('floor_display_pairing_code');
-        setPendingCode(null);
       }
-    }, 3000);
-
-    return () => {
-      cancelled = true;
-      clearInterval(interval);
-    };
-  }, [displayIdValue, pendingCode]);
+      setPendingCode(null);
+      setError(null);
+    }
+  }, [displayIdValue, pendingCode, pairingQuery.data, isPreview]);
 
   useEffect(() => {
-    if (!displayIdValue) return;
+    if (!displayIdValue || isPreview) return;
 
     const interval = setInterval(() => {
-      recordHeartbeat(displayIdValue);
+      heartbeatMutation.mutate(displayIdValue);
     }, 30000);
 
-    recordHeartbeat(displayIdValue);
+    heartbeatMutation.mutate(displayIdValue);
 
     return () => clearInterval(interval);
-  }, [displayIdValue]);
-
-  useEffect(() => {
-    if (!displayLocationId) {
-      setLocationLabel(null);
-      return;
-    }
-
-    let cancelled = false;
-
-    const loadLocation = async () => {
-      const { data, error } = await supabase
-        .from('locations')
-        .select('name, companies:company_id (name)')
-        .eq('id', displayLocationId)
-        .maybeSingle();
-
-      if (cancelled) return;
-
-      if (error || !data) {
-        setLocationLabel(null);
-        return;
-      }
-
-      const company = Array.isArray(data.companies) ? data.companies[0] : data.companies;
-      setLocationLabel({
-        locationName: data.name,
-        companyName: company?.name ?? null,
-      });
-    };
-
-    loadLocation();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [displayLocationId]);
+  }, [displayIdValue, isPreview]);
 
   // Loading state
   if (loading) {

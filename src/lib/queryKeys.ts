@@ -37,6 +37,8 @@ export const queryKeys = {
   displays: {
     all: (locationId: string) => ['displays', locationId] as const,
     detail: (locationId: string, displayId: string) => ['displays', locationId, displayId] as const,
+    public: (displayId: string) => ['displays', 'public', displayId] as const,
+    byCode: (pairingCode: string) => ['displays', 'pairing', pairingCode] as const,
   },
   sessions: {
     all: (locationId: string) => ['sessions', locationId] as const,
@@ -54,6 +56,7 @@ export const queryKeys = {
   },
   locations: {
     all: () => ['locations'] as const,
+    detail: (locationId: string) => ['locations', locationId] as const,
   },
   companies: {
     all: () => ['companies'] as const,

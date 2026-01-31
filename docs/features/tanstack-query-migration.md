@@ -1,6 +1,6 @@
 # TanStack Query Migration Guide
 
-**Status**: Phase 1 Complete + Phase 2/3 partial (18/19 components migrated)
+**Status**: Phase 1-3 Complete (19/19 components migrated)
 **Last Updated**: 2026-01-31
 **Target**: TanStack Query v5
 
@@ -75,14 +75,14 @@ const queryClient = new QueryClient({
 - Now uses TanStack Query pagination (`useInventoryPages`) with filter-driven query keys
 - Export/import are handled via query-backed hooks (`useInventoryExport`, `useImportInventorySnapshot`, `useNukeInventory`)
 
-### ✅ / ⏳ Phase 2 - Floor Display
+### ✅ Completed (Phase 2 - Floor Display)
 
-| Component | File | Priority | Estimated Hooks Needed |
-|-----------|------|----------|------------------------|
-| AsisLoadsWidget | `src/components/FloorDisplay/widgets/AsisLoadsWidget.tsx` | Medium | `useLoads` with filters (done) |
-| AsisOverviewWidget | `src/components/FloorDisplay/widgets/AsisOverviewWidget.tsx` | Medium | Uses inline `useQuery`; could move to `useLoads`/`useInventory` hook |
-| DisplayManager | `src/components/FloorDisplay/DisplayManager.tsx` | Low | Still manual state; needs `useDisplays` hook |
-| FloorDisplayView | `src/components/FloorDisplay/FloorDisplayView.tsx` | Medium | Still manual state + Supabase fetch |
+| Component | File | Changes | Benefits |
+|-----------|------|---------|----------|
+| AsisLoadsWidget | `src/components/FloorDisplay/widgets/AsisLoadsWidget.tsx` | Uses `useLoads` with filters | Cached load data |
+| AsisOverviewWidget | `src/components/FloorDisplay/widgets/AsisOverviewWidget.tsx` | Uses `useAsisOverview` | Shared cache + realtime refresh |
+| DisplayManager | `src/components/FloorDisplay/DisplayManager.tsx` | Uses `useDisplays` + mutation hooks | Shared cache + refetch |
+| FloorDisplayView | `src/components/FloorDisplay/FloorDisplayView.tsx` | Uses display hooks + polling | Centralized queries |
 
 ### ✅ Completed (Phase 3 - Map Component)
 

@@ -20,8 +20,8 @@ import type { AppView } from "@/lib/routes"
 import { LocationSwitcher } from "@/components/Navigation/LocationSwitcher"
 import { NotificationBell } from "@/components/Navigation/NotificationBell"
 import { NavUser } from "@/components/nav-user"
-import supabase from "@/lib/supabase"
 import { getActiveCompanyId, getActiveLocationId } from "@/lib/tenant"
+import { useCompanies, useLocations } from "@/hooks/queries/useSettings"
 import {
   Sidebar,
   SidebarContent,
@@ -148,6 +148,10 @@ export function AppSidebar({ currentView, onViewChange, ...props }: AppSidebarPr
   const [search, setSearch] = useState(() => window.location.search)
   const [companyLabel, setCompanyLabel] = useState("Company")
   const [locationLabel, setLocationLabel] = useState("Location")
+  const [activeLocationKey, setActiveLocationKey] = useState(() => getActiveLocationId())
+  const [activeCompanyId, setActiveCompanyId] = useState(() => getActiveCompanyId())
+  const locationsQuery = useLocations()
+  const companiesQuery = useCompanies()
 
   useEffect(() => {
     const handleChange = () => setSearch(window.location.search)
@@ -160,55 +164,34 @@ export function AppSidebar({ currentView, onViewChange, ...props }: AppSidebarPr
   }, [])
 
   useEffect(() => {
-    let cancelled = false
-    const isUuidLike = (value: string) =>
-      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value)
-
-    const loadLabels = async () => {
-      const locationKey = getActiveLocationId()
-      const storedCompanyId = getActiveCompanyId()
-      let resolvedCompanyId = storedCompanyId
-      let locationName: string | null = null
-
-      if (locationKey) {
-        const locationQuery = supabase
-          .from("locations")
-          .select("id, name, company_id")
-        const locationLookup = isUuidLike(locationKey)
-          ? await locationQuery.eq("id", locationKey).maybeSingle()
-          : await locationQuery.eq("slug", locationKey).maybeSingle()
-        if (locationLookup.data) {
-          locationName = locationLookup.data.name ?? null
-          resolvedCompanyId = resolvedCompanyId ?? locationLookup.data.company_id ?? null
-        }
-      }
-
-      let companyName: string | null = null
-      if (resolvedCompanyId) {
-        const { data: company } = await supabase
-          .from("companies")
-          .select("name")
-          .eq("id", resolvedCompanyId)
-          .maybeSingle()
-        companyName = company?.name ?? null
-      }
-
-      if (!cancelled) {
-        setLocationLabel(locationName || "Location")
-        setCompanyLabel(companyName || "Company")
-      }
+    const handleChange = () => {
+      setActiveLocationKey(getActiveLocationId())
+      setActiveCompanyId(getActiveCompanyId())
     }
-
-    loadLabels()
-    const handleChange = () => loadLabels()
     window.addEventListener("app:locationchange", handleChange)
     window.addEventListener("popstate", handleChange)
     return () => {
-      cancelled = true
       window.removeEventListener("app:locationchange", handleChange)
       window.removeEventListener("popstate", handleChange)
     }
   }, [])
+
+  useEffect(() => {
+    const locations = locationsQuery.data ?? []
+    const companies = companiesQuery.data ?? []
+    const resolvedLocation = activeLocationKey
+      ? locations.find((row) => row.id === activeLocationKey || row.slug === activeLocationKey) ||
+        locations.find((row) => row.company_id === activeLocationKey) ||
+        null
+      : null
+    const resolvedCompanyId = activeCompanyId ?? resolvedLocation?.company_id ?? null
+    const resolvedCompany = resolvedCompanyId
+      ? companies.find((row) => row.id === resolvedCompanyId) || null
+      : null
+
+    setLocationLabel(resolvedLocation?.name || "Location")
+    setCompanyLabel(resolvedCompany?.name || "Company")
+  }, [activeLocationKey, activeCompanyId, locationsQuery.data, companiesQuery.data])
 
   const params = useMemo(() => new URLSearchParams(search), [search])
   const navSections = useMemo<NavSection[]>(

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { ChevronsUpDown, Settings2 } from "lucide-react"
 
 import {
@@ -15,19 +15,11 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar"
-import supabase from "@/lib/supabase"
 import { getActiveLocationId, setActiveLocationContext } from "@/lib/tenant"
+import { useLocations } from "@/hooks/queries/useSettings"
+import type { LocationRecord } from "@/lib/settingsManager"
 
-type LocationOption = {
-  id: string
-  company_id: string
-  name: string
-  slug: string
-  companies?: {
-    name?: string | null
-    slug?: string | null
-  } | null
-}
+type LocationOption = LocationRecord
 
 interface LocationSwitcherProps {
   onManageLocations?: () => void
@@ -37,60 +29,40 @@ export function LocationSwitcher({ onManageLocations }: LocationSwitcherProps) {
   const tenantLogoUrl = "/blue-jacket.png"
   const { isMobile, state } = useSidebar()
   const isCollapsed = state === "collapsed" && !isMobile
-  const [locations, setLocations] = useState<LocationOption[]>([])
-  const [activeLocation, setActiveLocation] = useState<LocationOption | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [activeKey, setActiveKey] = useState(() => getActiveLocationId())
+  const locationsQuery = useLocations()
+  const locations = (locationsQuery.data ?? []) as LocationOption[]
+  const loading = locationsQuery.isLoading
+  const activeLocation = useMemo(() => {
+    if (!activeKey) return null
+    return (
+      locations.find((row) => row.id === activeKey || row.slug === activeKey) ||
+      locations.find((row) => row.company_id === activeKey) ||
+      null
+    )
+  }, [locations, activeKey])
 
   useEffect(() => {
-    let cancelled = false
-
-    const loadLocations = async () => {
-      setLoading(true)
-      const { data, error } = await supabase
-        .from("locations")
-        .select("id, company_id, name, slug, companies:company_id (name, slug)")
-        .order("created_at", { ascending: true })
-
-      if (cancelled) return
-
-      if (error) {
-        setLocations([])
-        setActiveLocation(null)
-        setLoading(false)
-        return
-      }
-
-      const rows = (data ?? []) as LocationOption[]
-      setLocations(rows)
-
-      const activeKey = getActiveLocationId()
-      const resolved =
-        rows.find((row) => row.id === activeKey || row.slug === activeKey) ||
-        rows.find((row) => row.company_id === activeKey) ||
-        rows[0]
-
-      if (resolved) {
-        setActiveLocation(resolved)
-        if (activeKey !== resolved.id) {
-          setActiveLocationContext(resolved.id, resolved.company_id)
-        }
-      } else {
-        setActiveLocation(null)
-      }
-
-      setLoading(false)
-    }
-
-    loadLocations()
-
+    const handleChange = () => setActiveKey(getActiveLocationId())
+    window.addEventListener("app:locationchange", handleChange)
+    window.addEventListener("popstate", handleChange)
     return () => {
-      cancelled = true
+      window.removeEventListener("app:locationchange", handleChange)
+      window.removeEventListener("popstate", handleChange)
     }
   }, [])
 
+  useEffect(() => {
+    if (!activeLocation || !activeKey) return
+    if (activeKey !== activeLocation.id) {
+      setActiveLocationContext(activeLocation.id, activeLocation.company_id)
+      setActiveKey(activeLocation.id)
+    }
+  }, [activeLocation, activeKey])
+
   const handleSelect = (location: LocationOption) => {
     setActiveLocationContext(location.id, location.company_id)
-    setActiveLocation(location)
+    setActiveKey(location.id)
     if (location.id !== activeLocation?.id) {
       window.location.reload()
     }
