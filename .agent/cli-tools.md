@@ -1,6 +1,6 @@
 # CLI Tools Available to Agents
 
-This project has CLI tools linked for Supabase, Netlify, and Railway. Use them instead of writing custom scripts or asking the user to copy/paste into web UIs.
+This project has CLI tools linked for Supabase and Railway. Use them instead of writing custom scripts or asking the user to copy/paste into web UIs.
 
 ## Permission Model
 
@@ -95,48 +95,6 @@ doppler run -- psql "postgresql://postgres:${SUPABASE_DB_PASSWORD}@db.wxfdrdqchf
 
 # Run a query
 doppler run -- psql "postgresql://postgres:${SUPABASE_DB_PASSWORD}@db.wxfdrdqchfrcdgprdznr.supabase.co:5432/postgres" -c "SELECT * FROM users LIMIT 5"
-```
-
----
-
-## Netlify CLI
-
-The project is linked to the Netlify site (warehouse-tools).
-
-### Deployments
-
-```bash
-# Deploy to production (from main branch)
-netlify deploy --prod
-
-# Deploy a preview (for testing)
-netlify deploy
-
-# View deploy status
-netlify status
-```
-
-### Environment Variables
-
-```bash
-# List env vars
-netlify env:list
-
-# Set an env var
-netlify env:set KEY value
-
-# Unset an env var
-netlify env:unset KEY
-```
-
-### Build & Logs
-
-```bash
-# Build locally (same as Netlify would)
-netlify build
-
-# View function logs
-netlify logs:function <function_name>
 ```
 
 ---
@@ -242,9 +200,11 @@ doppler setup
 
 ### Integration Notes
 
-- **Frontend & ge-sync**: Both projects now use Doppler for local development
-- **Railway/Netlify**: Need to integrate Doppler via their dashboards for deployments
-- **All CLI tools**: Use `doppler run --` prefix to inject secrets (Supabase, psql, etc.)
+- **Frontend**: Uses Doppler for local development
+- **GE Sync**: Should use `.env.local` for local development (not Doppler)
+- **Railway**: Uses Railway environment variables for deployment
+- **Vercel**: Uses Vercel environment variables for deployment
+- **All CLI tools**: Use `doppler run --` prefix to inject secrets when needed (Supabase, psql, etc.)
 
 ---
 
@@ -255,16 +215,16 @@ doppler setup
 | Database migrations | `supabase migration new` + `supabase db push` | Creating .sql files for manual paste |
 | Check table structure | `supabase inspect db` or `supabase db query` | Asking user to check dashboard |
 | Generate TypeScript types | `supabase gen types typescript --linked` | Manually writing type definitions |
-| Deploy frontend | `netlify deploy --prod` | Asking user to trigger deploy |
+| Deploy frontend | Vercel auto-deploys on push to main | Manual deployment |
 | Check service logs | `railway logs` | Asking user to check Railway dashboard |
-| Set env vars | `railway variables set` / `netlify env:set` | Asking user to set in dashboard |
+| Set env vars | `railway variables set` or set in Vercel dashboard | Hardcoding in code |
 
 ---
 
 ## Troubleshooting
 
 If a CLI command fails with auth errors:
-1. The CLI may need re-authentication: `supabase login`, `netlify login`, `railway login`
+1. The CLI may need re-authentication: `supabase login`, `railway login`
 2. The project may need re-linking (run `conductor-setup.sh`)
 
 If unsure whether a CLI is available, ask the user.

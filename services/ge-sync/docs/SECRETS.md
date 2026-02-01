@@ -137,7 +137,7 @@ Set in Railway Dashboard → Project → Variables:
 SUPABASE_URL=https://your-project.supabase.co
 SUPABASE_SERVICE_KEY=eyJhbGci...
 API_KEY=your_secure_api_key
-CORS_ORIGIN=https://your-app.netlify.app
+CORS_ORIGIN=https://your-app.vercel.app
 PORT=3001
 PLAYWRIGHT_HEADLESS=true
 NODE_ENV=production
@@ -149,7 +149,7 @@ NODE_ENV=production
 railway variables set SUPABASE_URL=https://your-project.supabase.co
 railway variables set SUPABASE_SERVICE_KEY=eyJhbGci...
 railway variables set API_KEY=your_api_key
-railway variables set CORS_ORIGIN=https://your-app.netlify.app
+railway variables set CORS_ORIGIN=https://your-app.vercel.app
 railway variables set PLAYWRIGHT_HEADLESS=true
 railway variables set NODE_ENV=production
 ```
