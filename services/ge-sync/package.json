@@ -4,11 +4,11 @@
   "description": "GE DMS sync service with Playwright authentication",
   "main": "dist/index.js",
   "scripts": {
-    "dev": "doppler run -- tsx watch src/index.ts",
+    "dev": "tsx watch src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
     "typecheck": "tsc --noEmit",
-    "import:brand-products": "doppler run -- tsx src/scripts/importBrandProducts.ts"
+    "import:brand-products": "tsx src/scripts/importBrandProducts.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.49.1",

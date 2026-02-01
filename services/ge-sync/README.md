@@ -12,7 +12,7 @@ Node.js service for syncing data from GE DMS to Supabase. Uses Playwright for SS
 ## Architecture
 
 ```
-Frontend (Netlify)
+Frontend (Vercel)
        │
        │ POST /sync/asis
        ▼
