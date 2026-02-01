@@ -2,6 +2,7 @@ import { useEffect, useState } from "react"
 import { LandingPage } from "@/components/Marketing/LandingPage"
 import { FeaturesPage } from "@/components/Marketing/FeaturesPage"
 import { PricingPage } from "@/components/Marketing/PricingPage"
+import { SpeedInsights } from "@vercel/speed-insights/react"
 
 type Route = "home" | "features" | "pricing"
 
@@ -21,11 +22,12 @@ export function App() {
     return () => window.removeEventListener("popstate", handleChange)
   }, [])
 
-  if (route === "features") {
-    return <FeaturesPage />
-  }
-  if (route === "pricing") {
-    return <PricingPage />
-  }
-  return <LandingPage />
+  return (
+    <>
+      {route === "features" && <FeaturesPage />}
+      {route === "pricing" && <PricingPage />}
+      {route === "home" && <LandingPage />}
+      <SpeedInsights />
+    </>
+  )
 }
