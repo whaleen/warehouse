@@ -311,6 +311,45 @@ Once all tests pass:
 
 ---
 
+## Git Hooks
+
+### Pre-commit Hook
+
+Runs ESLint and TypeScript checks before each commit:
+- Lints and auto-fixes staged `.ts` and `.tsx` files
+- Runs `tsc --noEmit` to catch type errors
+- Prevents commits with lint/type errors
+
+### Pre-push Hook
+
+Runs production build before pushing to remote:
+- Executes `pnpm run build:prod`
+- Catches TypeScript errors that would break Vercel deployment
+- Prevents pushing broken code to main
+
+**Bypassing Hooks (Use Sparingly)**
+
+When iterating rapidly or fixing urgent issues, you can skip hooks:
+
+```bash
+# Skip pre-commit hook
+git commit --no-verify -m "quick fix"
+
+# Skip pre-push hook
+git push --no-verify
+```
+
+⚠️ **Important**: Only use `--no-verify` when you're certain the code is safe. The hooks exist to prevent breaking production.
+
+**When to use --no-verify:**
+- ✅ Pushing documentation-only changes
+- ✅ Emergency hotfixes (but verify locally first!)
+- ✅ Rapid iteration on a feature branch
+- ❌ Never on main branch without testing
+- ❌ Never when you know there are errors
+
+---
+
 ## Testing Notes
 
 Use this space to record any issues found during testing:
