@@ -366,10 +366,12 @@ export function CreateSessionView({ onViewChange, onMenuClick, sessionId, onSess
 
   return (
     <div className="min-h-screen bg-background">
-      <AppHeader
-        title="Scanning Sessions"
-        onMenuClick={onMenuClick}
-      />
+      {!isMobile && (
+        <AppHeader
+          title="Scanning Sessions"
+          onMenuClick={onMenuClick}
+        />
+      )}
 
       <PageContainer className="py-4 pb-24">
         <div className="space-y-6">

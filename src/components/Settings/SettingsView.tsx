@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Settings as SettingsIcon } from "lucide-react"
 import { useEffect, useState } from "react"
+import { useIsMobile } from "@/hooks/use-mobile"
 import { PageContainer } from "@/components/Layout/PageContainer"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useAuth } from "@/context/AuthContext"
@@ -62,6 +63,7 @@ const slugify = (value: string) => {
 }
 
 export function SettingsView({ onMenuClick, section }: SettingsViewProps) {
+  const isMobile = useIsMobile();
   const { user, updateUser, updatePassword } = useAuth()
   const { theme, setTheme } = useTheme()
   const resolvedSection: SettingsSection = section ?? "location"
@@ -1266,7 +1268,9 @@ export function SettingsView({ onMenuClick, section }: SettingsViewProps) {
 
   return (
     <div className="min-h-screen bg-background">
-      <AppHeader title={pageTitle} onMenuClick={onMenuClick} />
+      {!isMobile && (
+        <AppHeader title={pageTitle} onMenuClick={onMenuClick} />
+      )}
 
       <PageContainer className="py-6 pb-24">
         <div className="max-w-2xl mx-auto space-y-6">

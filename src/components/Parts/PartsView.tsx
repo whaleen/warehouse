@@ -6,6 +6,7 @@ import { PartsHistoryTab } from '@/components/Inventory/PartsHistoryTab';
 import { AppHeader } from '@/components/Navigation/AppHeader';
 import { PageContainer } from '@/components/Layout/PageContainer';
 import { Search, ClipboardList, History } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 type PartsTab = 'inventory' | 'history';
 
@@ -14,6 +15,7 @@ interface PartsViewProps {
 }
 
 export function PartsView({ onMenuClick }: PartsViewProps) {
+  const isMobile = useIsMobile();
   const getInitialTab = (): PartsTab => {
     const params = new URLSearchParams(window.location.search);
     const tab = params.get('tab');
@@ -86,10 +88,12 @@ export function PartsView({ onMenuClick }: PartsViewProps) {
 
   return (
     <div className="min-h-screen bg-background">
-      <AppHeader
-        title="Parts"
-        onMenuClick={onMenuClick}
-      />
+      {!isMobile && (
+        <AppHeader
+          title="Parts"
+          onMenuClick={onMenuClick}
+        />
+      )}
 
       {/* Search */}
       <div className="border-b">

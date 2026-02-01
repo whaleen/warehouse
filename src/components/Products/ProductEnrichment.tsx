@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/select';
 import { Loader2, Search, Plus, ExternalLink } from 'lucide-react';
 import { AppHeader } from '@/components/Navigation/AppHeader';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { decodeHTMLEntities } from '@/lib/htmlUtils';
 import { toast } from 'sonner';
 import { PageContainer } from '@/components/Layout/PageContainer';
@@ -27,6 +28,7 @@ interface ProductEnrichmentProps {
 }
 
 export function ProductEnrichment({ onMenuClick }: ProductEnrichmentProps) {
+  const isMobile = useIsMobile();
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [productData, setProductData] = useState<ProductData | null>(null);
@@ -98,7 +100,9 @@ export function ProductEnrichment({ onMenuClick }: ProductEnrichmentProps) {
 
   return (
     <div className="min-h-screen bg-background">
-      <AppHeader title="Product Database" onMenuClick={onMenuClick} />
+      {!isMobile && (
+        <AppHeader title="Product Database" onMenuClick={onMenuClick} />
+      )}
       <PageContainer className="pt-6 pb-24">
         <div className="max-w-2xl mx-auto space-y-6">
           <p className="text-muted-foreground">Look up or add appliance model information</p>

@@ -13,6 +13,7 @@ import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { toast } from 'sonner';
 import { PageContainer } from '@/components/Layout/PageContainer';
 import { getPathForView } from '@/lib/routes';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface LoadWithCount extends LoadMetadata {
   item_count: number;
@@ -25,6 +26,7 @@ interface LoadManagementViewProps {
 
 export function LoadManagementView({ onMenuClick }: LoadManagementViewProps) {
   const { data: loadsData, isLoading: loading, refetch } = useLoads();
+  const isMobile = useIsMobile();
   const [loads, setLoads] = useState<LoadWithCount[]>([]);
   const [showAway, setShowAway] = useState(false);
   const [pendingLoadSelection, setPendingLoadSelection] = useState<string | null>(null);
@@ -232,14 +234,16 @@ export function LoadManagementView({ onMenuClick }: LoadManagementViewProps) {
   return (
     <>
       <div className="h-screen bg-background flex flex-col">
-        <AppHeader
-          title={
-            isStandaloneDetail
-              ? `Load ${selectedLoadForDetail?.friendly_name || selectedLoadForDetail?.sub_inventory_name || ''}`.trim()
-              : "ASIS Loads"
-          }
-          onMenuClick={onMenuClick}
-        />
+        {!isMobile && (
+          <AppHeader
+            title={
+              isStandaloneDetail
+                ? `Load ${selectedLoadForDetail?.friendly_name || selectedLoadForDetail?.sub_inventory_name || ''}`.trim()
+                : "ASIS Loads"
+            }
+            onMenuClick={onMenuClick}
+          />
+        )}
 
         <PageContainer className="py-4 pb-24 flex-1 min-h-0 overflow-hidden">
           <div className="flex min-h-0 flex-col gap-4 h-full">

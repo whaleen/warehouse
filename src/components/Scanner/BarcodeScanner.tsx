@@ -3,6 +3,8 @@ import { Html5Qrcode } from 'html5-qrcode';
 import { Button } from '@/components/ui/button';
 import { X, ScanBarcode, Maximize2, Minimize2, RotateCw } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { uiLayers } from '@/lib/uiLayers';
+import { OverlayPortal } from '@/components/Layout/OverlayPortal';
 
 interface BarcodeScannerProps {
   onScan: (barcode: string) => void;
@@ -56,21 +58,28 @@ export function BarcodeScanner({ onScan, onClose, inventoryType }: BarcodeScanne
         scannerRef.current = null;
       }
 
-      // Clear any leftover video elements manually
-      const element = document.getElementById(scannerId);
-      if (element) {
-        element.innerHTML = '';
-      }
+      // Wait for element to be available in DOM (portal may delay rendering)
+      let element: HTMLElement | null = null;
+      let attempts = 0;
+      const maxAttempts = 20; // Try for up to 2 seconds (20 * 100ms)
 
-      // Wait longer to ensure cleanup is complete
-      await new Promise(resolve => setTimeout(resolve, 300));
+      while (!element && attempts < maxAttempts && mounted) {
+        element = document.getElementById(scannerId);
+        if (!element) {
+          await new Promise(resolve => setTimeout(resolve, 100));
+          attempts++;
+        }
+      }
 
       if (!mounted) return;
 
       if (!element) {
-        if (mounted) setError('Scanner element not found');
+        if (mounted) setError('Scanner element not found - please try again');
         return;
       }
+
+      // Clear any leftover video elements
+      element.innerHTML = '';
 
       try {
         const scanner = new Html5Qrcode(scannerId);
@@ -169,7 +178,8 @@ export function BarcodeScanner({ onScan, onClose, inventoryType }: BarcodeScanne
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black flex flex-col">
+    <OverlayPortal>
+      <div className={`fixed inset-0 bg-black flex flex-col ${uiLayers.toolOverlay}`}>
       {/* Header */}
       <div className="flex items-center justify-between p-4">
         <Button
@@ -263,6 +273,7 @@ export function BarcodeScanner({ onScan, onClose, inventoryType }: BarcodeScanne
           </div>
         </div>
       )}
-    </div>
+      </div>
+    </OverlayPortal>
   );
 }

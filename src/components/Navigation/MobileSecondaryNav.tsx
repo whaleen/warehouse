@@ -2,16 +2,16 @@ import {
   ClipboardList,
   Package,
   History,
+  MapPin,
   Settings2,
   Users,
   Database,
   ChevronLeft,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Separator } from '@/components/ui/separator';
-import { feedbackSuccess } from '@/lib/feedback';
-import type { AppView } from '@/App';
+import { haptic } from '@/lib/feedback';
+import type { AppView } from '@/lib/routes';
 
 interface MobileSecondaryNavProps {
   currentView: AppView;
@@ -46,6 +46,11 @@ const secondaryGroups: NavGroup[] = [
         icon: History,
         label: 'Activity Log',
         view: 'activity',
+      },
+      {
+        icon: MapPin,
+        label: 'Warehouse Map',
+        view: 'map',
       },
     ],
   },
@@ -87,60 +92,59 @@ export function MobileSecondaryNav({
   onBack,
 }: MobileSecondaryNavProps) {
   const handleNavigate = (view: AppView) => {
-    feedbackSuccess();
+    haptic('light');
     onNavigate(view);
   };
 
   const handleBack = () => {
-    feedbackSuccess();
+    haptic('light');
     onBack();
   };
 
   return (
-    <div className="flex flex-col gap-4 pb-4">
-      <SheetHeader>
-        <SheetTitle>More Options</SheetTitle>
-      </SheetHeader>
+    <div className="flex flex-col max-h-[70vh]">
+      {/* Back button - fixed at top */}
+      <div className="p-4 pb-0 shrink-0">
+        <Button
+          variant="ghost"
+          className="h-12 justify-start gap-2 text-base"
+          onClick={handleBack}
+        >
+          <ChevronLeft className="h-5 w-5" />
+          <span>Back to Main Menu</span>
+        </Button>
+        <Separator className="mt-4" />
+      </div>
 
-      {/* Back button */}
-      <Button
-        variant="ghost"
-        className="h-12 justify-start gap-2 text-base"
-        onClick={handleBack}
-      >
-        <ChevronLeft className="h-5 w-5" />
-        <span>Back to Main Menu</span>
-      </Button>
+      {/* Grouped navigation items - scrollable */}
+      <div className="overflow-y-auto p-4 pb-8">
+        <div className="flex flex-col gap-6">
+          {secondaryGroups.map((group) => (
+            <div key={group.title} className="flex flex-col gap-2">
+              <h3 className="text-sm font-semibold text-muted-foreground px-2">
+                {group.title}
+              </h3>
+              <div className="flex flex-col gap-1">
+                {group.items.map((item) => {
+                  const Icon = item.icon;
+                  const isActive = currentView === item.view;
 
-      <Separator />
-
-      {/* Grouped navigation items */}
-      <div className="flex flex-col gap-6">
-        {secondaryGroups.map((group) => (
-          <div key={group.title} className="flex flex-col gap-2">
-            <h3 className="text-sm font-semibold text-muted-foreground px-2">
-              {group.title}
-            </h3>
-            <div className="flex flex-col gap-1">
-              {group.items.map((item) => {
-                const Icon = item.icon;
-                const isActive = currentView === item.view;
-
-                return (
-                  <Button
-                    key={item.view}
-                    variant={isActive ? 'secondary' : 'ghost'}
-                    className="h-12 justify-start gap-3 text-base"
-                    onClick={() => handleNavigate(item.view)}
-                  >
-                    <Icon className="h-5 w-5" />
-                    <span>{item.label}</span>
-                  </Button>
-                );
-              })}
+                  return (
+                    <Button
+                      key={item.view}
+                      variant={isActive ? 'secondary' : 'ghost'}
+                      className="h-12 justify-start gap-3 text-base"
+                      onClick={() => handleNavigate(item.view)}
+                    >
+                      <Icon className="h-5 w-5" />
+                      <span>{item.label}</span>
+                    </Button>
+                  );
+                })}
+              </div>
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
     </div>
   );

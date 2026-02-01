@@ -234,3 +234,71 @@ export async function deleteSession(sessionId: string): Promise<{ success: boole
 
   return { success: !error, error };
 }
+
+/**
+ * Get or create a permanent session for quick scans
+ * These sessions are never closed and are reused for all quick scans
+ */
+async function getOrCreatePermanentSession(name: string, subInventory: string): Promise<{ sessionId: string | null; error?: unknown }> {
+  const { locationId, companyId } = getActiveLocationContext();
+
+  try {
+    // Try to find existing session
+    const { data: existing, error: findError } = await supabase
+      .from(SESSION_TABLE)
+      .select('id')
+      .eq('location_id', locationId)
+      .eq('name', name)
+      .maybeSingle();
+
+    if (findError) {
+      return { sessionId: null, error: findError };
+    }
+
+    // If found, return it
+    if (existing) {
+      return { sessionId: existing.id };
+    }
+
+    // Create new permanent session
+    const { data: created, error: createError } = await supabase
+      .from(SESSION_TABLE)
+      .insert({
+        company_id: companyId,
+        location_id: locationId,
+        name,
+        inventory_type: 'all',
+        sub_inventory: subInventory,
+        status: 'active',
+        items: [],
+        scanned_item_ids: [],
+        created_by: 'system',
+        updated_by: 'system',
+        updated_at: new Date().toISOString()
+      })
+      .select('id')
+      .single();
+
+    if (createError || !created) {
+      return { sessionId: null, error: createError };
+    }
+
+    return { sessionId: created.id };
+  } catch (err) {
+    return { sessionId: null, error: err };
+  }
+}
+
+/**
+ * Get or create the permanent "Ad-hoc Scans" session for test/garbage scans
+ */
+export async function getOrCreateAdHocSession(): Promise<{ sessionId: string | null; error?: unknown }> {
+  return getOrCreatePermanentSession('🧪 Ad-hoc Scans', 'Ad-hoc');
+}
+
+/**
+ * Get or create the permanent "Fog of War" session for inventory position updates
+ */
+export async function getOrCreateFogOfWarSession(): Promise<{ sessionId: string | null; error?: unknown }> {
+  return getOrCreatePermanentSession('🗺️ Fog of War', 'Fog of War');
+}

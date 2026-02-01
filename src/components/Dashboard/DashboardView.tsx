@@ -615,7 +615,9 @@ export function DashboardView({ onViewChange, onMenuClick }: DashboardViewProps)
 
   return (
     <div className="min-h-screen bg-background">
-      <AppHeader title="Dashboard" onMenuClick={onMenuClick} />
+      {!isMobile && (
+        <AppHeader title="Dashboard" onMenuClick={onMenuClick} />
+      )}
 
       <PageContainer className="py-4 space-y-6 pb-24">
         {/* Welcome Header with Quick Stats */}

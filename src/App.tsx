@@ -10,6 +10,8 @@ import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { PendingAccess } from "@/components/Auth/PendingAccess";
 import { PageTransition } from "@/components/ui/page-transition";
+import { OverlayStack } from "@/components/Layout/OverlayStack";
+import { ScannerOverlayProvider } from "@/context/ScannerOverlayContext";
 
 // Lazy load heavy components for code splitting
 const LoadManagementView = lazy(() => import("@/components/Inventory/LoadManagementView").then(m => ({ default: m.LoadManagementView })));
@@ -272,13 +274,13 @@ function App() {
 
   return (
     <QueryClientProvider client={queryClient}>
+      <ScannerOverlayProvider>
       <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
         {isMobile ? (
           <>
-            <SidebarInset className="bg-muted/40">
-              <div className="flex min-h-screen flex-col min-w-0">
-                <Suspense fallback={null}>
-                  <PageTransition className="flex-1 min-h-0">
+            <div className="bg-muted/40 flex min-h-screen flex-col min-w-0">
+              <Suspense fallback={null}>
+                <PageTransition className="flex-1 min-h-0">
                     {currentView === "dashboard" && (
                       <DashboardView
                         onViewChange={handleViewChange}
@@ -334,9 +336,9 @@ function App() {
                     )}
                   </PageTransition>
                 </Suspense>
-              </div>
-            </SidebarInset>
+            </div>
             <MobileNav currentView={currentView} onViewChange={navigate} />
+            <OverlayStack />
           </>
         ) : (
           <SidebarProvider>
@@ -406,10 +408,11 @@ function App() {
                 </Suspense>
               </div>
             </SidebarInset>
+            <OverlayStack />
           </SidebarProvider>
         )}
       </ThemeProvider>
-
+      </ScannerOverlayProvider>
     </QueryClientProvider>
   );
 }

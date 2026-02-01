@@ -7,10 +7,10 @@
 
 import { AppHeader } from '@/components/Navigation/AppHeader';
 import { PageContainer } from '@/components/Layout/PageContainer';
-import { MobileOverlay } from '@/components/Layout/MobileOverlay';
 import { useProductLocations } from '@/hooks/queries/useMap';
 import { WarehouseMapNew } from './WarehouseMapNew';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { uiLayers } from '@/lib/uiLayers';
 
 interface MapViewProps {
   onMenuClick?: () => void;
@@ -20,12 +20,12 @@ export function MapView({ onMenuClick }: MapViewProps) {
   const { data: locations } = useProductLocations();
   const isMobile = useIsMobile();
 
-  // Mobile: Full-screen overlay
+  // Mobile: Full-screen map without container constraints
   if (isMobile) {
     return (
-      <MobileOverlay title="Warehouse Map">
+      <div className={`fixed inset-0 bg-background ${uiLayers.page}`}>
         <WarehouseMapNew locations={locations ?? []} />
-      </MobileOverlay>
+      </div>
     );
   }
 

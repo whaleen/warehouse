@@ -395,6 +395,12 @@ export function InventoryView({ onMenuClick }: InventoryViewProps) {
 
   const handleImportProducts = useCallback(async () => {
     if (importingProducts) return;
+    if (!locationId || !companyId) {
+      toast.error('Missing location', {
+        description: 'Select a location before importing inventory.',
+      });
+      return;
+    }
     const source = resolveProductImportSource(inventoryTypeFilter);
     if (!source) {
       toast.error('Missing source', {
@@ -568,7 +574,9 @@ export function InventoryView({ onMenuClick }: InventoryViewProps) {
 
   return (
     <div className="min-h-screen bg-background">
-      <AppHeader title="Inventory" onMenuClick={onMenuClick} />
+      {!isMobile && (
+        <AppHeader title="Inventory" onMenuClick={onMenuClick} />
+      )}
 
       {/* Filters */}
       <div className="border-b">

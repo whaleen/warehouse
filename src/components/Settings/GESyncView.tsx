@@ -6,6 +6,7 @@ import { useState } from "react";
 import { PageContainer } from "@/components/Layout/PageContainer";
 import { getActiveLocationContext } from "@/lib/tenant";
 import { useGeSync } from "@/hooks/queries/useGeSync";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface GESyncViewProps {
   onMenuClick?: () => void;
@@ -27,6 +28,7 @@ interface SyncStatus {
 }
 
 export function GESyncView({ onMenuClick }: GESyncViewProps) {
+  const isMobile = useIsMobile();
   const [syncStatuses, setSyncStatuses] = useState<Record<SyncType, SyncStatus>>({
     asis: { type: "asis", loading: false, success: null, error: null },
     fg: { type: "fg", loading: false, success: null, error: null },
@@ -161,7 +163,9 @@ export function GESyncView({ onMenuClick }: GESyncViewProps) {
 
   return (
     <div className="min-h-screen bg-background">
-      <AppHeader title="Settings / GE Sync" onMenuClick={onMenuClick} />
+      {!isMobile && (
+        <AppHeader title="Settings / GE Sync" onMenuClick={onMenuClick} />
+      )}
 
       <PageContainer className="py-6 pb-24">
         <div className="max-w-2xl mx-auto space-y-6">

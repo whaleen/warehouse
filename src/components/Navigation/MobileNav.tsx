@@ -1,11 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
 import { Menu, X, ScanBarcode } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Sheet, SheetContent } from '@/components/ui/sheet';
-import { useUiHandedness } from '@/hooks/useUiHandedness';
+import { Drawer, DrawerContent } from '@/components/ui/drawer';
 import { MobilePrimaryNav } from './MobilePrimaryNav';
 import { MobileSecondaryNav } from './MobileSecondaryNav';
-import type { AppView } from '@/App';
+import type { AppView } from '@/lib/routes';
 
 interface MobileNavProps {
   currentView: AppView;
@@ -18,7 +17,6 @@ export function MobileNav({ currentView, onViewChange }: MobileNavProps) {
   const [activeSheet, setActiveSheet] = useState<NavSheet>('closed');
   const [fabVisible, setFabVisible] = useState(true);
   const lastScroll = useRef(0);
-  const uiHandedness = useUiHandedness();
 
   // Scroll behavior: hide FAB on scroll down, show on scroll up
   useEffect(() => {
@@ -69,10 +67,8 @@ export function MobileNav({ currentView, onViewChange }: MobileNavProps) {
 
   const FabIcon = getFabIcon();
 
-  // Position FAB based on handedness
-  const fabPositionClass = uiHandedness === 'left'
-    ? 'left-4'
-    : 'right-4';
+  // Position FAB - always top-right
+  const fabPositionClass = 'top-4 right-4';
 
   return (
     <>
@@ -80,7 +76,7 @@ export function MobileNav({ currentView, onViewChange }: MobileNavProps) {
       <Button
         size="lg"
         className={`
-          fixed bottom-4 z-50 h-14 w-14 rounded-full shadow-lg
+          fixed z-50 h-14 w-14 rounded-full shadow-lg
           transition-all duration-300
           ${fabPositionClass}
           ${fabVisible ? 'translate-y-0 opacity-100' : 'translate-y-24 opacity-0'}
@@ -92,11 +88,10 @@ export function MobileNav({ currentView, onViewChange }: MobileNavProps) {
         <FabIcon className="h-6 w-6" />
       </Button>
 
-      {/* Primary Navigation Sheet */}
-      <Sheet open={activeSheet === 'primary'} onOpenChange={handleSheetClose}>
-        <SheetContent
-          side="bottom"
-          className="h-auto max-h-[85vh]"
+      {/* Primary Navigation Drawer */}
+      <Drawer open={activeSheet === 'primary'} onOpenChange={(open) => !open && handleSheetClose()}>
+        <DrawerContent
+          className="max-h-[85vh]"
           aria-describedby="primary-nav-description"
         >
           <div id="primary-nav-description" className="sr-only">
@@ -107,14 +102,13 @@ export function MobileNav({ currentView, onViewChange }: MobileNavProps) {
             onNavigate={handleNavigate}
             onOpenMore={handleOpenSecondary}
           />
-        </SheetContent>
-      </Sheet>
+        </DrawerContent>
+      </Drawer>
 
-      {/* Secondary Navigation Sheet */}
-      <Sheet open={activeSheet === 'secondary'} onOpenChange={handleSheetClose}>
-        <SheetContent
-          side="bottom"
-          className="h-auto max-h-[85vh]"
+      {/* Secondary Navigation Drawer */}
+      <Drawer open={activeSheet === 'secondary'} onOpenChange={(open) => !open && handleSheetClose()}>
+        <DrawerContent
+          className="max-h-[85vh]"
           aria-describedby="secondary-nav-description"
         >
           <div id="secondary-nav-description" className="sr-only">
@@ -125,8 +119,8 @@ export function MobileNav({ currentView, onViewChange }: MobileNavProps) {
             onNavigate={handleNavigate}
             onBack={handleBackToPrimary}
           />
-        </SheetContent>
-      </Sheet>
+        </DrawerContent>
+      </Drawer>
     </>
   );
 }

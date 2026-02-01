@@ -1,5 +1,6 @@
 import { AppHeader } from '@/components/Navigation/AppHeader';
 import { PageContainer } from '@/components/Layout/PageContainer';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, Loader2 } from 'lucide-react';
@@ -28,6 +29,7 @@ type ActivityDetails = {
 };
 
 export function ActivityLogView() {
+  const isMobile = useIsMobile();
   const {
     data,
     fetchNextPage,
@@ -91,7 +93,9 @@ export function ActivityLogView() {
 
   return (
     <div className="min-h-screen bg-background">
-      <AppHeader title="Activity Log" />
+      {!isMobile && (
+        <AppHeader title="Activity Log" />
+      )}
       <PageContainer className="py-4 pb-24 space-y-4">
         <Card className="p-4">
           <div className="space-y-3">
