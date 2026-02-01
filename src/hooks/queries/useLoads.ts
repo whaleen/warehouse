@@ -17,10 +17,11 @@ export function useLoads(inventoryType?: InventoryType) {
 
   return useQuery({
     queryKey: inventoryType
-      ? queryKeys.loads.byType(locationId, inventoryType)
-      : queryKeys.loads.all(locationId),
+      ? queryKeys.loads.byType(locationId ?? 'none', inventoryType)
+      : queryKeys.loads.all(locationId ?? 'none'),
     queryFn: () => getAllLoads(inventoryType),
     select: (data) => data.data,
+    enabled: !!locationId,
   });
 }
 
@@ -28,10 +29,10 @@ export function useLoadDetail(inventoryType: InventoryType, subInventoryName: st
   const { locationId } = getActiveLocationContext();
 
   return useQuery({
-    queryKey: queryKeys.loads.detail(locationId, inventoryType, subInventoryName),
+    queryKey: queryKeys.loads.detail(locationId ?? 'none', inventoryType, subInventoryName),
     queryFn: () => getLoadWithItems(inventoryType, subInventoryName),
     select: (data) => data.data,
-    enabled: !!subInventoryName,
+    enabled: !!locationId && !!subInventoryName,
   });
 }
 
@@ -39,10 +40,10 @@ export function useLoadItemCount(inventoryType: InventoryType, subInventoryName:
   const { locationId } = getActiveLocationContext();
 
   return useQuery({
-    queryKey: queryKeys.loads.count(locationId, inventoryType, subInventoryName),
+    queryKey: queryKeys.loads.count(locationId ?? 'none', inventoryType, subInventoryName),
     queryFn: () => getLoadItemCount(inventoryType, subInventoryName),
     select: (data) => data.count,
-    enabled: !!subInventoryName,
+    enabled: !!locationId && !!subInventoryName,
   });
 }
 
@@ -62,7 +63,9 @@ export function useUpdateLoadStatus() {
     }) => updateLoadStatus(inventoryType, subInventoryName, newStatus),
 
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.loads.all(locationId) });
+      if (locationId) {
+        queryClient.invalidateQueries({ queryKey: queryKeys.loads.all(locationId) });
+      }
     },
   });
 }
@@ -83,8 +86,10 @@ export function useMergeLoads() {
     }) => mergeLoads(inventoryType, sourceNames, targetName),
 
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.loads.all(locationId) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.inventory.all(locationId) });
+      if (locationId) {
+        queryClient.invalidateQueries({ queryKey: queryKeys.loads.all(locationId) });
+        queryClient.invalidateQueries({ queryKey: queryKeys.inventory.all(locationId) });
+      }
     },
   });
 }
@@ -105,8 +110,10 @@ export function useDeleteLoad() {
     }) => deleteLoad(inventoryType, subInventoryName, clearItems),
 
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.loads.all(locationId) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.inventory.all(locationId) });
+      if (locationId) {
+        queryClient.invalidateQueries({ queryKey: queryKeys.loads.all(locationId) });
+        queryClient.invalidateQueries({ queryKey: queryKeys.inventory.all(locationId) });
+      }
     },
   });
 }
@@ -115,7 +122,7 @@ export function useLoadConflicts(inventoryType: InventoryType, loadNumber: strin
   const { locationId } = getActiveLocationContext();
 
   return useQuery({
-    queryKey: queryKeys.loads.conflicts(locationId, inventoryType, loadNumber),
+    queryKey: queryKeys.loads.conflicts(locationId ?? 'none', inventoryType, loadNumber),
     queryFn: () => getLoadConflicts(inventoryType, loadNumber),
     select: (data) => data.data,
     enabled: !!loadNumber,

@@ -10,8 +10,10 @@ export function useActivityLog() {
   const { locationId } = getActiveLocationContext();
 
   return useInfiniteQuery({
-    queryKey: queryKeys.activity.all(locationId),
+    queryKey: queryKeys.activity.all(locationId ?? 'none'),
+    enabled: !!locationId,
     queryFn: async ({ pageParam = 0 }) => {
+      if (!locationId) throw new Error('Location required');
       const from = pageParam * PAGE_SIZE;
       const to = from + PAGE_SIZE - 1;
 

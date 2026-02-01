@@ -18,8 +18,9 @@ export function useTrackedParts() {
   const { locationId } = getActiveLocationContext();
 
   return useQuery({
-    queryKey: queryKeys.parts.tracked(locationId),
+    queryKey: queryKeys.parts.tracked(locationId ?? 'none'),
     queryFn: getTrackedParts,
+    enabled: !!locationId,
   });
 }
 
@@ -27,8 +28,9 @@ export function useReorderAlerts() {
   const { locationId } = getActiveLocationContext();
 
   return useQuery({
-    queryKey: queryKeys.parts.alerts(locationId),
+    queryKey: queryKeys.parts.alerts(locationId ?? 'none'),
     queryFn: getReorderAlerts,
+    enabled: !!locationId,
   });
 }
 
@@ -52,6 +54,7 @@ export function useUpdatePartCount() {
     }) => updatePartCount(productId, newQty, countedBy, notes, reason),
 
     onMutate: async ({ productId, newQty }) => {
+      if (!locationId) return {};
       await queryClient.cancelQueries({ queryKey: queryKeys.parts.tracked(locationId) });
       const previous = queryClient.getQueryData<TrackedPartWithDetails[]>(queryKeys.parts.tracked(locationId));
 
@@ -69,14 +72,16 @@ export function useUpdatePartCount() {
     },
 
     onError: (_err, _variables, context) => {
-      if (context?.previous) {
+      if (context?.previous && locationId) {
         queryClient.setQueryData(queryKeys.parts.tracked(locationId), context.previous);
       }
     },
 
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.parts.tracked(locationId) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.parts.alerts(locationId) });
+      if (locationId) {
+        queryClient.invalidateQueries({ queryKey: queryKeys.parts.tracked(locationId) });
+        queryClient.invalidateQueries({ queryKey: queryKeys.parts.alerts(locationId) });
+      }
     },
   });
 }
@@ -89,6 +94,7 @@ export function useMarkAsReordered() {
     mutationFn: (trackedPartId: string) => markAsReordered(trackedPartId),
 
     onMutate: async (trackedPartId) => {
+      if (!locationId) return {};
       await queryClient.cancelQueries({ queryKey: queryKeys.parts.alerts(locationId) });
       const previous = queryClient.getQueryData<ReorderAlert[]>(queryKeys.parts.alerts(locationId));
 
@@ -108,14 +114,16 @@ export function useMarkAsReordered() {
     },
 
     onError: (_err, _variables, context) => {
-      if (context?.previous) {
+      if (context?.previous && locationId) {
         queryClient.setQueryData(queryKeys.parts.alerts(locationId), context.previous);
       }
     },
 
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.parts.tracked(locationId) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.parts.alerts(locationId) });
+      if (locationId) {
+        queryClient.invalidateQueries({ queryKey: queryKeys.parts.tracked(locationId) });
+        queryClient.invalidateQueries({ queryKey: queryKeys.parts.alerts(locationId) });
+      }
     },
   });
 }
@@ -136,8 +144,10 @@ export function useAddTrackedPart() {
     }) => addTrackedPart(productId, reorderThreshold, createdBy),
 
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.parts.tracked(locationId) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.parts.alerts(locationId) });
+      if (locationId) {
+        queryClient.invalidateQueries({ queryKey: queryKeys.parts.tracked(locationId) });
+        queryClient.invalidateQueries({ queryKey: queryKeys.parts.alerts(locationId) });
+      }
     },
   });
 }
@@ -150,8 +160,10 @@ export function useRemoveTrackedPart() {
     mutationFn: (trackedPartId: string) => removeTrackedPart(trackedPartId),
 
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.parts.tracked(locationId) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.parts.alerts(locationId) });
+      if (locationId) {
+        queryClient.invalidateQueries({ queryKey: queryKeys.parts.tracked(locationId) });
+        queryClient.invalidateQueries({ queryKey: queryKeys.parts.alerts(locationId) });
+      }
     },
   });
 }
@@ -170,8 +182,10 @@ export function useUpdateThreshold() {
     }) => updateThreshold(trackedPartId, threshold),
 
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.parts.tracked(locationId) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.parts.alerts(locationId) });
+      if (locationId) {
+        queryClient.invalidateQueries({ queryKey: queryKeys.parts.tracked(locationId) });
+        queryClient.invalidateQueries({ queryKey: queryKeys.parts.alerts(locationId) });
+      }
     },
   });
 }
@@ -180,8 +194,9 @@ export function usePartsHistory(productId?: string, days: number = 30) {
   const { locationId } = getActiveLocationContext();
 
   return useQuery({
-    queryKey: queryKeys.parts.history(locationId, productId, days),
+    queryKey: queryKeys.parts.history(locationId ?? 'none', productId, days),
     queryFn: () => getCountHistoryWithProducts(productId, days),
+    enabled: !!locationId,
   });
 }
 
@@ -189,7 +204,7 @@ export function useAvailablePartsToTrack(searchTerm?: string, enabled: boolean =
   const { locationId } = getActiveLocationContext();
 
   return useQuery({
-    queryKey: queryKeys.parts.available(locationId, searchTerm),
+    queryKey: queryKeys.parts.available(locationId ?? 'none', searchTerm),
     queryFn: () =>
       getAvailablePartsToTrack({
         searchTerm: searchTerm?.trim() ? searchTerm.trim() : undefined,

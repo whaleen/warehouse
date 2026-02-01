@@ -40,7 +40,6 @@ export function useDashboardInventoryItems() {
 
       return allItems;
     },
-    enabled: !!locationId,
   });
 }
 

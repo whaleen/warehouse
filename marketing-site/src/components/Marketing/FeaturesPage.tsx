@@ -27,7 +27,7 @@ export function FeaturesPage() {
   return (
     <MarketingLayout onRequestAccess={() => setShowEarlyAccess(true)}>
       {showEarlyAccess && <EarlyAccessForm onClose={() => setShowEarlyAccess(false)} />}
-      <PageHeader onRequestAccess={() => setShowEarlyAccess(true)} />
+      <PageHeader />
       <CoreFeatures />
       <ReliabilitySection />
       <FloorControls />

@@ -19,14 +19,17 @@ The ge-sync service requires two types of credentials:
 
 ### Infrastructure Secrets (Environment Variables)
 
-| Variable | Required For | Description | Example |
-|----------|-------------|-------------|---------|
-| `SUPABASE_URL` | All | Supabase project URL | `https://abc123.supabase.co` |
-| `SUPABASE_SERVICE_KEY` | All | Supabase service role key | `eyJhbGci...` (JWT token) |
-| `API_KEY` | Service | Auth key for HTTP requests to service | Any secure string |
-| `CORS_ORIGIN` | Service | Frontend origin for CORS | `http://localhost:5173` |
-| `PORT` | Service | HTTP server port | `3001` (default) |
-| `PLAYWRIGHT_HEADLESS` | Optional | Run browser headless | `true` or `false` |
+| Variable | Required For | Description | Example | Default |
+|----------|-------------|-------------|---------|---------|
+| `SUPABASE_URL` | All | Supabase project URL | `https://abc123.supabase.co` | ❌ None - **Required** |
+| `SUPABASE_SERVICE_KEY` | All | Supabase service role key | `eyJhbGci...` (JWT token) | ❌ None - **Required** |
+| `API_KEY` | Service | Auth key for HTTP requests to service | Any secure string | ❌ None - **Required** |
+| `CORS_ORIGIN` | Service | Frontend origin for CORS | `http://localhost:5173` | ❌ None - **Required** |
+| `PORT` | Service | HTTP server port | `3001` | ✅ `3001` (optional) |
+| `NODE_ENV` | All | Environment mode | `development`, `production` | ✅ `development` (optional) |
+| `PLAYWRIGHT_HEADLESS` | Scripts/Service | Run browser headless | `true` or `false` | ✅ `true` (optional) |
+
+**Note:** Variables with ✅ defaults are optional and can be omitted from `.env`. The service will use the default value if not specified.
 
 ### GE SSO Credentials (Stored in Supabase)
 
@@ -58,19 +61,20 @@ cp .env.example .env
 Edit `.env` with your values:
 
 ```bash
-# Get these from Supabase project settings
+# Required: Get these from Supabase project settings
 SUPABASE_URL=https://your-project.supabase.co
 SUPABASE_SERVICE_KEY=eyJhbGci...your_service_key...
 
-# Generate a secure API key
+# Required: Generate a secure API key
 API_KEY=your_secure_api_key_here
 
-# Frontend URL (Vite dev server)
+# Required: Frontend URL (Vite dev server)
 CORS_ORIGIN=http://localhost:5173
 
-# Optional - useful for debugging
-PLAYWRIGHT_HEADLESS=false
-PORT=3001
+# Optional (these have defaults, can be omitted):
+# PORT=3001                    # Default: 3001
+# NODE_ENV=development         # Default: development
+# PLAYWRIGHT_HEADLESS=false    # Default: true (set to false to see browser)
 ```
 
 **Getting Supabase Credentials**:

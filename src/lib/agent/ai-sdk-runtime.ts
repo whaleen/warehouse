@@ -82,7 +82,7 @@ export function useAISDKRuntime(
     } else if (provider === 'anthropic') {
       const anthropic = createAnthropic({ apiKey: apiKey.trim() });
       languageModel = anthropic(modelName || 'claude-3-5-sonnet-20241022');
-    } else if (provider === 'google' || provider === 'gemini') {
+    } else if (provider === 'gemini') {
       const google = createGoogleGenerativeAI({ apiKey: apiKey.trim() });
       languageModel = google(modelName || 'gemini-1.5-flash');
     } else if (provider === 'groq') {

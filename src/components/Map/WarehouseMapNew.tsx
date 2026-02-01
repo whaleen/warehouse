@@ -51,7 +51,7 @@ export function WarehouseMapNew({ locations }: WarehouseMapNewProps) {
   const { locationId } = getActiveLocationContext();
   const userDisplayName = user?.username ?? user?.email ?? undefined;
   const sessionSummariesQuery = useSessionSummaries();
-  const allSessions = sessionSummariesQuery.data?.filter(s => s.status === 'active' || s.status === 'open') ?? [];
+  const allSessions = sessionSummariesQuery.data?.filter(s => s.status === 'active') ?? [];
 
   const [mapInstance, setMapInstance] = useState<MapRef | null>(null);
   const [hiddenSessions, setHiddenSessions] = useState<Set<string>>(new Set());

@@ -153,7 +153,8 @@ export async function createAgentReply(options: {
         role: 'tool',
         tool_call_id: toolCall.id,
         content: JSON.stringify(toolResult),
-      });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } as any);
 
       // Get final response
       response = await fetch(endpoint, {
@@ -218,11 +219,10 @@ export async function createAgentReply(options: {
     }
 
     const data = await response.json();
-    let content = data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
+    const content = data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
     if (!content) {
       throw new Error('Gemini returned an empty response');
     }
-    content = await processResponse(content, enableSQL);
     return { content, citations: context };
   }
 
@@ -281,7 +281,9 @@ export async function createAgentReply(options: {
       : { data: queryData };
 
     // Send tool result back
-    conversationMessages.push({ role: 'assistant', content: data.content });
+    conversationMessages.push({ role: 'assistant', content: data.content
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any);
     conversationMessages.push({
       role: 'user',
       content: [{
@@ -289,7 +291,8 @@ export async function createAgentReply(options: {
         tool_use_id: toolUse.id,
         content: JSON.stringify(toolResult),
       }],
-    });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any);
 
     // Get final response
     response = await fetch('https://api.anthropic.com/v1/messages', {

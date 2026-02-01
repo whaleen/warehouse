@@ -235,7 +235,7 @@ export function LoadDetailPanel({
     } else {
       onMetaUpdated?.(updates);
       triggerSavePulse();
-      if (!options?.skipActivityLog) {
+      if (!options?.skipActivityLog && companyId && locationId) {
         try {
           await logActivityMutation.mutateAsync({
             companyId,
@@ -440,23 +440,25 @@ export function LoadDetailPanel({
     } else {
       onMetaUpdated?.(updates);
       triggerSavePulse();
-      try {
-        await logActivityMutation.mutateAsync({
-          companyId,
-          locationId,
-          user,
-          action: 'load_update',
-          entityType: 'ASIS_LOAD',
-          entityId: load.sub_inventory_name,
-          details: {
-            loadNumber: load.sub_inventory_name,
-            friendlyName: friendly || load.friendly_name || null,
-            fields: Object.keys(updates),
-            updates,
-          },
-        });
-      } catch (activityError) {
-        console.warn('Failed to log activity (load_update):', activityError);
+      if (companyId && locationId) {
+        try {
+          await logActivityMutation.mutateAsync({
+            companyId,
+            locationId,
+            user,
+            action: 'load_update',
+            entityType: 'ASIS_LOAD',
+            entityId: load.sub_inventory_name,
+            details: {
+              loadNumber: load.sub_inventory_name,
+              friendlyName: friendly || load.friendly_name || null,
+              fields: Object.keys(updates),
+              updates,
+            },
+          });
+        } catch (activityError) {
+          console.warn('Failed to log activity (load_update):', activityError);
+        }
       }
     }
 
@@ -579,7 +581,7 @@ export function LoadDetailPanel({
       },
       { skipActivityLog: true }
     );
-    if (success) {
+    if (success && companyId && locationId) {
       try {
         await logActivityMutation.mutateAsync({
           companyId,
@@ -613,7 +615,7 @@ export function LoadDetailPanel({
       },
       { skipActivityLog: true }
     );
-    if (success) {
+    if (success && companyId && locationId) {
       try {
         await logActivityMutation.mutateAsync({
           companyId,
