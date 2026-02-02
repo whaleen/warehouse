@@ -98,7 +98,6 @@ export function MobileNav({ currentView, onViewChange }: MobileNavProps) {
             Main navigation menu with quick access to scanner, dashboard, loads, and map
           </div>
           <MobilePrimaryNav
-            currentView={currentView}
             onNavigate={handleNavigate}
             onOpenMore={handleOpenSecondary}
           />
