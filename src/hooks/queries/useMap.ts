@@ -7,7 +7,8 @@ export function useProductLocations() {
   const { locationId } = getActiveLocationContext();
 
   return useQuery({
-    queryKey: ['product-locations', locationId],
+    queryKey: ['product-locations', locationId ?? 'none'],
+    enabled: !!locationId,
     queryFn: async () => {
       const { data, error } = await getProductLocations();
       if (error) throw error;
@@ -27,7 +28,9 @@ export function useDeleteProductLocation() {
       return locationIdToDelete;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['product-locations', locationId] });
+      if (locationId) {
+        queryClient.invalidateQueries({ queryKey: ['product-locations', locationId] });
+      }
     },
   });
 }
@@ -38,6 +41,7 @@ export function useClearAllScans() {
 
   return useMutation({
     mutationFn: async () => {
+      if (!locationId) throw new Error('Location required');
       const { error } = await supabase
         .from('product_location_history')
         .delete()
@@ -46,7 +50,9 @@ export function useClearAllScans() {
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['product-locations', locationId] });
+      if (locationId) {
+        queryClient.invalidateQueries({ queryKey: ['product-locations', locationId] });
+      }
     },
   });
 }
@@ -57,6 +63,7 @@ export function useDeleteSessionScans() {
 
   return useMutation({
     mutationFn: async (sessionId: string) => {
+      if (!locationId) throw new Error('Location required');
       // Empty sessionId means delete scans without a session
       const query = supabase
         .from('product_location_history')
@@ -70,7 +77,9 @@ export function useDeleteSessionScans() {
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['product-locations', locationId] });
+      if (locationId) {
+        queryClient.invalidateQueries({ queryKey: ['product-locations', locationId] });
+      }
     },
   });
 }
