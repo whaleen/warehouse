@@ -1,6 +1,7 @@
 import type { InventoryItem, InventoryType } from './inventory';
 
 export type SessionStatus = 'draft' | 'active' | 'closed';
+export type SessionSource = 'manual' | 'ge_sync' | 'system';
 
 export interface ScanningSession {
   id: string;
@@ -8,6 +9,7 @@ export interface ScanningSession {
   inventoryType: InventoryType;
   subInventory?: string; // Optional filter (e.g., specific route for Staged)
   status: SessionStatus;
+  sessionSource?: SessionSource;
   createdAt: string;
   updatedAt?: string;
   closedAt?: string;
@@ -24,6 +26,7 @@ export interface SessionSummary {
   inventoryType: InventoryType;
   subInventory?: string;
   status: SessionStatus;
+  sessionSource?: SessionSource;
   totalItems: number;
   scannedCount: number;
   createdAt: string;

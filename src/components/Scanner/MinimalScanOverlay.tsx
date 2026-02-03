@@ -26,6 +26,7 @@ interface MinimalScanOverlayProps {
   onOpenCamera: () => void;
   isProcessing: boolean;
   alert: { type: 'success' | 'error'; message: string } | null;
+  feedbackText?: string;
   activeSessionName?: string;
   activeSessionDisplayName?: string;
   activeSessionColor?: string;
@@ -41,6 +42,7 @@ export function MinimalScanOverlay({
   onOpenCamera,
   isProcessing,
   alert,
+  feedbackText,
   activeSessionName,
   activeSessionDisplayName,
   activeSessionColor,
@@ -163,6 +165,9 @@ export function MinimalScanOverlay({
           >
             {/* Input with mode toggle */}
             <div className="relative">
+              {feedbackText && (
+                <div className="text-xs text-muted-foreground mb-2">{feedbackText}</div>
+              )}
               <Input
                 ref={inputRef}
                 type="text"

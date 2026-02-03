@@ -683,7 +683,7 @@ export function DashboardView({ onViewChange, onMenuClick }: DashboardViewProps)
                         type="button"
                         onClick={() => {
                           if (item.type === 'session' && item.sessionId) {
-                            onViewChange?.('create-session');
+                            onViewChange?.('sessions');
                             setTimeout(() => {
                               const params = new URLSearchParams(window.location.search);
                               params.set('session', item.sessionId!);
@@ -721,7 +721,7 @@ export function DashboardView({ onViewChange, onMenuClick }: DashboardViewProps)
                             type="button"
                             onClick={() => {
                               if (item.type === 'session' && item.sessionId) {
-                                onViewChange?.('create-session');
+                                onViewChange?.('sessions');
                                 setTimeout(() => {
                                   const params = new URLSearchParams(window.location.search);
                                   params.set('session', item.sessionId!);
@@ -790,7 +790,7 @@ export function DashboardView({ onViewChange, onMenuClick }: DashboardViewProps)
                 <Button
                   variant="outline"
                   className="w-full justify-start whitespace-normal text-left h-auto py-3"
-                  onClick={() => onViewChange?.('create-session')}
+                  onClick={() => onViewChange?.('sessions')}
                 >
                   <ScanBarcode className="mr-2 h-4 w-4" />
                   Manage sessions
@@ -1067,7 +1067,7 @@ export function DashboardView({ onViewChange, onMenuClick }: DashboardViewProps)
                         type="button"
                         onClick={() => {
                           if (item.type === 'session' && item.sessionId) {
-                            onViewChange?.('create-session');
+                            onViewChange?.('sessions');
                             setTimeout(() => {
                               const params = new URLSearchParams(window.location.search);
                               params.set('session', item.sessionId!);
@@ -1112,7 +1112,7 @@ export function DashboardView({ onViewChange, onMenuClick }: DashboardViewProps)
                             type="button"
                             onClick={() => {
                               if (item.type === 'session' && item.sessionId) {
-                                onViewChange?.('create-session');
+                                onViewChange?.('sessions');
                                 setTimeout(() => {
                                   const params = new URLSearchParams(window.location.search);
                                   params.set('session', item.sessionId!);
@@ -1193,7 +1193,7 @@ export function DashboardView({ onViewChange, onMenuClick }: DashboardViewProps)
                             type="button"
                             onClick={() => {
                               if (item.sessionId) {
-                                onViewChange?.('create-session');
+                                onViewChange?.('sessions');
                                 setTimeout(() => {
                                   const params = new URLSearchParams(window.location.search);
                                   params.set('session', item.sessionId!);
@@ -1340,7 +1340,7 @@ export function DashboardView({ onViewChange, onMenuClick }: DashboardViewProps)
                     <Button
                       variant="outline"
                       className="w-full justify-start whitespace-normal text-left h-auto py-3"
-                      onClick={() => onViewChange?.('create-session')}
+                      onClick={() => onViewChange?.('sessions')}
                     >
                       <ScanBarcode className="mr-2 h-4 w-4" />
                       Manage sessions

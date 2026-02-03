@@ -16,9 +16,9 @@ import { Drawer, DrawerClose, DrawerContent, DrawerHeader, DrawerTitle } from '@
 import { useDeleteProductLocation, useClearAllScans, useDeleteSessionScans } from '@/hooks/queries/useMap';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { getCurrentPosition, logProductLocation } from '@/lib/mapManager';
-import { findMatchingItemsInInventory } from '@/lib/inventoryScanner';
+import { findItemOwningSession } from '@/lib/sessionScanner';
 import { getOrCreateAdHocSession, getOrCreateFogOfWarSession } from '@/lib/sessionManager';
-import { useSessionSummaries } from '@/hooks/queries/useSessions';
+import { useSessionDetail, useSessionSummaries, useUpdateSessionScannedItems } from '@/hooks/queries/useSessions';
 import { useAuth } from '@/context/AuthContext';
 import { useQueryClient } from '@tanstack/react-query';
 import { getActiveLocationContext } from '@/lib/tenant';
@@ -74,9 +74,12 @@ export function WarehouseMapNew({ locations }: WarehouseMapNewProps) {
   const [clearAllConfirmOpen, setClearAllConfirmOpen] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [scanAlert, setScanAlert] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const [scanFeedback, setScanFeedback] = useState('');
 
   // Get active session details
   const activeSession = allSessions.find(s => s.id === activeSessionId);
+  const sessionDetailQuery = useSessionDetail(activeSessionId ?? '');
+  const updateSessionMutation = useUpdateSessionScannedItems();
 
   const deleteLocation = useDeleteProductLocation();
   const clearAllScans = useClearAllScans();
@@ -168,6 +171,12 @@ export function WarehouseMapNew({ locations }: WarehouseMapNewProps) {
     }
   }, [activeSessionId]);
 
+  useEffect(() => {
+    if (scanOverlayOpen) {
+      setScanFeedback('');
+    }
+  }, [scanOverlayOpen]);
+
   const showScanAlert = (type: 'success' | 'error', message: string, duration = 3000) => {
     setScanAlert({ type, message });
     setTimeout(() => setScanAlert(null), duration);
@@ -177,6 +186,7 @@ export function WarehouseMapNew({ locations }: WarehouseMapNewProps) {
     if (!activeSessionId) {
       feedbackError();
       showScanAlert('error', 'No active session - select one first');
+      setScanFeedback('No active session');
       return;
     }
 
@@ -194,48 +204,171 @@ export function WarehouseMapNew({ locations }: WarehouseMapNewProps) {
       // Check if this is a special session (ad-hoc or fog-of-war)
       const isAdHoc = activeSession?.name === '🧪 Ad-hoc Scans';
       const isFogOfWar = activeSession?.name === '🗺️ Fog of War';
+      const isRegularSession = !isAdHoc && !isFogOfWar;
+
+      const result = await findItemOwningSession(barcode);
+
+      if (result.type === 'not_found') {
+        if (isAdHoc) {
+          feedbackError();
+          setScanFeedback('Not in inventory');
+          showScanAlert('error', 'Not in inventory');
+          return;
+        }
+
+        if (isFogOfWar) {
+          const logResult = await logProductLocation({
+            scanning_session_id: activeSessionId,
+            raw_lat: position.latitude,
+            raw_lng: position.longitude,
+            accuracy: position.accuracy,
+            scanned_by: userDisplayName,
+            product_type: barcode,
+            sub_inventory: 'Review',
+          });
+
+          if (!logResult.success) {
+            feedbackError();
+            showScanAlert('error', `Failed: ${logResult.error instanceof Error ? logResult.error.message : 'Unknown error'}`);
+            return;
+          }
+
+          feedbackSuccess();
+          setScanFeedback('Not in inventory - marked for review');
+          showScanAlert('success', 'Not in inventory - marked for review');
+          queryClient.invalidateQueries({ queryKey: ['product-locations', locationId] });
+          return;
+        }
+
+        feedbackError();
+        setScanFeedback('Not in inventory');
+        showScanAlert('error', 'Not in inventory');
+        return;
+      }
+
+      if (result.type === 'multiple') {
+        feedbackError();
+        setScanFeedback('Multiple matches');
+        showScanAlert('error', 'Multiple matches found - use session view', 5000);
+        return;
+      }
+
+      const { item, owningSession } = result;
+      if (!owningSession) {
+        feedbackError();
+        setScanFeedback('Item not assigned');
+        showScanAlert('error', 'Item not assigned to a session');
+        return;
+      }
+
+      const isSameSession = owningSession.id === activeSessionId;
 
       if (isAdHoc) {
-        // Ad-hoc mode: accept anything
-        const result = await logProductLocation({
+        const logResult = await logProductLocation({
+          product_id: item.products?.id ?? item.product_fk,
+          inventory_item_id: item.id,
           scanning_session_id: activeSessionId,
           raw_lat: position.latitude,
           raw_lng: position.longitude,
           accuracy: position.accuracy,
           scanned_by: userDisplayName,
-          product_type: barcode,
-          sub_inventory: 'Ad-hoc Scan',
+          product_type: item.product_type,
+          sub_inventory: item.sub_inventory ?? undefined,
         });
 
-        if (!result.success) {
+        if (!logResult.success) {
           feedbackError();
-          showScanAlert('error', `Failed: ${result.error instanceof Error ? result.error.message : 'Unknown error'}`);
+          showScanAlert('error', `Failed: ${logResult.error instanceof Error ? logResult.error.message : 'Unknown error'}`);
           return;
         }
 
         feedbackSuccess();
-        showScanAlert('success', `Marked: ${barcode}`);
+        setScanFeedback(`Belongs to ${owningSession.name}`);
+        showScanAlert('success', `Belongs to ${owningSession.name}`);
         queryClient.invalidateQueries({ queryKey: ['product-locations', locationId] });
-      } else if (isFogOfWar) {
-        // Fog of war mode: validate against inventory
-        const result = await findMatchingItemsInInventory(barcode);
+        return;
+      }
 
-        if (result.type === 'not_found') {
+      if (isFogOfWar) {
+        const logResult = await logProductLocation({
+          product_id: item.products?.id ?? item.product_fk,
+          inventory_item_id: item.id,
+          scanning_session_id: activeSessionId,
+          raw_lat: position.latitude,
+          raw_lng: position.longitude,
+          accuracy: position.accuracy,
+          scanned_by: userDisplayName,
+          product_type: item.product_type,
+          sub_inventory: item.sub_inventory ?? undefined,
+        });
+
+        if (!logResult.success) {
           feedbackError();
-          showScanAlert('error', `Not in inventory`);
+          showScanAlert('error', `Failed: ${logResult.error instanceof Error ? logResult.error.message : 'Unknown error'}`);
           return;
         }
 
-        if (result.matchedField === 'model' && result.type === 'multiple') {
+        feedbackSuccess();
+        setScanFeedback(logResult.action === 'updated' ? 'Mark updated' : 'Marked');
+        showScanAlert('success', logResult.action === 'updated' ? 'Mark updated' : 'Marked');
+        queryClient.invalidateQueries({ queryKey: ['product-locations', locationId] });
+        return;
+      }
+
+      if (isRegularSession) {
+        const sessionDetail = sessionDetailQuery.data;
+        if (!sessionDetail) {
           feedbackError();
-          showScanAlert('error', `Model requires session - found ${result.items?.length || 0} items`, 5000);
+          setScanFeedback('Session unavailable');
+          showScanAlert('error', 'Session data unavailable');
           return;
         }
 
-        const item = result.items?.[0];
-        if (!item) {
-          feedbackError();
-          showScanAlert('error', 'Item data missing');
+        if (isSameSession) {
+          const itemId = item.id;
+          if (!itemId) {
+            feedbackError();
+            setScanFeedback('Item data missing');
+            showScanAlert('error', 'Item data missing');
+            return;
+          }
+
+          if (sessionDetail.scannedItemIds.includes(itemId)) {
+            feedbackError();
+            setScanFeedback('Already scanned');
+            showScanAlert('error', 'Item already scanned');
+            return;
+          }
+
+          const nextScanned = [...sessionDetail.scannedItemIds, itemId];
+          await updateSessionMutation.mutateAsync({
+            sessionId: sessionDetail.id,
+            scannedItemIds: nextScanned,
+            updatedBy: userDisplayName,
+          });
+
+          const logResult = await logProductLocation({
+            product_id: item.products?.id ?? item.product_fk,
+            inventory_item_id: item.id,
+            scanning_session_id: activeSessionId,
+            raw_lat: position.latitude,
+            raw_lng: position.longitude,
+            accuracy: position.accuracy,
+            scanned_by: userDisplayName,
+            product_type: item.product_type,
+            sub_inventory: item.sub_inventory ?? undefined,
+          });
+
+          if (!logResult.success) {
+            feedbackError();
+            showScanAlert('error', `Failed: ${logResult.error instanceof Error ? logResult.error.message : 'Unknown error'}`);
+            return;
+          }
+
+          feedbackSuccess();
+          setScanFeedback(`Scanned - ${owningSession.name}`);
+          showScanAlert('success', `Scanned - ${owningSession.name}`);
+          queryClient.invalidateQueries({ queryKey: ['product-locations', locationId] });
           return;
         }
 
@@ -258,14 +391,13 @@ export function WarehouseMapNew({ locations }: WarehouseMapNewProps) {
         }
 
         feedbackSuccess();
-        showScanAlert('success', `Updated: ${item.product_type} (${result.matchedField?.toUpperCase()})`);
+        setScanFeedback(`Belongs to ${owningSession.name} - marker updated`);
+        showScanAlert('success', `Belongs to ${owningSession.name} - marker updated`);
         queryClient.invalidateQueries({ queryKey: ['product-locations', locationId] });
-      } else {
-        // Regular session: navigate to session view
-        showScanAlert('error', 'Use session view for regular sessions');
       }
     } catch (err) {
       feedbackError();
+      setScanFeedback('Scan failed');
       showScanAlert('error', err instanceof Error ? err.message : 'Scan failed');
     } finally {
       setIsProcessing(false);
@@ -946,6 +1078,7 @@ export function WarehouseMapNew({ locations }: WarehouseMapNewProps) {
         }}
         isProcessing={isProcessing}
         alert={scanAlert}
+        feedbackText={scanFeedback}
         activeSessionName={activeSession?.name}
         activeSessionDisplayName={activeSessionDisplay.displayName}
         activeSessionColor={activeSessionDisplay.color}

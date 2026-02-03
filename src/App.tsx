@@ -17,7 +17,7 @@ import { SpeedInsights } from "@vercel/speed-insights/react";
 
 // Lazy load heavy components for code splitting
 const LoadManagementView = lazy(() => import("@/components/Inventory/LoadManagementView").then(m => ({ default: m.LoadManagementView })));
-const CreateSessionView = lazy(() => import("@/components/Session/CreateSessionView").then(m => ({ default: m.CreateSessionView })));
+const SessionsView = lazy(() => import("@/components/Session/SessionsView").then(m => ({ default: m.SessionsView })));
 const ProductEnrichment = lazy(() => import("./components/Products/ProductEnrichment").then(m => ({ default: m.ProductEnrichment })));
 const InventoryView = lazy(() => import("./components/Inventory/InventoryView").then(m => ({ default: m.InventoryView })));
 const PartsView = lazy(() => import("./components/Parts/PartsView").then(m => ({ default: m.PartsView })));
@@ -77,7 +77,7 @@ function App() {
         'settings-gesync',
         'loads',
         'activity',
-        'create-session',
+        'sessions',
       ].includes(legacyView)
     ) {
       const mappedView = legacyView === 'settings'
@@ -88,6 +88,8 @@ function App() {
           legacyView === 'settings-displays-list' ||
           legacyView === 'settings-displays-settings'
         ? 'settings-displays'
+        : legacyView === 'create-session'
+        ? 'sessions'
         : legacyView;
       return { view: mappedView as AppView, sessionId: null };
     }
@@ -131,7 +133,7 @@ function App() {
   };
 
   const handleSessionChange = (nextSessionId: string | null) => {
-    navigate('create-session', { sessionId: nextSessionId });
+    navigate('sessions', { sessionId: nextSessionId });
   };
 
   useEffect(() => {
@@ -312,9 +314,8 @@ function App() {
                     {currentView === "agent" && (
                       <AgentView />
                     )}
-                    {currentView === "create-session" && (
-                      <CreateSessionView
-                        onViewChange={handleViewChange}
+                    {currentView === "sessions" && (
+                      <SessionsView
                         sessionId={sessionId}
                         onSessionChange={handleSessionChange}
                       />
@@ -385,9 +386,8 @@ function App() {
                     {currentView === "agent" && (
                       <AgentView />
                     )}
-                    {currentView === "create-session" && (
-                      <CreateSessionView
-                        onViewChange={handleViewChange}
+                    {currentView === "sessions" && (
+                      <SessionsView
                         sessionId={sessionId}
                         onSessionChange={handleSessionChange}
                       />

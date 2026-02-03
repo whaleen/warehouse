@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { syncGeInventory, type GeSyncType } from '@/lib/geSync';
+import { createSessionsFromSync } from '@/lib/sessionManager';
 import { getActiveLocationContext } from '@/lib/tenant';
 import { queryKeys } from '@/lib/queryKeys';
 
@@ -8,12 +9,19 @@ export function useGeSync() {
   const { locationId } = getActiveLocationContext();
 
   return useMutation({
-    mutationFn: ({ type, locationId: overrideLocationId }: { type: GeSyncType; locationId?: string }) => {
+    mutationFn: async ({ type, locationId: overrideLocationId }: { type: GeSyncType; locationId?: string }) => {
       const targetLocationId = overrideLocationId ?? locationId;
       if (!targetLocationId) {
         throw new Error('No active location selected');
       }
-      return syncGeInventory(type, targetLocationId);
+      const result = await syncGeInventory(type, targetLocationId);
+      const sessionResult = await createSessionsFromSync(type);
+      if (!sessionResult.success) {
+        throw sessionResult.error instanceof Error
+          ? sessionResult.error
+          : new Error('Failed to create sessions from GE sync');
+      }
+      return result;
     },
     onSuccess: () => {
       if (locationId) {
@@ -21,6 +29,7 @@ export function useGeSync() {
         queryClient.invalidateQueries({ queryKey: queryKeys.loads.all(locationId) });
         queryClient.invalidateQueries({ queryKey: queryKeys.dashboard.items(locationId) });
         queryClient.invalidateQueries({ queryKey: queryKeys.dashboard.conflicts(locationId) });
+        queryClient.invalidateQueries({ queryKey: queryKeys.sessions.all(locationId) });
       }
     },
   });

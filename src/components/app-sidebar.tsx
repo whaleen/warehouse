@@ -116,9 +116,9 @@ const baseNavSections: NavSection[] = [
       {
         label: "Scanning Sessions",
         icon: ScanBarcode,
-        view: "create-session",
+        view: "sessions",
         applyParams: clearPartsParams,
-        isActive: (currentView) => currentView === "create-session",
+        isActive: (currentView) => currentView === "sessions",
       },
     ],
   },

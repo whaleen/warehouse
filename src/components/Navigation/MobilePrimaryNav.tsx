@@ -15,7 +15,7 @@ const primaryItems = [
   {
     icon: ScanBarcode,
     label: 'Sessions',
-    view: 'create-session' as AppView,
+    view: 'sessions' as AppView,
     description: 'Scanning sessions',
     action: 'route' as const,
   },

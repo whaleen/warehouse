@@ -2,7 +2,8 @@ import supabase from '@/lib/supabase';
 import { getActiveLocationContext } from '@/lib/tenant';
 import type { PostgrestError } from '@supabase/supabase-js';
 import type { InventoryItem } from '@/types/inventory';
-import type { ScanningSession, SessionStatus, SessionSummary } from '@/types/session';
+import type { InventoryType } from '@/types/inventory';
+import type { ScanningSession, SessionSource, SessionStatus, SessionSummary } from '@/types/session';
 
 const SESSION_TABLE = 'scanning_sessions';
 
@@ -12,6 +13,7 @@ type SessionRecord = {
   inventory_type: ScanningSession['inventoryType'];
   sub_inventory: string | null;
   status: SessionStatus;
+  session_source?: SessionSource | null;
   created_at: string;
   updated_at?: string | null;
   closed_at?: string | null;
@@ -29,6 +31,7 @@ function toSession(record: SessionRecord): ScanningSession {
     inventoryType: record.inventory_type,
     subInventory: record.sub_inventory ?? undefined,
     status: record.status,
+    sessionSource: record.session_source ?? undefined,
     createdAt: record.created_at,
     updatedAt: record.updated_at ?? undefined,
     closedAt: record.closed_at ?? undefined,
@@ -50,6 +53,7 @@ function toSummary(record: SessionRecord): SessionSummary {
     inventoryType: record.inventory_type,
     subInventory: record.sub_inventory ?? undefined,
     status: record.status,
+    sessionSource: record.session_source ?? undefined,
     totalItems: items.length,
     scannedCount: scanned.length,
     createdAt: record.created_at,
@@ -65,6 +69,7 @@ export async function getAllSessions(): Promise<{ data: ScanningSession[] | null
     .from(SESSION_TABLE)
     .select('*')
     .eq('location_id', locationId)
+    .in('session_source', ['ge_sync', 'system'])
     .order('created_at', { ascending: false });
 
   if (error) {
@@ -81,8 +86,9 @@ export async function getSessionSummaries(): Promise<{ data: SessionSummary[] | 
   const { locationId } = getActiveLocationContext();
   const { data, error } = await supabase
     .from(SESSION_TABLE)
-    .select('id, name, inventory_type, sub_inventory, status, created_at, updated_at, closed_at, created_by, items, scanned_item_ids')
+    .select('id, name, inventory_type, sub_inventory, status, session_source, created_at, updated_at, closed_at, created_by, items, scanned_item_ids')
     .eq('location_id', locationId)
+    .in('session_source', ['ge_sync', 'system'])
     .order('created_at', { ascending: false });
 
   if (error) {
@@ -129,6 +135,7 @@ export async function createSession(input: {
       inventory_type: input.inventoryType,
       sub_inventory: input.subInventory ?? null,
       status: input.status ?? 'active',
+      session_source: 'manual',
       items: input.items,
       scanned_item_ids: [],
       created_by: input.createdBy ?? null,
@@ -235,6 +242,253 @@ export async function deleteSession(sessionId: string): Promise<{ success: boole
   return { success: !error, error };
 }
 
+function mapGeStatusToSessionStatus(geStatus?: string | null): SessionStatus {
+  if (!geStatus) return 'active';
+  const normalized = geStatus.trim().toLowerCase();
+  return ['delivered', 'completed', 'closed'].includes(normalized) ? 'closed' : 'active';
+}
+
+async function assignInventoryOwnership(input: {
+  sessionId: string;
+  inventoryType: InventoryType;
+  subInventory?: string;
+}): Promise<PostgrestError | null> {
+  const { locationId } = getActiveLocationContext();
+  let query = supabase
+    .from('inventory_items')
+    .update({ owning_session_id: input.sessionId, updated_at: new Date().toISOString() })
+    .eq('location_id', locationId)
+    .eq('inventory_type', input.inventoryType)
+    .is('owning_session_id', null);
+
+  if (input.subInventory) {
+    query = query.eq('sub_inventory', input.subInventory);
+  }
+
+  const { error } = await query;
+  return error ?? null;
+}
+
+async function fetchSessionItems(sessionId: string): Promise<InventoryItem[]> {
+  const { locationId } = getActiveLocationContext();
+  const { data, error } = await supabase
+    .from('inventory_items')
+    .select('*')
+    .eq('location_id', locationId)
+    .eq('owning_session_id', sessionId);
+
+  if (error || !data) return [];
+  return data as InventoryItem[];
+}
+
+async function refreshSessionItems(sessionId: string): Promise<PostgrestError | null> {
+  const { locationId } = getActiveLocationContext();
+  const items = await fetchSessionItems(sessionId);
+  const { error } = await supabase
+    .from(SESSION_TABLE)
+    .update({ items, updated_at: new Date().toISOString() })
+    .eq('id', sessionId)
+    .eq('location_id', locationId);
+
+  return error ?? null;
+}
+
+export async function getOrCreateLoadSession(
+  subInventoryName: string,
+  geStatus: string,
+  friendlyName?: string
+): Promise<{ sessionId: string | null; error?: unknown }> {
+  const { locationId, companyId } = getActiveLocationContext();
+
+  try {
+    const { data: existing, error: findError } = await supabase
+      .from(SESSION_TABLE)
+      .select('id, status')
+      .eq('location_id', locationId)
+      .eq('inventory_type', 'ASIS')
+      .eq('sub_inventory', subInventoryName)
+      .eq('session_source', 'ge_sync')
+      .maybeSingle();
+
+    if (findError) {
+      return { sessionId: null, error: findError };
+    }
+
+    const mappedStatus = mapGeStatusToSessionStatus(geStatus);
+    const sessionId = existing?.id ?? null;
+
+    if (sessionId) {
+      if (existing && existing.status !== mappedStatus) {
+        await supabase
+          .from(SESSION_TABLE)
+          .update({ status: mappedStatus, updated_at: new Date().toISOString() })
+          .eq('id', sessionId)
+          .eq('location_id', locationId);
+      }
+
+      await assignInventoryOwnership({
+        sessionId,
+        inventoryType: 'ASIS',
+        subInventory: subInventoryName,
+      });
+      await refreshSessionItems(sessionId);
+      return { sessionId };
+    }
+
+    const { data: created, error: createError } = await supabase
+      .from(SESSION_TABLE)
+      .insert({
+        company_id: companyId,
+        location_id: locationId,
+        name: friendlyName || `Load ${subInventoryName}`,
+        inventory_type: 'ASIS',
+        sub_inventory: subInventoryName,
+        status: mappedStatus,
+        session_source: 'ge_sync',
+        items: [],
+        scanned_item_ids: [],
+        created_by: 'system',
+        updated_by: 'system',
+        updated_at: new Date().toISOString(),
+      })
+      .select('id')
+      .single();
+
+    if (createError || !created) {
+      return { sessionId: null, error: createError };
+    }
+
+    await assignInventoryOwnership({
+      sessionId: created.id,
+      inventoryType: 'ASIS',
+      subInventory: subInventoryName,
+    });
+    await refreshSessionItems(created.id);
+    return { sessionId: created.id };
+  } catch (err) {
+    return { sessionId: null, error: err };
+  }
+}
+
+export async function getOrCreateInventoryTypeSession(
+  inventoryType: InventoryType,
+  name?: string
+): Promise<{ sessionId: string | null; error?: unknown }> {
+  const { locationId, companyId } = getActiveLocationContext();
+
+  try {
+    const { data: existing, error: findError } = await supabase
+      .from(SESSION_TABLE)
+      .select('id, status')
+      .eq('location_id', locationId)
+      .eq('inventory_type', inventoryType)
+      .is('sub_inventory', null)
+      .eq('session_source', 'ge_sync')
+      .maybeSingle();
+
+    if (findError) {
+      return { sessionId: null, error: findError };
+    }
+
+    const sessionName = name ?? `${inventoryType} Inventory`;
+    const sessionId = existing?.id ?? null;
+
+    if (sessionId) {
+      if (existing && existing.status !== 'active') {
+        await supabase
+          .from(SESSION_TABLE)
+          .update({ status: 'active', updated_at: new Date().toISOString() })
+          .eq('id', sessionId)
+          .eq('location_id', locationId);
+      }
+
+      await assignInventoryOwnership({ sessionId, inventoryType });
+      await refreshSessionItems(sessionId);
+      return { sessionId };
+    }
+
+    const { data: created, error: createError } = await supabase
+      .from(SESSION_TABLE)
+      .insert({
+        company_id: companyId,
+        location_id: locationId,
+        name: sessionName,
+        inventory_type: inventoryType,
+        sub_inventory: null,
+        status: 'active',
+        session_source: 'ge_sync',
+        items: [],
+        scanned_item_ids: [],
+        created_by: 'system',
+        updated_by: 'system',
+        updated_at: new Date().toISOString(),
+      })
+      .select('id')
+      .single();
+
+    if (createError || !created) {
+      return { sessionId: null, error: createError };
+    }
+
+    await assignInventoryOwnership({ sessionId: created.id, inventoryType });
+    await refreshSessionItems(created.id);
+    return { sessionId: created.id };
+  } catch (err) {
+    return { sessionId: null, error: err };
+  }
+}
+
+type GeSyncSessionType = 'asis' | 'fg' | 'sta';
+
+export async function createSessionsFromSync(type: GeSyncSessionType): Promise<{ success: boolean; error?: unknown }> {
+  const { locationId } = getActiveLocationContext();
+  if (!locationId) {
+    return { success: false, error: new Error('No active location selected') };
+  }
+
+  try {
+    if (type === 'asis') {
+      const { data: loads, error } = await supabase
+        .from('load_metadata')
+        .select('sub_inventory_name, status, ge_source_status, friendly_name')
+        .eq('location_id', locationId)
+        .eq('inventory_type', 'ASIS');
+
+      if (error) {
+        return { success: false, error };
+      }
+
+      for (const load of loads ?? []) {
+        const status = (load as { status?: string | null; ge_source_status?: string | null }).status
+          ?? (load as { ge_source_status?: string | null }).ge_source_status
+          ?? 'active';
+        await getOrCreateLoadSession(
+          (load as { sub_inventory_name: string }).sub_inventory_name,
+          status,
+          (load as { friendly_name?: string | null }).friendly_name ?? undefined
+        );
+      }
+
+      return { success: true };
+    }
+
+    if (type === 'fg') {
+      await getOrCreateInventoryTypeSession('FG');
+      await getOrCreateInventoryTypeSession('BackHaul');
+      return { success: true };
+    }
+
+    if (type === 'sta') {
+      await getOrCreateInventoryTypeSession('STA');
+      return { success: true };
+    }
+
+    return { success: true };
+  } catch (err) {
+    return { success: false, error: err };
+  }
+}
+
 /**
  * Get or create a permanent session for quick scans
  * These sessions are never closed and are reused for all quick scans
@@ -249,6 +503,7 @@ async function getOrCreatePermanentSession(name: string, subInventory: string): 
       .select('id')
       .eq('location_id', locationId)
       .eq('name', name)
+      .eq('session_source', 'system')
       .maybeSingle();
 
     if (findError) {
@@ -270,6 +525,7 @@ async function getOrCreatePermanentSession(name: string, subInventory: string): 
         inventory_type: 'all',
         sub_inventory: subInventory,
         status: 'active',
+        session_source: 'system',
         items: [],
         scanned_item_ids: [],
         created_by: 'system',

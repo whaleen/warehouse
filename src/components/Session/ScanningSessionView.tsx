@@ -13,7 +13,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { ScanBarcode, CheckCircle2, Loader2, Search, MapPin, X, Scan } from 'lucide-react';
 import type { InventoryItem } from '@/types/inventory';
 import type { ScanningSession } from '@/types/session';
-import { findMatchingItemsInSession } from '@/lib/sessionScanner';
+import { findItemOwningSession } from '@/lib/sessionScanner';
 // import { useToast } from '@/components/ui/toast';
 import { useAuth } from '@/context/AuthContext';
 import { InventoryItemCard } from '@/components/Inventory/InventoryItemCard';
@@ -148,7 +148,18 @@ export function ScanningSessionView({ sessionId, onExit }: ScanningSessionViewPr
       return;
     }
 
-    const result = findMatchingItemsInSession(barcode, session);
+    let result;
+    try {
+      result = await findItemOwningSession(barcode);
+    } catch (err) {
+      feedbackError();
+      setAlert({
+        type: 'error',
+        message: err instanceof Error ? err.message : 'Scan failed'
+      });
+      setTimeout(() => setAlert(null), 4000);
+      return;
+    }
 
     if (result.type === 'not_found') {
       feedbackError();
@@ -160,72 +171,120 @@ export function ScanningSessionView({ sessionId, onExit }: ScanningSessionViewPr
       return;
     }
 
-    if (result.type === 'unique' && result.items && result.items.length === 1) {
-      const itemId = result.items[0].id!;
-      if (session.scannedItemIds.includes(itemId)) {
-        feedbackWarning();
-        setAlert({
-          type: 'error',
-          message: 'Item already scanned in this session.'
-        });
-        setTimeout(() => setAlert(null), 3000);
+    if (result.type === 'multiple') {
+      if (result.ownershipScope === 'single' && result.owningSession?.id === session.id) {
+        setMatchedItems(result.items);
+        setMatchedField(result.matchedField);
+        setSelectionDialogOpen(true);
         return;
       }
 
-      // Start processing feedback (pulsing haptic + visual)
-      setIsProcessing(true);
-      setProcessingItemId(itemId);
-      stopProcessingFeedbackRef.current = feedbackProcessing();
-
-      const nextScanned = [...session.scannedItemIds, itemId];
-
-      try {
-        await updateSessionMutation.mutateAsync({
-          sessionId: session.id,
-          scannedItemIds: nextScanned,
-          updatedBy: userDisplayName
-        });
-      } catch (err) {
-        feedbackError();
-        setAlert({
-          type: 'error',
-          message: err instanceof Error ? err.message : 'Failed to update session'
-        });
-        setTimeout(() => setAlert(null), 4000);
-        return;
-      } finally {
-        // Stop processing feedback
-        stopProcessingFeedbackRef.current?.();
-        stopProcessingFeedbackRef.current = null;
-        setIsProcessing(false);
-        setProcessingItemId(null);
-      }
-
-      // Success!
-      feedbackSuccess();
-      // Capture position for fog of war map (non-blocking)
-      capturePositionForScan(
-        result.items[0].products?.id ?? result.items[0].product_fk,
-        itemId, // May not exist in inventory_items table (session snapshot)
-        session.id,
-        userDisplayName,
-        result.items[0].product_type,
-        result.items[0].sub_inventory ?? undefined
-      );
-
+      feedbackError();
       setAlert({
-        type: 'success',
-        message: `Scanned: ${result.items[0].product_type} (${result.matchedField?.toUpperCase()})`
+        type: 'error',
+        message: 'Multiple matches found across sessions. Use session view for specific items.'
       });
-      setTimeout(() => setAlert(null), 2000);
+      setTimeout(() => setAlert(null), 5000);
       return;
     }
 
-    if (result.type === 'multiple' && result.items && result.matchedField) {
-      setMatchedItems(result.items);
-      setMatchedField(result.matchedField);
-      setSelectionDialogOpen(true);
+    const { item, owningSession } = result;
+    if (!owningSession) {
+      feedbackError();
+      setAlert({
+        type: 'error',
+        message: 'Item is not assigned to a session yet.'
+      });
+      setTimeout(() => setAlert(null), 4000);
+      return;
     }
+
+    const itemId = item.id;
+    if (!itemId) {
+      feedbackError();
+      setAlert({
+        type: 'error',
+        message: 'Item data missing.'
+      });
+      setTimeout(() => setAlert(null), 3000);
+      return;
+    }
+    const isSameSession = owningSession.id === session.id;
+
+    if (!isSameSession) {
+      feedbackSuccess();
+      capturePositionForScan(
+        item.products?.id ?? item.product_fk,
+        item.id,
+        session.id,
+        userDisplayName,
+        item.product_type,
+        item.sub_inventory ?? undefined
+      );
+      setAlert({
+        type: 'success',
+        message: `Belongs to ${owningSession.name} - marker updated`
+      });
+      setTimeout(() => setAlert(null), 3000);
+      return;
+    }
+
+    if (session.scannedItemIds.includes(itemId)) {
+      feedbackWarning();
+      setAlert({
+        type: 'error',
+        message: 'Item already scanned in this session.'
+      });
+      setTimeout(() => setAlert(null), 3000);
+      return;
+    }
+
+    // Start processing feedback (pulsing haptic + visual)
+    setIsProcessing(true);
+    setProcessingItemId(itemId);
+    stopProcessingFeedbackRef.current = feedbackProcessing();
+
+    const nextScanned = [...session.scannedItemIds, itemId];
+
+    try {
+      await updateSessionMutation.mutateAsync({
+        sessionId: session.id,
+        scannedItemIds: nextScanned,
+        updatedBy: userDisplayName
+      });
+    } catch (err) {
+      feedbackError();
+      setAlert({
+        type: 'error',
+        message: err instanceof Error ? err.message : 'Failed to update session'
+      });
+      setTimeout(() => setAlert(null), 4000);
+      return;
+    } finally {
+      // Stop processing feedback
+      stopProcessingFeedbackRef.current?.();
+      stopProcessingFeedbackRef.current = null;
+      setIsProcessing(false);
+      setProcessingItemId(null);
+    }
+
+    // Success!
+    feedbackSuccess();
+    // Capture position for fog of war map (non-blocking)
+    capturePositionForScan(
+      item.products?.id ?? item.product_fk,
+      itemId,
+      session.id,
+      userDisplayName,
+      item.product_type,
+      item.sub_inventory ?? undefined
+    );
+
+    setAlert({
+      type: 'success',
+      message: `Scanned: ${item.product_type} (${result.matchedField?.toUpperCase()})`
+    });
+    setTimeout(() => setAlert(null), 2000);
   };
 
   const handleMultiSelectConfirm = async (selectedIds: string[]) => {
@@ -261,7 +320,7 @@ export function ScanningSessionView({ sessionId, onExit }: ScanningSessionViewPr
     }
 
     // Capture position for all selected items (they're at the same location)
-    const markedItems = updatedSession.items.filter(item => item.id && uniqueIds.includes(item.id));
+    const markedItems = matchedItems.filter(item => item.id && uniqueIds.includes(item.id));
     for (const item of markedItems) {
       capturePositionForScan(
         item.products?.id ?? item.product_fk,

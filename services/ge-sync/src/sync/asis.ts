@@ -983,30 +983,41 @@ export async function syncASIS(locationId: string): Promise<SyncResult> {
       (item) => !item.serial || (typeof item.serial === 'string' && item.serial.trim().length === 0)
     );
 
+    const upsertChunkSize = 500;
+
     if (itemsWithoutIdWithoutSerial.length > 0) {
-      const { error: insertError } = await db
-        .from('inventory_items')
-        .insert(itemsWithoutIdWithoutSerial);
-      if (insertError) {
-        throw new Error(`Failed to insert new items: ${insertError.message}`);
+      for (let i = 0; i < itemsWithoutIdWithoutSerial.length; i += upsertChunkSize) {
+        const chunk = itemsWithoutIdWithoutSerial.slice(i, i + upsertChunkSize);
+        const { error: insertError } = await db
+          .from('inventory_items')
+          .insert(chunk);
+        if (insertError) {
+          throw new Error(`Failed to insert new items: ${insertError.message}`);
+        }
       }
     }
 
     if (itemsWithoutIdWithSerial.length > 0) {
-      const { error: upsertSerialError } = await db
-        .from('inventory_items')
-        .upsert(itemsWithoutIdWithSerial, { onConflict: 'company_id,location_id,serial' });
-      if (upsertSerialError) {
-        throw new Error(`Failed to upsert serial items: ${upsertSerialError.message}`);
+      for (let i = 0; i < itemsWithoutIdWithSerial.length; i += upsertChunkSize) {
+        const chunk = itemsWithoutIdWithSerial.slice(i, i + upsertChunkSize);
+        const { error: upsertSerialError } = await db
+          .from('inventory_items')
+          .upsert(chunk, { onConflict: 'company_id,location_id,serial' });
+        if (upsertSerialError) {
+          throw new Error(`Failed to upsert serial items: ${upsertSerialError.message}`);
+        }
       }
     }
 
     if (itemsWithId.length > 0) {
-      const { error: upsertError } = await db
-        .from('inventory_items')
-        .upsert(itemsWithId, { onConflict: 'id' });
-      if (upsertError) {
-        throw new Error(`Failed to upsert items: ${upsertError.message}`);
+      for (let i = 0; i < itemsWithId.length; i += upsertChunkSize) {
+        const chunk = itemsWithId.slice(i, i + upsertChunkSize);
+        const { error: upsertError } = await db
+          .from('inventory_items')
+          .upsert(chunk, { onConflict: 'id' });
+        if (upsertError) {
+          throw new Error(`Failed to upsert items: ${upsertError.message}`);
+        }
       }
     }
 

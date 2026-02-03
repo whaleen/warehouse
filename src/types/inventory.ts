@@ -19,6 +19,7 @@ export interface InventoryItem {
   scanned_by?: string;
   notes?: string;
   product_fk?: string;
+  owning_session_id?: string | null;
   created_at?: string;
   updated_at?: string;
   // GE-sourced fields (from ASIS.csv and per-load CSVs)

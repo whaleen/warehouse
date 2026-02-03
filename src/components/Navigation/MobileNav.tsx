@@ -61,7 +61,7 @@ export function MobileNav({ currentView, onViewChange }: MobileNavProps) {
   // Determine FAB icon based on context
   const getFabIcon = () => {
     if (activeSheet !== 'closed') return X;
-    if (currentView === 'create-session') return ScanBarcode;
+    if (currentView === 'sessions') return ScanBarcode;
     return Menu;
   };
 

@@ -69,8 +69,44 @@ export async function logProductLocation(input: {
   scanned_by?: string;
   product_type?: string;
   sub_inventory?: string;
-}): Promise<{ success: boolean; error?: unknown }> {
+}): Promise<{ success: boolean; error?: unknown; action?: 'created' | 'updated' }> {
   const { locationId, companyId } = getActiveLocationContext();
+
+  const now = new Date().toISOString();
+  const canUpdateExisting = Boolean(input.inventory_item_id);
+
+  if (canUpdateExisting) {
+    const cutoff = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+    const { data: recent, error: recentError } = await supabase
+      .from('product_location_history')
+      .select('id, created_at')
+      .eq('inventory_item_id', input.inventory_item_id ?? null)
+      .eq('scanning_session_id', input.scanning_session_id)
+      .gte('created_at', cutoff)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (!recentError && recent) {
+      const { error } = await supabase
+        .from('product_location_history')
+        .update({
+          position_x: 0,
+          position_y: 0,
+          position_source: 'gps',
+          raw_lat: input.raw_lat,
+          raw_lng: input.raw_lng,
+          accuracy: input.accuracy,
+          scanned_by: input.scanned_by ?? null,
+          product_type: input.product_type ?? null,
+          sub_inventory: input.sub_inventory ?? null,
+          created_at: now,
+        })
+        .eq('id', recent.id);
+
+      return { success: !error, error, action: !error ? 'updated' : undefined };
+    }
+  }
 
   // Insert location record
   const { error } = await supabase
@@ -92,7 +128,7 @@ export async function logProductLocation(input: {
       sub_inventory: input.sub_inventory ?? null,
     });
 
-  return { success: !error, error };
+  return { success: !error, error, action: !error ? 'created' : undefined };
 }
 
 /**

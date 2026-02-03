@@ -8,9 +8,23 @@ import type { SyncResult, AuthStatus } from './types/index.js';
 const app = express();
 
 // Basic CORS for local UI -> service requests.
-const CORS_ORIGIN = process.env.CORS_ORIGIN || '*';
+const rawCorsOrigins = process.env.CORS_ORIGIN || '*';
+const corsOrigins = rawCorsOrigins
+  .split(',')
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+
 app.use((req, res, next) => {
-  res.setHeader('Access-Control-Allow-Origin', CORS_ORIGIN);
+  const requestOrigin = req.headers.origin;
+  const allowAll = corsOrigins.includes('*');
+
+  if (allowAll) {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+  } else if (requestOrigin && corsOrigins.includes(requestOrigin)) {
+    res.setHeader('Access-Control-Allow-Origin', requestOrigin);
+    res.setHeader('Vary', 'Origin');
+  }
+
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, X-API-Key');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   next();

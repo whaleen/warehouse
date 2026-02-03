@@ -16,7 +16,7 @@ export type AppView =
   | 'settings-gesync'
   | 'loads'
   | 'activity'
-  | 'create-session'
+  | 'sessions'
   | 'floor-display'
   | 'map'
   | 'agent';
@@ -30,7 +30,7 @@ export type RouteState = {
 const baseSessionPath = '/scanning-sessions';
 
 export function getPathForView(view: AppView, sessionId?: string | null, displayId?: string | null): string {
-  if (view === 'create-session') {
+  if (view === 'sessions') {
     if (sessionId) return `${baseSessionPath}/${sessionId}`;
     return baseSessionPath;
   }
@@ -121,7 +121,7 @@ export function parseRoute(pathname: string): RouteState {
       return { view: 'agent' };
     case 'scanning-sessions':
     case 'sessions':
-      return { view: 'create-session', sessionId: second ?? null };
+      return { view: 'sessions', sessionId: second ?? null };
     case 'settings':
       switch (second) {
         case 'location':
