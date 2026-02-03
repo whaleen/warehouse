@@ -46,7 +46,7 @@ export async function getCurrentPosition(): Promise<RawGPSPosition | null> {
       {
         enableHighAccuracy: true, // Use GPS on phones for best accuracy
         timeout: 10000, // 10 second timeout (plenty for phones with GPS)
-        maximumAge: 5000, // Use positions up to 5 seconds old
+        maximumAge: 0, // Always request a fresh fix
       }
     );
   });
@@ -76,13 +76,11 @@ export async function logProductLocation(input: {
   const canUpdateExisting = Boolean(input.inventory_item_id);
 
   if (canUpdateExisting) {
-    const cutoff = new Date(Date.now() - 5 * 60 * 1000).toISOString();
     const { data: recent, error: recentError } = await supabase
       .from('product_location_history')
       .select('id, created_at')
       .eq('inventory_item_id', input.inventory_item_id ?? null)
       .eq('scanning_session_id', input.scanning_session_id)
-      .gte('created_at', cutoff)
       .order('created_at', { ascending: false })
       .limit(1)
       .maybeSingle();

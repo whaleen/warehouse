@@ -29,6 +29,8 @@ interface SyncStatus {
 
 export function GESyncView({ onMenuClick }: GESyncViewProps) {
   const isMobile = useIsMobile();
+  const geSyncUrl = (import.meta.env.VITE_GE_SYNC_URL as string | undefined) ?? "http://localhost:3001";
+  const geSyncKeyConfigured = Boolean(import.meta.env.VITE_GE_SYNC_API_KEY);
   const [syncStatuses, setSyncStatuses] = useState<Record<SyncType, SyncStatus>>({
     asis: { type: "asis", loading: false, success: null, error: null },
     fg: { type: "fg", loading: false, success: null, error: null },
@@ -192,6 +194,12 @@ export function GESyncView({ onMenuClick }: GESyncViewProps) {
               <p>
                 <strong>STA:</strong> Staged inventory (items prepared for delivery/pickup)
               </p>
+              <div className="pt-2 text-xs text-muted-foreground">
+                Endpoint: {geSyncUrl}
+              </div>
+              <div className="text-xs text-muted-foreground">
+                API Key: {geSyncKeyConfigured ? "configured" : "missing"}
+              </div>
             </div>
           </Card>
 

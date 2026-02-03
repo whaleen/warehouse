@@ -9,18 +9,20 @@ const app = express();
 
 // Basic CORS for local UI -> service requests.
 const rawCorsOrigins = process.env.CORS_ORIGIN || '*';
+const normalizeOrigin = (value: string) => value.trim().replace(/\/+$/, '').toLowerCase();
 const corsOrigins = rawCorsOrigins
   .split(',')
-  .map((origin) => origin.trim())
+  .map((origin) => normalizeOrigin(origin))
   .filter(Boolean);
 
 app.use((req, res, next) => {
   const requestOrigin = req.headers.origin;
+  const normalizedRequestOrigin = requestOrigin ? normalizeOrigin(requestOrigin) : '';
   const allowAll = corsOrigins.includes('*');
 
   if (allowAll) {
     res.setHeader('Access-Control-Allow-Origin', '*');
-  } else if (requestOrigin && corsOrigins.includes(requestOrigin)) {
+  } else if (requestOrigin && corsOrigins.includes(normalizedRequestOrigin)) {
     res.setHeader('Access-Control-Allow-Origin', requestOrigin);
     res.setHeader('Vary', 'Origin');
   }
