@@ -475,6 +475,7 @@ export function DashboardView({ onViewChange, onMenuClick }: DashboardViewProps)
       sessionId?: string;
       icon: typeof AlertTriangle;
       color: string;
+      loadColor?: string | null;
     }> = [];
 
     // Unfinished scanning sessions for sold/for sale loads (high priority)
@@ -490,6 +491,30 @@ export function DashboardView({ onViewChange, onMenuClick }: DashboardViewProps)
         if (!status || (status !== 'for sale' && status !== 'sold')) {
           return; // Skip this session
         }
+        const friendly = load?.friendly_name?.trim() || session.subInventory;
+        const csoValue = load?.ge_cso?.trim() || '';
+        const csoTail = csoValue ? csoValue.slice(-4) : '';
+        const loadLabel = csoTail ? `${friendly} · ${csoTail}` : friendly;
+
+        const loadKey = load?.sub_inventory_name ?? session.subInventory;
+        const key = `load:${loadKey}`;
+        const scanned = scanCountsQuery.data?.scannedByKey.get(key) ?? session.scannedCount;
+        const total = scanCountsQuery.data?.totalByKey.get(key) ?? session.totalItems;
+        const progress = total > 0
+          ? Math.round((scanned / total) * 100)
+          : 0;
+        items.push({
+          id: `session-${session.id}`,
+          type: 'session',
+          priority: 2,
+          title: `Scan ${loadLabel}`,
+          subtitle: `${scanned}/${total} scanned (${progress}%)`,
+          sessionId: session.id,
+          icon: ScanBarcode,
+          color: 'text-blue-600 dark:text-blue-400',
+          loadColor: load?.primary_color ?? null,
+        });
+        return;
       }
 
       const key = session.subInventory
@@ -504,7 +529,7 @@ export function DashboardView({ onViewChange, onMenuClick }: DashboardViewProps)
         id: `session-${session.id}`,
         type: 'session',
         priority: 2,
-        title: `Continue ${session.name}`,
+        title: `Scan ${session.name}`,
         subtitle: `${scanned}/${total} scanned (${progress}%)`,
         sessionId: session.id,
         icon: ScanBarcode,
@@ -516,21 +541,27 @@ export function DashboardView({ onViewChange, onMenuClick }: DashboardViewProps)
     asisActionLoads.sanityCheckRequested.forEach((load) => {
       const friendly = load.friendly_name?.trim() || load.sub_inventory_name;
       const csoValue = load.ge_cso?.trim() || '';
+      const csoTail = csoValue ? csoValue.slice(-4) : '';
+      const loadLabel = csoTail ? `${friendly} · ${csoTail}` : friendly;
       items.push({
         id: `sanity-${load.sub_inventory_name}`,
         type: 'sanity',
         priority: 1,
-        title: `Sanity check ${friendly}`,
-        subtitle: `${csoValue ? 'CSO' : 'Load'} ${csoValue ? csoValue.slice(-4) : load.sub_inventory_name}`,
+        title: `Sanity check ${loadLabel}`,
+        subtitle: csoTail ? `CSO ${csoTail}` : `Load ${load.sub_inventory_name}`,
         load,
         icon: AlertTriangle,
         color: 'text-amber-600 dark:text-amber-400',
+        loadColor: load.primary_color ?? null,
       });
     });
 
     // Pickup soon needs prep (high priority)
     asisActionLoads.pickupSoonNeedsPrep.forEach((load) => {
       const friendly = load.friendly_name?.trim() || load.sub_inventory_name;
+      const csoValue = load.ge_cso?.trim() || '';
+      const csoTail = csoValue ? csoValue.slice(-4) : '';
+      const loadLabel = csoTail ? `${friendly} · ${csoTail}` : friendly;
       const needsWrap = !load.prep_wrapped;
       const needsTag = !load.prep_tagged;
       const actions = [needsWrap && 'wrap', needsTag && 'tag'].filter(Boolean).join(' & ');
@@ -538,11 +569,12 @@ export function DashboardView({ onViewChange, onMenuClick }: DashboardViewProps)
         id: `pickup-${load.sub_inventory_name}`,
         type: 'pickup',
         priority: 2,
-        title: `Prep ${friendly} for pickup`,
+        title: `Prep ${loadLabel} for pickup`,
         subtitle: `Needs ${actions} · Pickup ${formatPickupDate(load.pickup_date)}`,
         load,
         icon: TruckIcon,
         color: 'text-red-600 dark:text-red-400',
+        loadColor: load.primary_color ?? null,
       });
     });
 
@@ -553,6 +585,8 @@ export function DashboardView({ onViewChange, onMenuClick }: DashboardViewProps)
       }
       const friendly = load.friendly_name?.trim() || load.sub_inventory_name;
       const csoValue = load.ge_cso?.trim() || '';
+      const csoTail = csoValue ? csoValue.slice(-4) : '';
+      const loadLabel = csoTail ? `${friendly} · ${csoTail}` : friendly;
       const needsWrap = !load.prep_wrapped;
       const needsTag = !load.prep_tagged;
       const actions = [needsWrap && 'wrap', needsTag && 'tag'].filter(Boolean).join(' & ');
@@ -560,11 +594,12 @@ export function DashboardView({ onViewChange, onMenuClick }: DashboardViewProps)
         id: `prep-${load.sub_inventory_name}`,
         type: 'tag',
         priority: 3,
-        title: `Prep ${friendly}`,
-        subtitle: `Needs ${actions} · ${csoValue ? 'CSO' : 'Load'} ${csoValue ? csoValue.slice(-4) : load.sub_inventory_name}`,
+        title: `Prep ${loadLabel}`,
+        subtitle: `Needs ${actions}`,
         load,
         icon: Package,
         color: 'text-orange-600 dark:text-orange-400',
+        loadColor: load.primary_color ?? null,
       });
     });
 
@@ -572,20 +607,23 @@ export function DashboardView({ onViewChange, onMenuClick }: DashboardViewProps)
     asisActionLoads.forSaleNeedsWrap.forEach((load) => {
       const friendly = load.friendly_name?.trim() || load.sub_inventory_name;
       const csoValue = load.ge_cso?.trim() || '';
+      const csoTail = csoValue ? csoValue.slice(-4) : '';
+      const loadLabel = csoTail ? `${friendly} · ${csoTail}` : friendly;
       items.push({
         id: `wrap-${load.sub_inventory_name}`,
         type: 'wrap',
         priority: 4,
-        title: `Wrap ${friendly}`,
-        subtitle: `For Sale · ${csoValue ? 'CSO' : 'Load'} ${csoValue ? csoValue.slice(-4) : load.sub_inventory_name}`,
+        title: `Wrap ${loadLabel}`,
+        subtitle: 'For Sale',
         load,
         icon: PackageOpen,
         color: 'text-blue-600 dark:text-blue-400',
+        loadColor: load.primary_color ?? null,
       });
     });
 
     return items.sort((a, b) => a.priority - b.priority);
-  }, [asisActionLoads, formatPickupDate, sessionsQuery.data, loadsData]);
+  }, [asisActionLoads, formatPickupDate, sessionsQuery.data, loadsData, scanCountsQuery.data]);
 
   const formatActivityDate = (value: string) =>
     new Date(value).toLocaleString(undefined, {
@@ -698,6 +736,24 @@ export function DashboardView({ onViewChange, onMenuClick }: DashboardViewProps)
                         className="flex items-center gap-3 rounded-lg border border-border/60 bg-card px-3 py-3 text-left transition hover:bg-accent w-full"
                       >
                         <Icon className={`h-5 w-5 flex-shrink-0 ${item.color}`} />
+                        {item.loadColor && (
+                          <span
+                            className="h-3 w-3 rounded-full flex-shrink-0 border border-border"
+                            style={{ backgroundColor: item.loadColor }}
+                          />
+                        )}
+                        {item.loadColor && (
+                          <span
+                            className="h-3 w-3 rounded-full flex-shrink-0 border border-border"
+                            style={{ backgroundColor: item.loadColor }}
+                          />
+                        )}
+                        {item.loadColor && (
+                          <span
+                            className="h-3 w-3 rounded-full flex-shrink-0 border border-border"
+                            style={{ backgroundColor: item.loadColor }}
+                          />
+                        )}
                         <div className="flex-1 min-w-0">
                           <div className="font-medium text-sm truncate">{item.title}</div>
                           {item.subtitle && (
@@ -729,6 +785,30 @@ export function DashboardView({ onViewChange, onMenuClick }: DashboardViewProps)
                             className="flex items-center gap-3 rounded-lg border border-border/60 bg-card px-3 py-3 text-left transition hover:bg-accent w-full"
                           >
                             <Icon className={`h-5 w-5 flex-shrink-0 ${item.color}`} />
+                            {item.loadColor && (
+                              <span
+                                className="h-3 w-3 rounded-full flex-shrink-0 border border-border"
+                                style={{ backgroundColor: item.loadColor }}
+                              />
+                            )}
+                            {item.loadColor && (
+                              <span
+                                className="h-3 w-3 rounded-full flex-shrink-0 border border-border"
+                                style={{ backgroundColor: item.loadColor }}
+                              />
+                            )}
+                            {item.loadColor && (
+                              <span
+                                className="h-3 w-3 rounded-full flex-shrink-0 border border-border"
+                                style={{ backgroundColor: item.loadColor }}
+                              />
+                            )}
+                            {item.loadColor && (
+                              <span
+                                className="h-3 w-3 rounded-full flex-shrink-0 border border-border"
+                                style={{ backgroundColor: item.loadColor }}
+                              />
+                            )}
                             <div className="flex-1 min-w-0">
                               <div className="font-medium text-sm truncate">{item.title}</div>
                               {item.subtitle && (

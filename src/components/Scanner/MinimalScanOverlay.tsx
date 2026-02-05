@@ -37,8 +37,6 @@ export function MinimalScanOverlay({
   const [inputValue, setInputValue] = useState('');
   const [inputMode, setInputMode] = useState<InputMode>('scanner');
   const inputRef = useRef<HTMLInputElement>(null);
-  const bufferRef = useRef('');
-  const lastKeyRef = useRef(0);
 
   // Auto-focus input when opened
   useEffect(() => {
@@ -57,7 +55,6 @@ export function MinimalScanOverlay({
       : value.trim();
     if (!sanitized) return;
     onScan(sanitized);
-    bufferRef.current = '';
     setInputValue('');
   }, [inputMode, isProcessing, onScan]);
 
@@ -76,30 +73,9 @@ export function MinimalScanOverlay({
   };
 
   useEffect(() => {
-    if (!isOpen || inputMode !== 'scanner') return;
-
-    const handleScannerKey = (event: KeyboardEvent) => {
-      if (event.key === 'Enter') {
-        event.preventDefault();
-        submitValue(bufferRef.current);
-        return;
-      }
-
-      if (event.key.length !== 1) return;
-      const now = Date.now();
-      if (now - lastKeyRef.current > 50) {
-        bufferRef.current = '';
-      }
-      lastKeyRef.current = now;
-      bufferRef.current += event.key;
-      setInputValue(bufferRef.current);
-    };
-
-    window.addEventListener('keydown', handleScannerKey);
-    return () => {
-      window.removeEventListener('keydown', handleScannerKey);
-    };
-  }, [inputMode, isOpen, submitValue]);
+    if (!isOpen) return;
+    inputRef.current?.focus();
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
