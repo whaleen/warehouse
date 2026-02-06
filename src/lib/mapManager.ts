@@ -164,13 +164,12 @@ export async function getProductLocations(): Promise<{
       product_fk: string | null;
       sub_inventory: string | null;
       inventory_type: string | null;
-      owning_session_id: string | null;
     }
   >();
   if (inventoryItemIds.length > 0) {
     const { data: inventoryItems, error: inventoryError } = await supabase
       .from('inventory_items')
-      .select('id, model, serial, product_type, product_fk, sub_inventory, inventory_type, owning_session_id')
+      .select('id, model, serial, product_type, product_fk, sub_inventory, inventory_type')
       .in('id', inventoryItemIds);
 
     if (!inventoryError && inventoryItems) {
@@ -182,7 +181,6 @@ export async function getProductLocations(): Promise<{
         product_fk: string | null;
         sub_inventory: string | null;
         inventory_type: string | null;
-        owning_session_id: string | null;
       }[]) {
         inventoryItemById.set(item.id, item);
       }
@@ -325,7 +323,7 @@ export async function getProductLocations(): Promise<{
       created_at: item.created_at,
       accuracy: item.accuracy,
       scanning_session_id: item.scanning_session_id,
-      owning_session_id: inventoryItem?.owning_session_id ?? null,
+      // owning_session_id removed - no permanent session ownership
     };
   });
 

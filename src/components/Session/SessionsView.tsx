@@ -112,7 +112,8 @@ export function SessionsView({ onViewChange, onMenuClick }: SessionsViewProps) {
       const { data: inventoryItems, error: inventoryError } = await supabase
         .from('inventory_items')
         .select('id, sub_inventory, inventory_type')
-        .eq('location_id', locationId);
+        .eq('location_id', locationId)
+        .limit(50000); // Override default 1000 row limit
 
       if (inventoryError) throw inventoryError;
 
@@ -163,7 +164,8 @@ export function SessionsView({ onViewChange, onMenuClick }: SessionsViewProps) {
   const sessionCounts = sessionCountsQuery.data;
   const getCountsForSession = (session: SessionSummary) => {
     if (!sessionCounts) {
-      return { total: session.totalItems, scanned: session.scannedCount };
+      // No stale snapshot fallback - query is loading, use 0 until data arrives
+      return { total: 0, scanned: session.scannedCount };
     }
     const key = session.inventoryType === 'ASIS' && session.subInventory
       ? `load:${session.subInventory}`

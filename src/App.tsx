@@ -32,6 +32,7 @@ const UpdatePasswordView = lazy(() => import("@/components/Auth/UpdatePasswordVi
 const ActivityLogView = lazy(() => import("@/components/Activity/ActivityLogView").then(m => ({ default: m.ActivityLogView })));
 const MapView = lazy(() => import("@/components/Map/MapView").then(m => ({ default: m.MapView })));
 const AgentView = lazy(() => import("@/components/Agent/AgentView").then(m => ({ default: m.AgentView })));
+const DataQualityDashboard = lazy(() => import("@/components/Dashboard/DataQualityDashboard").then(m => ({ default: m.DataQualityDashboard })));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -308,6 +309,9 @@ function App() {
                     {currentView === "agent" && (
                       <AgentView />
                     )}
+                    {currentView === "data-quality" && (
+                      <DataQualityDashboard />
+                    )}
                     {currentView === "sessions" && (
                         <SessionsView
                           onViewChange={handleViewChange}
@@ -378,6 +382,9 @@ function App() {
                     )}
                     {currentView === "agent" && (
                       <AgentView />
+                    )}
+                    {currentView === "data-quality" && (
+                      <DataQualityDashboard />
                     )}
                     {currentView === "sessions" && (
                         <SessionsView

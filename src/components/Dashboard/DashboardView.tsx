@@ -498,8 +498,8 @@ export function DashboardView({ onViewChange, onMenuClick }: DashboardViewProps)
 
         const loadKey = load?.sub_inventory_name ?? session.subInventory;
         const key = `load:${loadKey}`;
-        const scanned = scanCountsQuery.data?.scannedByKey.get(key) ?? session.scannedCount;
-        const total = scanCountsQuery.data?.totalByKey.get(key) ?? session.totalItems;
+        const scanned = scanCountsQuery.data?.scannedByKey.get(key) ?? 0;
+        const total = scanCountsQuery.data?.totalByKey.get(key) ?? 0;
         const progress = total > 0
           ? Math.round((scanned / total) * 100)
           : 0;
@@ -520,8 +520,8 @@ export function DashboardView({ onViewChange, onMenuClick }: DashboardViewProps)
       const key = session.subInventory
         ? `load:${session.subInventory}`
         : `type:${session.inventoryType}`;
-      const scanned = scanCountsQuery.data?.scannedByKey.get(key) ?? session.scannedCount;
-      const total = scanCountsQuery.data?.totalByKey.get(key) ?? session.totalItems;
+      const scanned = scanCountsQuery.data?.scannedByKey.get(key) ?? 0;
+      const total = scanCountsQuery.data?.totalByKey.get(key) ?? 0;
       const progress = total > 0
         ? Math.round((scanned / total) * 100)
         : 0;

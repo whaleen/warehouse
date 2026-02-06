@@ -63,7 +63,7 @@ export interface ProductLocationForMap {
   created_at: string;
   accuracy: number | null;
   scanning_session_id?: string | null;
-  owning_session_id?: string | null;
+  // owning_session_id removed - no permanent session ownership
 }
 
 /**

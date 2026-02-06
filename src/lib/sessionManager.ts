@@ -1,7 +1,6 @@
 import supabase from '@/lib/supabase';
 import { getActiveLocationContext } from '@/lib/tenant';
 import type { PostgrestError } from '@supabase/supabase-js';
-import type { InventoryItem } from '@/types/inventory';
 import type { InventoryType } from '@/types/inventory';
 import type { ScanningSession, SessionSource, SessionStatus, SessionSummary } from '@/types/session';
 
@@ -20,7 +19,7 @@ type SessionRecord = {
   created_by?: string | null;
   updated_by?: string | null;
   closed_by?: string | null;
-  items: InventoryItem[];
+  // NO items field - no snapshots
   scanned_item_ids: string[];
 };
 
@@ -38,13 +37,12 @@ function toSession(record: SessionRecord): ScanningSession {
     createdBy: record.created_by ?? undefined,
     updatedBy: record.updated_by ?? undefined,
     closedBy: record.closed_by ?? undefined,
-    items: Array.isArray(record.items) ? record.items : [],
+    // NO items - query dynamically when needed
     scannedItemIds: Array.isArray(record.scanned_item_ids) ? record.scanned_item_ids : []
   };
 }
 
 function toSummary(record: SessionRecord): SessionSummary {
-  const items = Array.isArray(record.items) ? record.items : [];
   const scanned = Array.isArray(record.scanned_item_ids) ? record.scanned_item_ids : [];
 
   return {
@@ -54,8 +52,8 @@ function toSummary(record: SessionRecord): SessionSummary {
     subInventory: record.sub_inventory ?? undefined,
     status: record.status,
     sessionSource: record.session_source ?? undefined,
-    totalItems: items.length,
     scannedCount: scanned.length,
+    // NO totalItems - query it dynamically from inventory_items when needed
     createdAt: record.created_at,
     updatedAt: record.updated_at ?? undefined,
     closedAt: record.closed_at ?? undefined,
@@ -86,7 +84,7 @@ export async function getSessionSummaries(): Promise<{ data: SessionSummary[] | 
   const { locationId } = getActiveLocationContext();
   const { data, error } = await supabase
     .from(SESSION_TABLE)
-    .select('id, name, inventory_type, sub_inventory, status, session_source, created_at, updated_at, closed_at, created_by, items, scanned_item_ids')
+    .select('id, name, inventory_type, sub_inventory, status, session_source, created_at, updated_at, closed_at, created_by, scanned_item_ids')
     .eq('location_id', locationId)
     .in('session_source', ['ge_sync', 'system'])
     .order('created_at', { ascending: false });
@@ -150,7 +148,7 @@ export async function updateSessionStatus(input: {
   const { locationId } = getActiveLocationContext();
   const { data: current, error: currentError } = await supabase
     .from(SESSION_TABLE)
-    .select('status, items, scanned_item_ids')
+    .select('status, scanned_item_ids')
     .eq('id', input.sessionId)
     .eq('location_id', locationId)
     .single();
@@ -213,50 +211,7 @@ function mapGeStatusToSessionStatus(geStatus?: string | null): SessionStatus {
   return ['delivered', 'completed', 'closed'].includes(normalized) ? 'closed' : 'active';
 }
 
-async function assignInventoryOwnership(input: {
-  sessionId: string;
-  inventoryType: InventoryType;
-  subInventory?: string;
-}): Promise<PostgrestError | null> {
-  const { locationId } = getActiveLocationContext();
-  let query = supabase
-    .from('inventory_items')
-    .update({ owning_session_id: input.sessionId, updated_at: new Date().toISOString() })
-    .eq('location_id', locationId)
-    .eq('inventory_type', input.inventoryType)
-    .is('owning_session_id', null);
-
-  if (input.subInventory) {
-    query = query.eq('sub_inventory', input.subInventory);
-  }
-
-  const { error } = await query;
-  return error ?? null;
-}
-
-async function fetchSessionItems(sessionId: string): Promise<InventoryItem[]> {
-  const { locationId } = getActiveLocationContext();
-  const { data, error } = await supabase
-    .from('inventory_items')
-    .select('*')
-    .eq('location_id', locationId)
-    .eq('owning_session_id', sessionId);
-
-  if (error || !data) return [];
-  return data as InventoryItem[];
-}
-
-async function refreshSessionItems(sessionId: string): Promise<PostgrestError | null> {
-  const { locationId } = getActiveLocationContext();
-  const items = await fetchSessionItems(sessionId);
-  const { error } = await supabase
-    .from(SESSION_TABLE)
-    .update({ items, updated_at: new Date().toISOString() })
-    .eq('id', sessionId)
-    .eq('location_id', locationId);
-
-  return error ?? null;
-}
+// Deprecated functions removed - sessions now query items dynamically
 
 export async function getOrCreateLoadSession(
   subInventoryName: string,
@@ -291,12 +246,7 @@ export async function getOrCreateLoadSession(
           .eq('location_id', locationId);
       }
 
-      await assignInventoryOwnership({
-        sessionId,
-        inventoryType: 'ASIS',
-        subInventory: subInventoryName,
-      });
-      await refreshSessionItems(sessionId);
+      // NO ownership assignment or snapshot refresh - query dynamically!
       return { sessionId };
     }
 
@@ -310,7 +260,6 @@ export async function getOrCreateLoadSession(
         sub_inventory: subInventoryName,
         status: mappedStatus,
         session_source: 'ge_sync',
-        items: [],
         scanned_item_ids: [],
         created_by: 'system',
         updated_by: 'system',
@@ -323,12 +272,7 @@ export async function getOrCreateLoadSession(
       return { sessionId: null, error: createError };
     }
 
-    await assignInventoryOwnership({
-      sessionId: created.id,
-      inventoryType: 'ASIS',
-      subInventory: subInventoryName,
-    });
-    await refreshSessionItems(created.id);
+    // NO ownership assignment or snapshot refresh - query dynamically!
     return { sessionId: created.id };
   } catch (err) {
     return { sessionId: null, error: err };
@@ -367,8 +311,7 @@ export async function getOrCreateInventoryTypeSession(
           .eq('location_id', locationId);
       }
 
-      await assignInventoryOwnership({ sessionId, inventoryType });
-      await refreshSessionItems(sessionId);
+      // NO ownership assignment or snapshot refresh - query dynamically!
       return { sessionId };
     }
 
@@ -382,7 +325,6 @@ export async function getOrCreateInventoryTypeSession(
         sub_inventory: null,
         status: 'active',
         session_source: 'ge_sync',
-        items: [],
         scanned_item_ids: [],
         created_by: 'system',
         updated_by: 'system',
@@ -395,8 +337,7 @@ export async function getOrCreateInventoryTypeSession(
       return { sessionId: null, error: createError };
     }
 
-    await assignInventoryOwnership({ sessionId: created.id, inventoryType });
-    await refreshSessionItems(created.id);
+    // NO ownership assignment or snapshot refresh - query dynamically!
     return { sessionId: created.id };
   } catch (err) {
     return { sessionId: null, error: err };
@@ -491,7 +432,6 @@ async function getOrCreatePermanentSession(name: string, subInventory: string): 
         sub_inventory: subInventory,
         status: 'active',
         session_source: 'system',
-        items: [],
         scanned_item_ids: [],
         created_by: 'system',
         updated_by: 'system',

@@ -19,7 +19,8 @@ export type AppView =
   | 'sessions'
   | 'floor-display'
   | 'map'
-  | 'agent';
+  | 'agent'
+  | 'data-quality';
 
 export type RouteState = {
   view: AppView;
@@ -63,6 +64,8 @@ export function getPathForView(view: AppView, _sessionId?: string | null, displa
       return '/map';
     case 'agent':
       return '/agent';
+    case 'data-quality':
+      return '/data-quality';
     case 'settings-locations':
       return '/settings/locations';
     case 'settings-location':
@@ -118,6 +121,8 @@ export function parseRoute(pathname: string): RouteState {
       return { view: 'map' };
     case 'agent':
       return { view: 'agent' };
+    case 'data-quality':
+      return { view: 'data-quality' };
     case 'scanning-sessions':
     case 'sessions':
       return { view: 'sessions' };

@@ -80,61 +80,43 @@ export function useInventoryScanCounts() {
   const { locationId } = getActiveLocationContext();
 
   return useQuery({
-    queryKey: ['inventory-scan-counts', locationId ?? 'none'],
+    queryKey: ['inventory-scan-counts-v4', locationId ?? 'none'], // v4: pagination to fetch all rows
     enabled: !!locationId,
+    staleTime: 0, // Force refetch
+    cacheTime: 0, // Don't cache
     queryFn: async () => {
       if (!locationId) {
         return { totalByKey: new Map<string, number>(), scannedByKey: new Map<string, number>() };
       }
 
-      const { data: inventoryItems, error: inventoryError } = await supabase
-        .from('inventory_items')
-        .select('id, sub_inventory, inventory_type')
-        .eq('location_id', locationId);
+      // Use database functions to get counts efficiently
+      const { data: totalCounts, error: totalError } = await supabase
+        .rpc('get_inventory_counts', { p_location_id: locationId });
 
-      if (inventoryError) throw inventoryError;
+      if (totalError) throw totalError;
 
+      const { data: scannedCounts, error: scannedError } = await supabase
+        .rpc('get_scanned_counts', { p_location_id: locationId });
+
+      if (scannedError) throw scannedError;
+
+      // Convert to Maps
       const totalByKey = new Map<string, number>();
-      const itemMap = new Map<string, { sub_inventory: string | null; inventory_type: string | null }>();
-
-      for (const item of inventoryItems ?? []) {
-        if (!item.id) continue;
-        const isLoadItem = Boolean(item.sub_inventory);
-        if (isLoadItem && item.inventory_type !== 'ASIS') {
-          continue;
-        }
-        const key = item.sub_inventory
-          ? `load:${item.sub_inventory}`
-          : `type:${item.inventory_type ?? 'unknown'}`;
-        totalByKey.set(key, (totalByKey.get(key) ?? 0) + 1);
-        itemMap.set(item.id, {
-          sub_inventory: item.sub_inventory ?? null,
-          inventory_type: item.inventory_type ?? null,
-        });
+      for (const row of totalCounts ?? []) {
+        totalByKey.set(row.key, Number(row.total_count));
       }
-
-      const { data: scanRows, error: scanError } = await supabase
-        .from('product_location_history')
-        .select('inventory_item_id')
-        .eq('location_id', locationId)
-        .not('inventory_item_id', 'is', null);
-
-      if (scanError) throw scanError;
 
       const scannedByKey = new Map<string, number>();
-      const scannedIds = new Set<string>();
-      for (const row of scanRows ?? []) {
-        if (row.inventory_item_id) scannedIds.add(row.inventory_item_id);
+      for (const row of scannedCounts ?? []) {
+        scannedByKey.set(row.key, Number(row.scanned_count));
       }
 
-      for (const id of scannedIds) {
-        const item = itemMap.get(id);
-        if (!item) continue;
-        const key = item.sub_inventory
-          ? `load:${item.sub_inventory}`
-          : `type:${item.inventory_type ?? 'unknown'}`;
-        scannedByKey.set(key, (scannedByKey.get(key) ?? 0) + 1);
-      }
+      console.log('=== INVENTORY COUNTS (DB Functions) ===');
+      console.log(`Total counts returned: ${totalCounts?.length ?? 0} groups`);
+      console.log(`Scanned counts returned: ${scannedCounts?.length ?? 0} groups`);
+      console.log(`Load E total: ${totalByKey.get('load:9SU20260203102320') ?? 'NOT FOUND'}`);
+      console.log(`Load E scanned: ${scannedByKey.get('load:9SU20260203102320') ?? 0}`);
+      console.log('========================================');
 
       return { totalByKey, scannedByKey };
     },
