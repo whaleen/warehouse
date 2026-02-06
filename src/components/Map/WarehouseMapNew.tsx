@@ -134,7 +134,6 @@ export function WarehouseMapNew({ locations }: WarehouseMapNewProps) {
 
   // Filter visible locations based on hidden sessions
   const getLocationGroupKey = useCallback((loc: ProductLocationForMap) => {
-    if (loc.owning_session_id) return `session:${loc.owning_session_id}`;
     if (loc.sub_inventory) return `load:${loc.sub_inventory}`;
     return 'unassigned';
   }, []);
@@ -326,13 +325,7 @@ export function WarehouseMapNew({ locations }: WarehouseMapNewProps) {
         return;
       }
 
-      const { item, owningSession } = result;
-      if (!owningSession) {
-        feedbackError();
-        setScanFeedback('Item not assigned');
-        showScanAlert('error', 'Item not assigned to a session');
-        return;
-      }
+      const { item } = result;
 
       if (isAdHoc) {
         const logResult = await logProductLocation({
@@ -435,15 +428,8 @@ export function WarehouseMapNew({ locations }: WarehouseMapNewProps) {
   }, [activeSessionId, sessionSummariesQuery.isLoading, handleActivateFogOfWar]);
 
   const sessionIds = useMemo(
-    () =>
-      Array.from(
-        new Set(
-          validLocations
-            .map(loc => loc.owning_session_id)
-            .filter(Boolean)
-        )
-      ) as string[],
-    [validLocations]
+    () => [] as string[],
+    []
   );
   const loadNames = useMemo(
     () =>

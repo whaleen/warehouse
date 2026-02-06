@@ -91,7 +91,6 @@ export function DataQualityDashboard({ onMenuClick }: DataQualityDashboardProps)
     <>
       <AppHeader
         title="Data Quality"
-        subtitle="Monitor system data integrity and completeness"
         onMenuClick={onMenuClick}
       />
       <PageContainer>

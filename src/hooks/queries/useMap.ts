@@ -83,7 +83,7 @@ export function useInventoryScanCounts() {
     queryKey: ['inventory-scan-counts-v4', locationId ?? 'none'], // v4: pagination to fetch all rows
     enabled: !!locationId,
     staleTime: 0, // Force refetch
-    cacheTime: 0, // Don't cache
+    gcTime: 0, // Don't cache
     queryFn: async () => {
       if (!locationId) {
         return { totalByKey: new Map<string, number>(), scannedByKey: new Map<string, number>() };
