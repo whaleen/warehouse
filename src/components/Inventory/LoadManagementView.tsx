@@ -30,6 +30,7 @@ export function LoadManagementView({ onMenuClick }: LoadManagementViewProps) {
   const { data: loadsData, isLoading: loading, refetch } = useLoads();
   const isMobile = useIsMobile();
   const [loads, setLoads] = useState<LoadWithCount[]>([]);
+  const [loadingCounts, setLoadingCounts] = useState(false);
   const [showAway, setShowAway] = useState(false);
   const [pendingLoadSelection, setPendingLoadSelection] = useState<string | null>(null);
   const [isStandaloneDetail, setIsStandaloneDetail] = useState(false);
@@ -48,6 +49,7 @@ export function LoadManagementView({ onMenuClick }: LoadManagementViewProps) {
   const [infoModalLoad, setInfoModalLoad] = useState<LoadWithCount | null>(null);
 
   const fetchLoadCounts = async (baseLoads: LoadMetadata[]) => {
+    setLoadingCounts(true);
     // Fetch item counts for each load
     const loadsWithCounts = await Promise.all(
       baseLoads.map(async (load) => {
@@ -59,6 +61,7 @@ export function LoadManagementView({ onMenuClick }: LoadManagementViewProps) {
       })
     );
     setLoads(loadsWithCounts);
+    setLoadingCounts(false);
   };
 
   useEffect(() => {
@@ -277,7 +280,7 @@ export function LoadManagementView({ onMenuClick }: LoadManagementViewProps) {
 
             {/* Load List */}
             <div className="flex-1 min-h-0 overflow-hidden">
-              {loading ? (
+              {loading || loadingCounts ? (
                 <div className="flex items-center justify-center h-full">
                   <Loader2 className="h-6 w-6 animate-spin" />
                 </div>
