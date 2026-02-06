@@ -38,28 +38,50 @@ export function MinimalScanOverlay({
   const [inputMode, setInputMode] = useState<InputMode>('scanner');
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Auto-focus input when opened
+  // Auto-focus input when opened, clear when closed
   useEffect(() => {
     if (isOpen) {
       const timer = setTimeout(() => {
         inputRef.current?.focus();
       }, 100);
       return () => clearTimeout(timer);
+    } else {
+      // Clear both ref and state when closing
+      setInputValue('');
+      if (inputRef.current) {
+        inputRef.current.value = '';
+      }
     }
   }, [isOpen]);
 
-  const submitValue = useCallback((value: string) => {
-    if (!value.trim() || isProcessing) return;
+  const submitValue = useCallback(() => {
+    if (isProcessing) return;
+
+    // Read from ref in scanner mode, state in keyboard mode
+    const rawValue = inputMode === 'scanner'
+      ? inputRef.current?.value || ''
+      : inputValue;
+
+    if (!rawValue.trim()) return;
+
     const sanitized = inputMode === 'scanner'
-      ? value.trim().replace(/[^A-Za-z0-9]/g, '')
-      : value.trim();
+      ? rawValue.trim().replace(/[^A-Za-z0-9]/g, '')
+      : rawValue.trim();
+
     if (!sanitized) return;
+
     onScan(sanitized);
-    setInputValue('');
-  }, [inputMode, isProcessing, onScan]);
+
+    // Clear input - ref in scanner mode, state in keyboard mode
+    if (inputMode === 'scanner' && inputRef.current) {
+      inputRef.current.value = '';
+    } else {
+      setInputValue('');
+    }
+  }, [inputMode, inputValue, isProcessing, onScan]);
 
   const handleSubmit = () => {
-    submitValue(inputValue);
+    submitValue();
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -120,8 +142,17 @@ export function MinimalScanOverlay({
                 ref={inputRef}
                 type="text"
                 inputMode={inputMode === 'scanner' ? 'none' : 'text'}
-                value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
+                {...(inputMode === 'scanner'
+                  ? {
+                      // Uncontrolled for scanner - let native input handle rapid keystrokes
+                      defaultValue: ''
+                    }
+                  : {
+                      // Controlled for keyboard - normal React state behavior
+                      value: inputValue,
+                      onChange: (e: React.ChangeEvent<HTMLInputElement>) => setInputValue(e.target.value)
+                    }
+                )}
                 onKeyDown={handleKeyDown}
                 placeholder={inputMode === 'scanner' ? 'Scan barcode here...' : 'Type barcode...'}
                 className="h-12 text-base font-mono pr-20"
@@ -141,8 +172,22 @@ export function MinimalScanOverlay({
                     size="icon"
                     className="h-8 w-8"
                     onClick={() => {
-                      setInputMode(prev => prev === 'scanner' ? 'keyboard' : 'scanner');
-                      inputRef.current?.focus();
+                      setInputMode(prev => {
+                        const newMode = prev === 'scanner' ? 'keyboard' : 'scanner';
+
+                        // Sync values when switching modes
+                        if (newMode === 'keyboard' && inputRef.current) {
+                          // Switching to keyboard: copy ref value to state
+                          setInputValue(inputRef.current.value);
+                        } else if (newMode === 'scanner' && inputRef.current) {
+                          // Switching to scanner: copy state value to ref
+                          inputRef.current.value = inputValue;
+                        }
+
+                        return newMode;
+                      });
+
+                      setTimeout(() => inputRef.current?.focus(), 0);
                     }}
                     title={inputMode === 'scanner' ? 'Switch to keyboard input' : 'Switch to scanner input'}
                   >
