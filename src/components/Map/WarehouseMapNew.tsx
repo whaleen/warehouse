@@ -346,8 +346,8 @@ export function WarehouseMapNew({ locations }: WarehouseMapNewProps) {
         }
 
         feedbackSuccess();
-        setScanFeedback(`Belongs to ${owningSession.name}`);
-        showScanAlert('success', `Belongs to ${owningSession.name}`);
+        setScanFeedback(`Logged to ${item.sub_inventory || 'inventory'}`);
+        showScanAlert('success', `Logged to ${item.sub_inventory || 'inventory'}`);
         queryClient.invalidateQueries({ queryKey: ['product-locations', locationId] });
         return;
       }
