@@ -5,8 +5,51 @@ import type { InventoryItem } from '@/types/inventory';
 // findMatchingItemsInSession() removed - use findItemOwningSession() instead
 
 /**
+ * Deduplicate items that exist in both ASIS and STA
+ * Priority rule: STA wins when both exist for the same serial
+ */
+function deduplicateAsisStaItems(items: InventoryItem[]): InventoryItem[] {
+  // Group by serial
+  const bySerial = new Map<string, InventoryItem[]>();
+  for (const item of items) {
+    if (!item.serial) continue;
+    const existing = bySerial.get(item.serial) || [];
+    existing.push(item);
+    bySerial.set(item.serial, existing);
+  }
+
+  const deduplicated: InventoryItem[] = [];
+
+  // For each serial, if both ASIS and STA exist, keep only STA
+  for (const itemsWithSerial of bySerial.values()) {
+    if (itemsWithSerial.length === 1) {
+      deduplicated.push(itemsWithSerial[0]);
+      continue;
+    }
+
+    // Check if we have both ASIS and STA
+    const staItem = itemsWithSerial.find(i => i.inventory_type === 'STA');
+    const asisItem = itemsWithSerial.find(i => i.inventory_type === 'ASIS');
+
+    if (staItem && asisItem) {
+      // Both exist - STA wins
+      deduplicated.push(staItem);
+    } else {
+      // No conflict, keep all
+      deduplicated.push(...itemsWithSerial);
+    }
+  }
+
+  // Include items without serials (won't be deduplicated)
+  const withoutSerial = items.filter(i => !i.serial);
+  deduplicated.push(...withoutSerial);
+
+  return deduplicated;
+}
+
+/**
  * Find inventory items by barcode (serial, CSO, or model)
- * No ownership tracking - just finds matching items
+ * Deduplicates ASIS/STA conflicts (STA wins)
  */
 export type ItemMatchResult =
   | { type: 'not_found' }
@@ -42,7 +85,14 @@ export async function findItemOwningSession(barcode: string): Promise<ItemMatchR
     throw error;
   }
 
-  const matches = (data ?? []) as InventoryItem[];
+  let matches = (data ?? []) as InventoryItem[];
+  if (matches.length === 0) {
+    return { type: 'not_found' };
+  }
+
+  // Deduplicate ASIS/STA conflicts (STA wins)
+  matches = deduplicateAsisStaItems(matches);
+
   if (matches.length === 0) {
     return { type: 'not_found' };
   }
