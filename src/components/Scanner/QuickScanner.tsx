@@ -1,6 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { X, ScanBarcode, Scan, ChevronDown } from 'lucide-react';
 import { BarcodeScanner } from '@/components/Scanner/BarcodeScanner';
 import { OverlayPortal } from '@/components/Layout/OverlayPortal';
@@ -35,16 +34,18 @@ export function QuickScanner({ onScan, onClose, title = 'Quick Scan' }: QuickSca
     const saved = localStorage.getItem(MODE_STORAGE_KEY);
     return (saved === 'ad-hoc' || saved === 'fog-of-war') ? saved : 'ad-hoc';
   });
-  const [inputValue, setInputValue] = useState('');
+  const [displayValue, setDisplayValue] = useState(''); // For visual display only
   const [cameraOpen, setCameraOpen] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [alert, setAlert] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
 
-  // Auto-focus input on mount
+  // Hidden input ref - isolated from React, never re-renders
+  const hiddenInputRef = useRef<HTMLInputElement>(null);
+
+  // Auto-focus hidden input on mount
   useEffect(() => {
     const timer = setTimeout(() => {
-      inputRef.current?.focus();
+      hiddenInputRef.current?.focus();
     }, 100);
     return () => clearTimeout(timer);
   }, []);
@@ -91,7 +92,6 @@ export function QuickScanner({ onScan, onClose, title = 'Quick Scan' }: QuickSca
       feedbackSuccess();
       showAlert('success', `Marked on map: ${barcode}`);
       onScan(barcode);
-      setInputValue('');
 
       // Refresh map to show new marker
       queryClient.invalidateQueries({ queryKey: ['product-locations', locationId] });
@@ -170,7 +170,6 @@ export function QuickScanner({ onScan, onClose, title = 'Quick Scan' }: QuickSca
         `Updated: ${item.product_type} (${result.matchedField?.toUpperCase()})`
       );
       onScan(barcode);
-      setInputValue('');
 
       // Refresh map to show updated marker
       queryClient.invalidateQueries({ queryKey: ['product-locations', locationId] });
@@ -185,21 +184,28 @@ export function QuickScanner({ onScan, onClose, title = 'Quick Scan' }: QuickSca
   };
 
   const handleKeyboardScan = async () => {
-    if (!inputValue.trim() || isProcessing) return;
+    const rawValue = hiddenInputRef.current?.value || '';
+    if (!rawValue.trim()) return;
 
     feedbackScanDetected();
-    const barcode = inputValue.trim();
+    const barcode = rawValue.trim().replace(/[^A-Za-z0-9]/g, '');
+    if (!barcode) return;
 
     if (mode === 'ad-hoc') {
       await handleAdHocScan(barcode);
     } else {
       await handleFogOfWarScan(barcode);
     }
+
+    // Clear after scan
+    if (hiddenInputRef.current) {
+      hiddenInputRef.current.value = '';
+      setDisplayValue('');
+    }
   };
 
   const handleCameraScan = (code: string) => {
     setCameraOpen(false);
-    setInputValue(code);
     // Auto-submit camera scans
     if (mode === 'ad-hoc') {
       handleAdHocScan(code);
@@ -294,36 +300,41 @@ export function QuickScanner({ onScan, onClose, title = 'Quick Scan' }: QuickSca
             </div>
 
             <div className="relative">
-              <Scan className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                ref={inputRef}
+              {/* Hidden input - captures scanner, never re-renders */}
+              <input
+                ref={hiddenInputRef}
                 type="text"
-                inputMode="none"
-                value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
+                onChange={(e) => setDisplayValue(e.target.value)}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
                     e.preventDefault();
                     handleKeyboardScan();
                   }
                 }}
-                placeholder="Scan barcode here..."
-                className="pl-10 h-14 text-base font-mono"
+                className="absolute opacity-0 pointer-events-none"
                 autoComplete="off"
                 autoCorrect="off"
                 autoCapitalize="off"
                 spellCheck={false}
-                disabled={isProcessing}
+                tabIndex={-1}
               />
-              {isProcessing && (
-                <Loader2 className="absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 animate-spin text-primary" />
-              )}
+
+              {/* Display div showing accumulated value */}
+              <div className="relative">
+                <Scan className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-blue-500 animate-pulse" />
+                <div className="pl-10 pr-12 h-14 flex items-center border-2 border-blue-500 rounded-md bg-blue-50 dark:bg-blue-950/20 font-mono text-base">
+                  {displayValue || <span className="text-muted-foreground">Scan barcode here...</span>}
+                </div>
+                {isProcessing && (
+                  <Loader2 className="absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 animate-spin text-blue-500" />
+                )}
+              </div>
             </div>
 
             <Button
               onClick={handleKeyboardScan}
               className="w-full h-12"
-              disabled={!inputValue.trim() || isProcessing}
+              disabled={!displayValue.trim() || isProcessing}
             >
               {isProcessing ? 'Processing...' : 'Submit Scan'}
             </Button>
