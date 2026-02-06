@@ -45,6 +45,11 @@ export function RealtimeProvider({ children }: { children: ReactNode }) {
           queryClient.invalidateQueries({
             queryKey: ['data-quality'],
           });
+
+          // Invalidate ASIS overview stats (dashboard)
+          queryClient.invalidateQueries({
+            queryKey: ['inventory', locationId, 'asis-overview'],
+          });
         }
       )
       .subscribe((status) => {
@@ -123,6 +128,12 @@ export function RealtimeProvider({ children }: { children: ReactNode }) {
 
           queryClient.invalidateQueries({
             queryKey: ['map-metadata'],
+          });
+
+          // Invalidate product-locations because getProductLocations()
+          // fetches load_metadata.primary_color and friendly_name
+          queryClient.invalidateQueries({
+            queryKey: ['product-locations', locationId],
           });
         }
       )
