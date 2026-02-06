@@ -12,6 +12,7 @@ import { PendingAccess } from "@/components/Auth/PendingAccess";
 import { PageTransition } from "@/components/ui/page-transition";
 import { OverlayStack } from "@/components/Layout/OverlayStack";
 import { ScannerOverlayProvider } from "@/context/ScannerOverlayContext";
+import { RealtimeProvider } from "@/context/RealtimeContext";
 import { SpeedInsights } from "@vercel/speed-insights/react";
 // import { BreakpointIndicator } from "@/components/Dev/BreakpointIndicator";
 
@@ -274,8 +275,9 @@ function App() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <ScannerOverlayProvider>
-      <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+      <RealtimeProvider>
+        <ScannerOverlayProvider>
+          <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
         {isMobile ? (
           <>
             <div className="bg-muted/40 flex min-h-screen flex-col min-w-0">
@@ -419,10 +421,11 @@ function App() {
             <OverlayStack />
           </SidebarProvider>
         )}
-      </ThemeProvider>
-      </ScannerOverlayProvider>
+          </ThemeProvider>
+        </ScannerOverlayProvider>
+      </RealtimeProvider>
       <SpeedInsights />
-      
+
     </QueryClientProvider>
   );
 }
