@@ -198,7 +198,8 @@ export function LoadManagementView({ onMenuClick }: LoadManagementViewProps) {
 
   const isAwayStatus = (status?: string | null) => {
     const normalized = normalizeGeStatus(status);
-    return normalized === 'shipped' || normalized === 'delivered';
+    // Only "delivered" is away - "shipped" means sold awaiting pickup (still on floor)
+    return normalized === 'delivered';
   };
 
   const isVisibleLoad = (load: LoadMetadata) => {
@@ -209,7 +210,7 @@ export function LoadManagementView({ onMenuClick }: LoadManagementViewProps) {
   };
 
   useEffect(() => {
-    if (!showAway && (loadFilter === 'shipped' || loadFilter === 'delivered')) {
+    if (!showAway && loadFilter === 'delivered') {
       setLoadFilter('all');
     }
   }, [showAway, loadFilter]);
@@ -244,7 +245,8 @@ export function LoadManagementView({ onMenuClick }: LoadManagementViewProps) {
                   { key: 'shipped', label: 'Shipped' },
                   { key: 'delivered', label: 'Delivered' },
                 ] as const).map(({ key, label }) => {
-                  if (!showAway && (key === 'shipped' || key === 'delivered')) {
+                  // Only hide "delivered" when showAway is off (shipped is still on floor)
+                  if (!showAway && key === 'delivered') {
                     return null;
                   }
                   const count = loads.filter((load) => {
@@ -272,7 +274,7 @@ export function LoadManagementView({ onMenuClick }: LoadManagementViewProps) {
                   );
                 })}
                 <div className="flex items-center gap-2 ml-auto">
-                  <span className="text-xs text-muted-foreground">Show away</span>
+                  <span className="text-xs text-muted-foreground">Show delivered</span>
                   <Switch checked={showAway} onCheckedChange={setShowAway} />
                 </div>
               </div>
