@@ -12,12 +12,12 @@ import { InventoryItemCard } from '@/components/Inventory/InventoryItemCard';
 import { toast } from 'sonner';
 import JsBarcode from 'jsbarcode';
 import { Checkbox } from '@/components/ui/checkbox';
-import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { useAuth } from '@/context/AuthContext';
 import { getActiveLocationContext } from '@/lib/tenant';
 import { useLogActivity } from '@/hooks/queries/useActivity';
 import { useQuery } from '@tanstack/react-query';
 import supabase from '@/lib/supabase';
+import { SanityCheckDialog } from '@/components/Loads/SanityCheckDialog';
 
 interface LoadDetailPanelProps {
   load: LoadMetadata;
@@ -542,74 +542,6 @@ export function LoadDetailPanel({
     persistPrepUpdate({ prep_wrapped: nextValue });
   };
 
-  const requestSanityCheck = async () => {
-    if (!user) return;
-    const now = new Date().toISOString();
-    setSanityCheckRequested(true);
-    setSanityCompletedAt(null);
-    const success = await persistPrepUpdate(
-      {
-        sanity_check_requested: true,
-        sanity_check_requested_at: now,
-        sanity_check_requested_by: userDisplayName,
-        sanity_check_completed_at: null,
-        sanity_check_completed_by: null,
-      },
-      { skipActivityLog: true }
-    );
-    if (success && companyId && locationId) {
-      try {
-        await logActivityMutation.mutateAsync({
-          companyId,
-          locationId,
-          user,
-          action: 'sanity_check_requested',
-          entityType: 'ASIS_LOAD',
-          entityId: load.sub_inventory_name,
-          details: {
-            loadNumber: load.sub_inventory_name,
-            friendlyName: load.friendly_name ?? null,
-          },
-        });
-      } catch (activityError) {
-        console.warn('Failed to log activity (sanity_check_requested):', activityError);
-      }
-    }
-  };
-
-  const completeSanityCheck = async () => {
-    if (!user) return;
-    const now = new Date().toISOString();
-    setSanityCheckRequested(false);
-    setSanityCompletedAt(now);
-    const success = await persistPrepUpdate(
-      {
-        sanity_check_requested: false,
-        sanity_check_completed_at: now,
-        sanity_check_completed_by: userDisplayName,
-      },
-      { skipActivityLog: true }
-    );
-    if (success && companyId && locationId) {
-      try {
-        await logActivityMutation.mutateAsync({
-          companyId,
-          locationId,
-          user,
-          action: 'sanity_check_completed',
-          entityType: 'ASIS_LOAD',
-          entityId: load.sub_inventory_name,
-          details: {
-            loadNumber: load.sub_inventory_name,
-            friendlyName: load.friendly_name ?? null,
-          },
-        });
-      } catch (activityError) {
-        console.warn('Failed to log activity (sanity_check_completed):', activityError);
-      }
-    }
-  };
-
   const handlePickupDateChange = (event: ChangeEvent<HTMLInputElement>) => {
     const nextValue = event.target.value;
     setPickupDate(nextValue);
@@ -1079,30 +1011,40 @@ export function LoadDetailPanel({
         </div>
       </div>
 
-      <ConfirmDialog
+      <SanityCheckDialog
+        load={load}
         open={sanityRequestConfirmOpen}
-        onOpenChange={setSanityRequestConfirmOpen}
-        title="Request sanity check?"
-        description="This marks the load as needing a sanity check."
-        confirmText="Request sanity check"
-        cancelText="Cancel"
-        onConfirm={() => {
-          setSanityRequestConfirmOpen(false);
-          requestSanityCheck();
+        onClose={() => setSanityRequestConfirmOpen(false)}
+        onSuccess={() => {
+          // Notify parent that metadata changed
+          const now = new Date().toISOString();
+          onMetaUpdated?.({
+            sanity_check_requested: true,
+            sanity_check_requested_at: now,
+            sanity_check_requested_by: userDisplayName,
+          });
+          // Update local state will happen via useEffect when load prop updates
+          triggerSavePulse();
         }}
+        mode="request"
       />
 
-      <ConfirmDialog
+      <SanityCheckDialog
+        load={load}
         open={sanityCompleteConfirmOpen}
-        onOpenChange={setSanityCompleteConfirmOpen}
-        title="Complete sanity check?"
-        description="This marks the sanity check as complete."
-        confirmText="Complete sanity check"
-        cancelText="Cancel"
-        onConfirm={() => {
-          setSanityCompleteConfirmOpen(false);
-          completeSanityCheck();
+        onClose={() => setSanityCompleteConfirmOpen(false)}
+        onSuccess={() => {
+          // Notify parent that metadata changed
+          const now = new Date().toISOString();
+          onMetaUpdated?.({
+            sanity_check_requested: false,
+            sanity_check_completed_at: now,
+            sanity_check_completed_by: userDisplayName,
+          });
+          // Update local state will happen via useEffect when load prop updates
+          triggerSavePulse();
         }}
+        mode="complete"
       />
     </>
   );

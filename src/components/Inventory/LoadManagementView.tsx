@@ -4,7 +4,6 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Loader2, Info } from 'lucide-react';
-import { getLoadColorByName } from '@/lib/loadColors';
 import { getLoadItemCount, getLoadConflictCount, deleteLoad } from '@/lib/loadManager';
 import { useLoads } from '@/hooks/queries/useLoads';
 import type { LoadMetadata } from '@/types/inventory';
@@ -16,6 +15,7 @@ import { toast } from 'sonner';
 import { PageContainer } from '@/components/Layout/PageContainer';
 import { getPathForView } from '@/lib/routes';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { LoadDisplay } from '@/components/Loads/LoadDisplay';
 
 interface LoadWithCount extends LoadMetadata {
   item_count: number;
@@ -125,17 +125,6 @@ export function LoadManagementView({ onMenuClick }: LoadManagementViewProps) {
   }, [selectedLoadForDetail?.id]);
 
   const normalizeGeStatus = (status?: string | null) => status?.toLowerCase().trim() ?? '';
-  const isSoldStatus = (status?: string | null) => {
-    const normalized = normalizeGeStatus(status);
-    return normalized.includes('sold');
-  };
-  const formatPickupDate = (value?: string | null) => {
-    if (!value) return '';
-    const base = value.slice(0, 10);
-    const [year, month, day] = base.split('-').map(Number);
-    if (!year || !month || !day) return base;
-    return new Date(year, month - 1, day).toLocaleDateString();
-  };
 
   const handleLoadClick = (load: LoadMetadata) => {
     setSelectedLoadForDetail((prev) => {
@@ -355,79 +344,31 @@ export function LoadManagementView({ onMenuClick }: LoadManagementViewProps) {
                         );
                       })
                       .map((load) => {
-                      const isSold = isSoldStatus(load.ge_source_status);
-                      const csoValue = load.ge_cso?.trim() || '';
-                      const csoTail = csoValue.slice(-4) || load.sub_inventory_name.slice(-4);
-                      const listTitle = load.friendly_name || load.sub_inventory_name;
-                      const needsWrap = isSold && !load.prep_wrapped;
-                      const needsTag = isSold && !load.prep_tagged;
-                      const needsCheck = load.sanity_check_requested;
-                      const pickupDate = load.pickup_date ? formatPickupDate(load.pickup_date) : null;
-
                       return (
-                      <Card
-                        key={load.id}
-                        className={`p-3 transition cursor-pointer ${
-                          selectedLoadForDetail?.id === load.id
-                            ? 'border-primary/50 bg-primary/5'
-                            : 'hover:bg-accent'
-                        }`}
-                        onClick={() => handleLoadClick(load)}
-                        role="button"
-                      >
-                        <div className="flex items-center gap-3">
-                          {/* Color square - prominent visual identifier */}
-                          <div
-                            className="h-10 w-10 rounded-md flex-shrink-0 shadow-sm border border-border"
-                            style={{
-                              backgroundColor: load.primary_color || getLoadColorByName(
-                                loads.map((entry) => entry.sub_inventory_name).sort((a, b) => a.localeCompare(b)),
-                                load.sub_inventory_name
-                              ) || '#9CA3AF',
-                            }}
+                        <div
+                          key={load.id}
+                          className="relative cursor-pointer"
+                          onClick={() => handleLoadClick(load)}
+                          role="button"
+                        >
+                          <LoadDisplay
+                            load={load}
+                            variant="card"
+                            showProgress={true}
+                            showCSO={true}
+                            showActions={false}
+                            className={`transition ${
+                              selectedLoadForDetail?.id === load.id
+                                ? 'border-primary/50 bg-primary/5'
+                                : 'hover:bg-accent'
+                            }`}
                           />
-
-                          {/* Load info */}
-                          <div className="flex-1 min-w-0">
-                            <div className="font-semibold text-base truncate">{listTitle}</div>
-                            <div className="text-sm text-muted-foreground">
-                              {csoValue ? 'CSO' : 'Load'} {csoTail}
-                              {pickupDate && (
-                                <span className="ml-2">· Pickup {pickupDate}</span>
-                              )}
-                            </div>
-                          </div>
-
-                          {/* Action badges */}
-                          <div className="flex gap-1.5 flex-shrink-0">
-                            {needsCheck && (
-                              <Badge variant="secondary" className="bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20">
-                                Check
-                              </Badge>
-                            )}
-                            {needsWrap && (
-                              <Badge variant="secondary" className="bg-orange-500/10 text-orange-700 dark:text-orange-400 border-orange-500/20">
-                                Wrap
-                              </Badge>
-                            )}
-                            {needsTag && (
-                              <Badge variant="secondary" className="bg-orange-500/10 text-orange-700 dark:text-orange-400 border-orange-500/20">
-                                Tag
-                              </Badge>
-                            )}
-                            {load.conflict_count > 0 && (
-                              <Badge variant="destructive">
-                                {load.conflict_count}
-                              </Badge>
-                            )}
-                          </div>
-
-                          {/* Info icon */}
+                          {/* Info button overlay */}
                           <Button
                             type="button"
                             size="icon"
                             variant="ghost"
-                            className="h-8 w-8 flex-shrink-0"
+                            className="absolute top-2 right-2 h-8 w-8"
                             onClick={(e) => {
                               e.stopPropagation();
                               setInfoModalLoad(load);
@@ -437,8 +378,7 @@ export function LoadManagementView({ onMenuClick }: LoadManagementViewProps) {
                             <Info className="h-4 w-4" />
                           </Button>
                         </div>
-                      </Card>
-                    );
+                      );
                     })}
                   </div>
 

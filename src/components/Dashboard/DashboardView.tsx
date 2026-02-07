@@ -18,6 +18,7 @@ import { PageContainer } from '@/components/Layout/PageContainer';
 import { getPathForView } from '@/lib/routes';
 import type { AppView } from '@/lib/routes';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { LoadDisplay } from '@/components/Loads/LoadDisplay';
 
 interface DashboardViewProps {
   onViewChange?: (view: AppView) => void;
@@ -711,55 +712,18 @@ export function DashboardView({ onViewChange, onMenuClick }: DashboardViewProps)
                   <TabsContent value="all" className="mt-0">
                     <div className="space-y-2">
                       {actionItems.slice(0, 8).map((item) => {
-                    const Icon = item.icon;
-                    return (
-                      <button
-                        key={item.id}
-                        type="button"
-                        onClick={() => {
-                          if (item.type === 'session' && item.sessionId) {
-                            onViewChange?.('sessions');
-                          } else if (item.load) {
-                            navigateToLoad(item.load.sub_inventory_name);
-                          }
-                        }}
-                        className="flex items-center gap-3 rounded-lg border border-border/60 bg-card px-3 py-3 text-left transition hover:bg-accent w-full"
-                      >
-                        <Icon className={`h-5 w-5 flex-shrink-0 ${item.color}`} />
-                        {item.loadColor && (
-                          <span
-                            className="h-3 w-3 rounded-full flex-shrink-0 border border-border"
-                            style={{ backgroundColor: item.loadColor }}
-                          />
-                        )}
-                        {item.loadColor && (
-                          <span
-                            className="h-3 w-3 rounded-full flex-shrink-0 border border-border"
-                            style={{ backgroundColor: item.loadColor }}
-                          />
-                        )}
-                        {item.loadColor && (
-                          <span
-                            className="h-3 w-3 rounded-full flex-shrink-0 border border-border"
-                            style={{ backgroundColor: item.loadColor }}
-                          />
-                        )}
-                        <div className="flex-1 min-w-0">
-                          <div className="font-medium text-sm truncate">{item.title}</div>
-                          {item.subtitle && (
-                            <div className="text-xs text-muted-foreground truncate">{item.subtitle}</div>
-                          )}
-                        </div>
-                        <ArrowRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                      </button>
-                    );
-                  })}
-                    </div>
-                  </TabsContent>
-
-                  <TabsContent value="priority" className="mt-0">
-                    <div className="space-y-2">
-                      {actionItems.filter(i => i.priority <= 2).slice(0, 8).map((item) => {
+                        if (item.load) {
+                          return (
+                            <div key={item.id} className="cursor-pointer" onClick={() => navigateToLoad(item.load!.sub_inventory_name)}>
+                              <LoadDisplay
+                                load={item.load}
+                                variant="compact"
+                                showProgress={true}
+                                showActions={false}
+                              />
+                            </div>
+                          );
+                        }
                         const Icon = item.icon;
                         return (
                           <button
@@ -768,37 +732,52 @@ export function DashboardView({ onViewChange, onMenuClick }: DashboardViewProps)
                             onClick={() => {
                               if (item.type === 'session' && item.sessionId) {
                                 onViewChange?.('sessions');
-                              } else if (item.load) {
-                                navigateToLoad(item.load.sub_inventory_name);
                               }
                             }}
                             className="flex items-center gap-3 rounded-lg border border-border/60 bg-card px-3 py-3 text-left transition hover:bg-accent w-full"
                           >
                             <Icon className={`h-5 w-5 flex-shrink-0 ${item.color}`} />
-                            {item.loadColor && (
-                              <span
-                                className="h-3 w-3 rounded-full flex-shrink-0 border border-border"
-                                style={{ backgroundColor: item.loadColor }}
+                            <div className="flex-1 min-w-0">
+                              <div className="font-medium text-sm truncate">{item.title}</div>
+                              {item.subtitle && (
+                                <div className="text-xs text-muted-foreground truncate">{item.subtitle}</div>
+                              )}
+                            </div>
+                            <ArrowRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </TabsContent>
+
+                  <TabsContent value="priority" className="mt-0">
+                    <div className="space-y-2">
+                      {actionItems.filter(i => i.priority <= 2).slice(0, 8).map((item) => {
+                        if (item.load) {
+                          return (
+                            <div key={item.id} className="cursor-pointer" onClick={() => navigateToLoad(item.load!.sub_inventory_name)}>
+                              <LoadDisplay
+                                load={item.load}
+                                variant="compact"
+                                showProgress={true}
+                                showActions={false}
                               />
-                            )}
-                            {item.loadColor && (
-                              <span
-                                className="h-3 w-3 rounded-full flex-shrink-0 border border-border"
-                                style={{ backgroundColor: item.loadColor }}
-                              />
-                            )}
-                            {item.loadColor && (
-                              <span
-                                className="h-3 w-3 rounded-full flex-shrink-0 border border-border"
-                                style={{ backgroundColor: item.loadColor }}
-                              />
-                            )}
-                            {item.loadColor && (
-                              <span
-                                className="h-3 w-3 rounded-full flex-shrink-0 border border-border"
-                                style={{ backgroundColor: item.loadColor }}
-                              />
-                            )}
+                            </div>
+                          );
+                        }
+                        const Icon = item.icon;
+                        return (
+                          <button
+                            key={item.id}
+                            type="button"
+                            onClick={() => {
+                              if (item.type === 'session' && item.sessionId) {
+                                onViewChange?.('sessions');
+                              }
+                            }}
+                            className="flex items-center gap-3 rounded-lg border border-border/60 bg-card px-3 py-3 text-left transition hover:bg-accent w-full"
+                          >
+                            <Icon className={`h-5 w-5 flex-shrink-0 ${item.color}`} />
                             <div className="flex-1 min-w-0">
                               <div className="font-medium text-sm truncate">{item.title}</div>
                               {item.subtitle && (
@@ -1123,6 +1102,18 @@ export function DashboardView({ onViewChange, onMenuClick }: DashboardViewProps)
                   <TabsContent value="all" className="mt-0">
                     <div className="space-y-2">
                       {actionItems.map((item) => {
+                    if (item.load) {
+                      return (
+                        <div key={item.id} className="cursor-pointer" onClick={() => navigateToLoad(item.load!.sub_inventory_name)}>
+                          <LoadDisplay
+                            load={item.load}
+                            variant="compact"
+                            showProgress={true}
+                            showActions={false}
+                          />
+                        </div>
+                      );
+                    }
                     const Icon = item.icon;
                     return (
                       <button
@@ -1131,8 +1122,6 @@ export function DashboardView({ onViewChange, onMenuClick }: DashboardViewProps)
                         onClick={() => {
                           if (item.type === 'session' && item.sessionId) {
                             onViewChange?.('sessions');
-                          } else if (item.load) {
-                            navigateToLoad(item.load.sub_inventory_name);
                           }
                         }}
                         className="flex items-center gap-4 rounded-lg border border-border/60 bg-card px-4 py-3 text-left transition hover:bg-accent w-full"
@@ -1144,13 +1133,6 @@ export function DashboardView({ onViewChange, onMenuClick }: DashboardViewProps)
                             <div className="text-sm text-muted-foreground">{item.subtitle}</div>
                           )}
                         </div>
-                        {item.load?.primary_color && (
-                          <span
-                            className="h-6 w-6 rounded-md flex-shrink-0 shadow-sm border border-border"
-                            style={{ backgroundColor: item.load.primary_color }}
-                            aria-hidden="true"
-                          />
-                        )}
                         <ArrowRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                       </button>
                     );
@@ -1161,6 +1143,18 @@ export function DashboardView({ onViewChange, onMenuClick }: DashboardViewProps)
                   <TabsContent value="priority" className="mt-0">
                     <div className="space-y-2">
                       {actionItems.filter(i => i.priority <= 2).map((item) => {
+                        if (item.load) {
+                          return (
+                            <div key={item.id} className="cursor-pointer" onClick={() => navigateToLoad(item.load!.sub_inventory_name)}>
+                              <LoadDisplay
+                                load={item.load}
+                                variant="compact"
+                                showProgress={true}
+                                showActions={false}
+                              />
+                            </div>
+                          );
+                        }
                         const Icon = item.icon;
                         return (
                           <button
@@ -1169,8 +1163,6 @@ export function DashboardView({ onViewChange, onMenuClick }: DashboardViewProps)
                             onClick={() => {
                               if (item.type === 'session' && item.sessionId) {
                                 onViewChange?.('sessions');
-                              } else if (item.load) {
-                                navigateToLoad(item.load.sub_inventory_name);
                               }
                             }}
                             className="flex items-center gap-4 rounded-lg border border-border/60 bg-card px-4 py-3 text-left transition hover:bg-accent w-full"
@@ -1182,13 +1174,6 @@ export function DashboardView({ onViewChange, onMenuClick }: DashboardViewProps)
                                 <div className="text-sm text-muted-foreground">{item.subtitle}</div>
                               )}
                             </div>
-                            {item.load?.primary_color && (
-                              <span
-                                className="h-4 w-4 rounded-sm flex-shrink-0"
-                                style={{ backgroundColor: item.load.primary_color }}
-                                aria-hidden="true"
-                              />
-                            )}
                             <ArrowRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                           </button>
                         );
@@ -1199,35 +1184,19 @@ export function DashboardView({ onViewChange, onMenuClick }: DashboardViewProps)
                   <TabsContent value="prep" className="mt-0">
                     <div className="space-y-2">
                       {actionItems.filter(i => i.type === 'wrap' || i.type === 'tag').map((item) => {
-                        const Icon = item.icon;
-                        return (
-                          <button
-                            key={item.id}
-                            type="button"
-                            onClick={() => {
-                              if (item.load) {
-                                navigateToLoad(item.load.sub_inventory_name);
-                              }
-                            }}
-                            className="flex items-center gap-4 rounded-lg border border-border/60 bg-card px-4 py-3 text-left transition hover:bg-accent w-full"
-                          >
-                            <Icon className={`h-5 w-5 flex-shrink-0 ${item.color}`} />
-                            <div className="flex-1 min-w-0">
-                              <div className="font-semibold text-base">{item.title}</div>
-                              {item.subtitle && (
-                                <div className="text-sm text-muted-foreground">{item.subtitle}</div>
-                              )}
-                            </div>
-                            {item.load?.primary_color && (
-                              <span
-                                className="h-4 w-4 rounded-sm flex-shrink-0"
-                                style={{ backgroundColor: item.load.primary_color }}
-                                aria-hidden="true"
+                        if (item.load) {
+                          return (
+                            <div key={item.id} className="cursor-pointer" onClick={() => navigateToLoad(item.load!.sub_inventory_name)}>
+                              <LoadDisplay
+                                load={item.load}
+                                variant="compact"
+                                showProgress={true}
+                                showActions={false}
                               />
-                            )}
-                            <ArrowRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                          </button>
-                        );
+                            </div>
+                          );
+                        }
+                        return null;
                       })}
                     </div>
                   </TabsContent>
