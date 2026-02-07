@@ -1146,7 +1146,7 @@ export function DashboardView({ onViewChange, onMenuClick }: DashboardViewProps)
                         </div>
                         {item.load?.primary_color && (
                           <span
-                            className="h-4 w-4 rounded-sm flex-shrink-0"
+                            className="h-6 w-6 rounded-md flex-shrink-0 shadow-sm border border-border"
                             style={{ backgroundColor: item.load.primary_color }}
                             aria-hidden="true"
                           />

@@ -767,7 +767,7 @@ export function LoadDetailPanel({
             <div className="flex items-center gap-2">
               {primaryColor && (
                 <span
-                  className="size-3 rounded-sm border border-border"
+                  className="size-8 rounded-md flex-shrink-0 shadow-sm border border-border"
                   style={{ backgroundColor: primaryColor }}
                   aria-hidden="true"
                 />

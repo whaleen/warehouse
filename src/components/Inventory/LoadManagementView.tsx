@@ -374,9 +374,9 @@ export function LoadManagementView({ onMenuClick }: LoadManagementViewProps) {
                         role="button"
                       >
                         <div className="flex items-center gap-3">
-                          {/* Color dot */}
+                          {/* Color square - prominent visual identifier */}
                           <div
-                            className="h-3 w-3 rounded-full flex-shrink-0"
+                            className="h-10 w-10 rounded-md flex-shrink-0 shadow-sm border border-border"
                             style={{
                               backgroundColor: load.primary_color || getLoadColorByName(
                                 loads.map((entry) => entry.sub_inventory_name).sort((a, b) => a.localeCompare(b)),

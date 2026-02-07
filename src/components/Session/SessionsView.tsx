@@ -207,7 +207,7 @@ export function SessionsView({ onViewChange, onMenuClick }: SessionsViewProps) {
                   <Badge variant="secondary" className="flex items-center gap-1.5">
                     {color && (
                       <div
-                        className="h-2.5 w-2.5 rounded-sm flex-shrink-0"
+                        className="h-6 w-6 rounded-md flex-shrink-0 shadow-sm border border-border"
                         style={{ backgroundColor: color }}
                       />
                     )}

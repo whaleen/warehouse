@@ -21,6 +21,7 @@ const LoadManagementView = lazy(() => import("@/components/Inventory/LoadManagem
 const SessionsView = lazy(() => import("@/components/Session/SessionsView").then(m => ({ default: m.SessionsView })));
 const ProductEnrichment = lazy(() => import("./components/Products/ProductEnrichment").then(m => ({ default: m.ProductEnrichment })));
 const InventoryView = lazy(() => import("./components/Inventory/InventoryView").then(m => ({ default: m.InventoryView })));
+const InventoryVisualGuide = lazy(() => import("./components/InventoryGuide/InventoryVisualGuide").then(m => ({ default: m.InventoryVisualGuide })));
 const PartsView = lazy(() => import("./components/Parts/PartsView").then(m => ({ default: m.PartsView })));
 const DashboardView = lazy(() => import("./components/Dashboard/DashboardView").then(m => ({ default: m.DashboardView })));
 const SettingsView = lazy(() => import("./components/Settings/SettingsView").then(m => ({ default: m.SettingsView })));
@@ -291,6 +292,9 @@ function App() {
                     {currentView === "inventory" && (
                       <InventoryView />
                     )}
+                    {currentView === "inventory-guide" && (
+                      <InventoryVisualGuide />
+                    )}
                     {currentView === "parts" && (
                       <PartsView />
                     )}
@@ -364,6 +368,9 @@ function App() {
                     )}
                     {currentView === "inventory" && (
                       <InventoryView />
+                    )}
+                    {currentView === "inventory-guide" && (
+                      <InventoryVisualGuide />
                     )}
                     {currentView === "parts" && (
                       <PartsView />

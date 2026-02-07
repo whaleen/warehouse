@@ -660,20 +660,20 @@ export function WarehouseMapNew({ locations }: WarehouseMapNewProps) {
             >
               <MarkerContent>
                 <div className="cursor-pointer">
-                  {location.inventory_type === 'FG' ? (
-                    <div className="size-5 rounded-sm border-2 border-white shadow-lg bg-sky-300 text-black flex items-center justify-center text-[9px] font-semibold tracking-tight hover:scale-110 transition-transform">
-                      FG
-                    </div>
-                  ) : location.inventory_type === 'STA' ? (
-                    <div
-                      className="size-4 rounded-sm border-2 border-white shadow-lg hover:scale-125 transition-transform"
-                      style={{ backgroundColor: location.load_color || '#94a3b8' }}
-                    />
-                  ) : (
+                  {/* ASIS loads - use vibrant load_color */}
+                  {location.inventory_type === 'ASIS' ? (
                     <div
                       className="size-4 rounded-full border-2 border-white shadow-lg hover:scale-125 transition-transform"
-                      style={{ backgroundColor: location.load_color || '#94a3b8' }}
+                      style={{ backgroundColor: location.load_color || '#ef4444' }}
                     />
+                  ) : /* Non-ASIS types - grayscale with label */ (
+                    <div className="size-5 rounded-sm border-2 border-white shadow-lg bg-gray-500 text-white flex items-center justify-center text-[9px] font-semibold tracking-tight hover:scale-110 transition-transform">
+                      {location.inventory_type === 'FG' ? 'FG' :
+                       location.inventory_type === 'STA' ? 'ST' :
+                       location.inventory_type === 'BackHaul' ? 'BH' :
+                       location.inventory_type === 'Inbound' ? 'IN' :
+                       location.inventory_type?.substring(0, 2) || '?'}
+                    </div>
                   )}
                 </div>
               </MarkerContent>

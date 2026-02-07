@@ -12,6 +12,7 @@ import {
   MapPin,
   Monitor,
   Package,
+  Palette,
   ScanBarcode,
   Settings2,
   TruckIcon,
@@ -99,6 +100,13 @@ const baseNavSections: NavSection[] = [
         view: "inventory",
         applyParams: clearPartsParams,
         isActive: (currentView) => currentView === "inventory",
+      },
+      {
+        label: "Visual Guide",
+        icon: Palette,
+        view: "inventory-guide",
+        applyParams: clearPartsParams,
+        isActive: (currentView) => currentView === "inventory-guide",
       },
       {
         label: "ASIS Loads",

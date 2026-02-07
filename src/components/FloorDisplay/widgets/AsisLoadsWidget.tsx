@@ -170,12 +170,10 @@ export function AsisLoadsWidget({ title = 'ASIS Loads', locationId, className, c
           {subLabel && <div className="text-sm text-muted-foreground truncate">{subLabel}</div>}
         </div>
         <div className="col-span-3 flex items-center gap-3 min-w-0">
-          <div className="h-8 w-8 rounded-sm border border-border bg-muted overflow-hidden">
-            <div
-              className="h-full w-full"
-              style={{ backgroundColor: load.primary_color ?? 'transparent' }}
-            />
-          </div>
+          <div
+            className="h-10 w-10 rounded-md flex-shrink-0 shadow-sm border border-border"
+            style={{ backgroundColor: load.primary_color || '#9CA3AF' }}
+          />
           <div className="min-w-0">
             <div className="text-xs uppercase tracking-wide text-muted-foreground">CSO</div>
             <div className="text-2xl font-semibold text-foreground tracking-widest">
