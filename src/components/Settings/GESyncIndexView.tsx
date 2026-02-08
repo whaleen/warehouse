@@ -16,6 +16,7 @@ export function GESyncIndexView({ onMenuClick }: GESyncIndexViewProps) {
   const geSyncUrl = (import.meta.env.VITE_GE_SYNC_URL as string | undefined) ?? "http://localhost:3001";
   const geSyncKeyConfigured = Boolean(import.meta.env.VITE_GE_SYNC_API_KEY);
   const { syncStatuses, settingsQuery } = useSyncHandler();
+  const settings = (settingsQuery.data?.settings ?? {}) as Record<string, string | null | undefined>;
 
   const navigateToDetail = (type: SyncType) => {
     const path = `/settings/gesync/${type}`;
@@ -24,8 +25,8 @@ export function GESyncIndexView({ onMenuClick }: GESyncIndexViewProps) {
   };
 
   const getLastSyncAt = (type: SyncType) => {
-    const timestampKey = `last_sync_${type}_at` as keyof typeof settingsQuery.data.settings;
-    return settingsQuery.data?.settings?.[timestampKey] as string | null | undefined;
+    const timestampKey = `last_sync_${type}_at`;
+    return settings[timestampKey];
   };
 
   return (

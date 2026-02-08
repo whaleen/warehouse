@@ -56,13 +56,15 @@ export function SyncStatusCard({ onViewChange }: SyncStatusCardProps) {
     return <AlertTriangle className="h-3.5 w-3.5 text-destructive" />;
   };
 
+  const settings = (settingsQuery.data?.settings ?? {}) as Record<string, string | null | undefined>;
+
   const getMostOutdated = () => {
     let oldestTime: number | null = null;
     let oldestType: SyncType | null = null;
 
     SYNC_DISPLAY_ORDER.forEach((type) => {
-      const timestampKey = `last_sync_${type}_at` as keyof typeof settingsQuery.data.settings;
-      const timestamp = settingsQuery.data?.settings?.[timestampKey] as string | null | undefined;
+      const timestampKey = `last_sync_${type}_at`;
+      const timestamp = settings[timestampKey];
 
       if (!timestamp) {
         oldestType = type;
@@ -82,8 +84,8 @@ export function SyncStatusCard({ onViewChange }: SyncStatusCardProps) {
 
   const mostOutdatedType = getMostOutdated();
   const hasOutdatedSyncs = SYNC_DISPLAY_ORDER.some((type) => {
-    const timestampKey = `last_sync_${type}_at` as keyof typeof settingsQuery.data.settings;
-    const timestamp = settingsQuery.data?.settings?.[timestampKey] as string | null | undefined;
+    const timestampKey = `last_sync_${type}_at`;
+    const timestamp = settings[timestampKey];
 
     if (!timestamp) return true;
 
@@ -130,8 +132,8 @@ export function SyncStatusCard({ onViewChange }: SyncStatusCardProps) {
           {/* Sync status list */}
           <div className="space-y-2">
             {SYNC_DISPLAY_ORDER.map((type) => {
-              const timestampKey = `last_sync_${type}_at` as keyof typeof settingsQuery.data.settings;
-              const timestamp = settingsQuery.data?.settings?.[timestampKey] as string | null | undefined;
+              const timestampKey = `last_sync_${type}_at`;
+              const timestamp = settings[timestampKey];
               const relativeTime = formatRelativeTime(timestamp);
               const isOutdated = type === mostOutdatedType;
 

@@ -32,9 +32,10 @@ export function LoadManagementView({ onMenuClick }: LoadManagementViewProps) {
 
   // USE ZUSTAND - no local state, no duplicate queries
   const { loads: loadsData, isLoading: loading } = useLoadData({ includeDelivered: showAway });
+  const loadsSource = loadsData ?? [];
 
   // Add counts from load_metadata (already on the records from Zustand)
-  const loads: LoadWithCount[] = loadsData.map(load => ({
+  const loads: LoadWithCount[] = loadsSource.map(load => ({
     ...load,
     item_count: load.items_total_count || 0,
     conflict_count: 0, // TODO: Add to load_metadata if needed

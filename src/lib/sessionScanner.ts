@@ -8,7 +8,7 @@ import type { InventoryItem } from '@/types/inventory';
  * Deduplicate items that exist in both ASIS and STA
  * Priority rule: STA wins when both exist for the same serial
  */
-function deduplicateAsisStaItems(items: InventoryItem[]): InventoryItem[] {
+export function deduplicateAsisStaItems(items: InventoryItem[]): InventoryItem[] {
   // Group by serial
   const bySerial = new Map<string, InventoryItem[]>();
   for (const item of items) {

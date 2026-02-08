@@ -63,9 +63,10 @@ export function GESyncDetailView({ type, onMenuClick }: GESyncDetailViewProps) {
 
   const config = SYNC_CONFIG[type];
   const status = syncStatuses[type];
-  const timestampKey = `last_sync_${type}_at` as keyof typeof settingsQuery.data.settings;
-  const lastSyncAt = settingsQuery.data?.settings?.[timestampKey] as string | null | undefined;
-  const storedLog = !status.loading && syncLogsQuery.data?.[type];
+  const settings = (settingsQuery.data?.settings ?? {}) as Record<string, string | null | undefined>;
+  const timestampKey = `last_sync_${type}_at`;
+  const lastSyncAt = settings[timestampKey];
+  const storedLog = status.loading ? undefined : syncLogsQuery.data?.[type];
 
   return (
     <div className="min-h-screen bg-background">

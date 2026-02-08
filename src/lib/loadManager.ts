@@ -88,8 +88,12 @@ export async function updateLoadMetadata(
     sanity_check_requested?: boolean | null;
     sanity_check_requested_at?: string | null;
     sanity_check_requested_by?: string | null;
+    sanity_check_stage?: 'early' | 'final' | null;
+    sanity_check_parameters?: Record<string, unknown> | null;
     sanity_check_completed_at?: string | null;
     sanity_check_completed_by?: string | null;
+    sanity_last_checked_at?: string | null;
+    sanity_last_checked_by?: string | null;
     pickup_date?: string | null;
     pickup_tba?: boolean;
   }

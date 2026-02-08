@@ -5,7 +5,7 @@
  */
 
 import { useLoads } from '@/hooks/queries/useLoads';
-import type { InventoryType } from '@/types/inventory';
+import type { InventoryType, LoadMetadata } from '@/types/inventory';
 
 interface UseLoadDataOptions {
   inventoryType?: InventoryType;
@@ -16,7 +16,8 @@ export function useLoadData(options: UseLoadDataOptions = {}) {
   const { inventoryType, includeDelivered = false } = options;
 
   // Single source of truth: TanStack Query
-  const { data: serverLoads = [], isLoading, error } = useLoads(inventoryType, includeDelivered);
+  const { data, isLoading, error } = useLoads(inventoryType, includeDelivered);
+  const serverLoads = (data ?? []) as LoadMetadata[];
 
   // Create map for easy lookups
   const loadsMap = new Map(serverLoads.map(l => [l.sub_inventory_name, l]));

@@ -207,8 +207,10 @@ const AssistantMessage: FC = () => {
           components={{
             Text: MarkdownText,
             tools: {
-              find_item: ToolFindItem,
-              Fallback: ToolFallback
+              by_name: {
+                find_item: ToolFindItem,
+              },
+              Fallback: ToolFallback,
             },
           }}
         />

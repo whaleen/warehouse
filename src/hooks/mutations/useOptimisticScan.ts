@@ -49,6 +49,8 @@ export function useOptimisticScan() {
           ...old,
           {
             id: `temp-${Date.now()}`, // Temporary ID
+            position_x: 0,
+            position_y: 0,
             raw_lat: params.raw_lat,
             raw_lng: params.raw_lng,
             accuracy: params.accuracy,
@@ -56,10 +58,11 @@ export function useOptimisticScan() {
             sub_inventory: params.sub_inventory,
             inventory_type: null,
             scanned_at: new Date().toISOString(),
+            created_at: new Date().toISOString(),
             scanned_by: params.scanned_by || 'Unknown',
             product_id: params.product_id || null,
             inventory_item_id: params.inventory_item_id || null,
-            load_color: null,
+            load_color: '',
           } as ProductLocationForMap,
         ]
       );

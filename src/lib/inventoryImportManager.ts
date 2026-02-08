@@ -250,7 +250,8 @@ export async function importInventorySnapshot(params: {
 
   // Deduplicate by id to prevent "cannot affect row a second time" error
   const payloadById = new Map<string, typeof payload[0]>();
-  const payloadWithoutIdArray: (typeof payload[0] & { id?: never })[] = [];
+  type PayloadWithoutId = Omit<typeof payload[0], 'id'>;
+  const payloadWithoutIdArray: PayloadWithoutId[] = [];
 
   payload.forEach((item) => {
     if (item.id) {
@@ -264,8 +265,8 @@ export async function importInventorySnapshot(params: {
       }
       payloadById.set(item.id, item);
     } else {
-      const rest = { ...item } as typeof item & { id?: string };
-      delete rest.id;
+      const { id: _id, ...rest } = item;
+      void _id;
       payloadWithoutIdArray.push(rest);
     }
   });

@@ -71,8 +71,8 @@ export function LoadDisplay({
     : 0;
 
   // Sanity check status
-  const sanityRequested = load.sanity_check_requested && !load.sanity_completed_at;
-  const sanityCompleted = load.sanity_check_requested && !!load.sanity_completed_at;
+  const sanityRequested = load.sanity_check_requested && !load.sanity_check_completed_at;
+  const sanityCompleted = load.sanity_check_requested && !!load.sanity_check_completed_at;
 
   // Get icon for non-ASIS types
   const TypeIcon = INVENTORY_TYPE_ICONS[load.inventory_type as keyof typeof INVENTORY_TYPE_ICONS];
@@ -90,9 +90,9 @@ export function LoadDisplay({
           />
           <span className="font-medium text-sm">{displayName}</span>
         </div>
-        {load.ge_units && (
+        {typeof load.ge_units === 'number' && (
           <div className="text-xs text-muted-foreground">
-            {load.ge_units} {parseInt(load.ge_units) === 1 ? 'item' : 'items'}
+            {load.ge_units} {load.ge_units === 1 ? 'item' : 'items'}
           </div>
         )}
       </div>

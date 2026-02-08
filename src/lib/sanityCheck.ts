@@ -56,10 +56,10 @@ export function canRequestSanityCheck(load: LoadMetadata): boolean {
   if (load.status === 'delivered') return false;
 
   // Must have items
-  if (!load.ge_units || load.ge_units === '0') return false;
+  if (!load.ge_units || load.ge_units === 0) return false;
 
   // If already requested and not completed, can't request again
-  if (load.sanity_check_requested && !load.sanity_completed_at) {
+  if (load.sanity_check_requested && !load.sanity_check_completed_at) {
     return false;
   }
 

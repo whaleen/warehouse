@@ -153,7 +153,7 @@ export function DashboardView({ onViewChange, onMenuClick }: DashboardViewProps)
   const scanCountsQuery = useInventoryScanCounts();
   const fogOfWarQuery = useFogOfWar();
 
-  const [selectedChartType, setSelectedChartType] = useState<'overview' | 'LocalStock' | 'FG' | 'ASIS'>('overview');
+  const [selectedChartType, setSelectedChartType] = useState<'overview' | 'LocalStock' | 'FG' | 'ASIS' | 'STA'>('overview');
   const [selectedDrilldown, setSelectedDrilldown] = useState<string | null>(null);
   // const [isCompact, setIsCompact] = useState(false);
 

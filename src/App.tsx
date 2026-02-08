@@ -90,10 +90,6 @@ function App() {
   const [currentView, setCurrentView] = useState<AppView>(initialRoute.view);
   const [displayId, setDisplayId] = useState<string | null>(initialRoute.displayId ?? null);
   const [docPath, setDocPath] = useState<string | null>(initialRoute.docPath ?? null);
-  const [inventoryType, setInventoryType] = useState<string | null>(initialRoute.inventoryType ?? null);
-  const [partsTab, setPartsTab] = useState<string | null>(initialRoute.partsTab ?? null);
-  const [displaySettingsId, setDisplaySettingsId] = useState<string | null>(initialRoute.displaySettingsId ?? null);
-  const [resetToken, setResetToken] = useState<string | null>(initialRoute.resetToken ?? null);
 
   const navigate = useCallback((view: AppView, options?: { params?: URLSearchParams; sessionId?: string | null; displayId?: string | null; replace?: boolean }) => {
     const params = options?.params ?? new URLSearchParams(window.location.search);
@@ -132,10 +128,7 @@ function App() {
         setCurrentView(route.view);
         setDisplayId(route.displayId ?? null);
         setDocPath(route.docPath ?? null);
-        setInventoryType(route.inventoryType ?? null);
-        setPartsTab(route.partsTab ?? null);
-        setDisplaySettingsId(route.displaySettingsId ?? null);
-        setResetToken(route.resetToken ?? null);
+        // inventoryType/partsTab/displaySettingsId/resetToken intentionally ignored
       });
     };
     window.addEventListener('popstate', syncRoute);
@@ -204,7 +197,7 @@ function App() {
         <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme-marketing">
           <Suspense fallback={null}>
             <PageTransition>
-              <UpdatePasswordView resetToken={resetToken} />
+              <UpdatePasswordView />
             </PageTransition>
           </Suspense>
         </ThemeProvider>
@@ -286,13 +279,13 @@ function App() {
                       />
                     )}
                     {currentView === "inventory" && (
-                      <InventoryView inventoryType={inventoryType} />
+                      <InventoryView />
                     )}
                     {currentView === "inventory-guide" && (
                       <InventoryVisualGuide />
                     )}
                     {currentView === "parts" && (
-                      <PartsView partsTab={partsTab} />
+                      <PartsView />
                     )}
                     {currentView === "products" && (
                       <ProductEnrichment
@@ -336,7 +329,7 @@ function App() {
                       <SettingsView section="profile" />
                     )}
                     {currentView === "settings-displays" && (
-                      <SettingsView section="displays" displaySettingsId={displaySettingsId} />
+                      <SettingsView section="displays" />
                     )}
                     {currentView === "settings-gesync" && (
                       <GESyncView />
@@ -364,13 +357,13 @@ function App() {
                       />
                     )}
                     {currentView === "inventory" && (
-                      <InventoryView inventoryType={inventoryType} />
+                      <InventoryView />
                     )}
                     {currentView === "inventory-guide" && (
                       <InventoryVisualGuide />
                     )}
                     {currentView === "parts" && (
-                      <PartsView partsTab={partsTab} />
+                      <PartsView />
                     )}
                     {currentView === "products" && (
                       <ProductEnrichment
@@ -414,7 +407,7 @@ function App() {
                       <SettingsView section="profile" />
                     )}
                     {currentView === "settings-displays" && (
-                      <SettingsView section="displays" displaySettingsId={displaySettingsId} />
+                      <SettingsView section="displays" />
                     )}
                     {currentView === "settings-gesync" && (
                       <GESyncView />
