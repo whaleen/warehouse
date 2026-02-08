@@ -4,10 +4,9 @@ Node.js service for syncing data from GE DMS to Supabase. Uses Playwright for SS
 
 ## 📚 Documentation
 
-**→ [SECRETS.md](./docs/SECRETS.md)** - **START HERE** for setup (local, deployed, exploration)
-- [EXPLORATION_GUIDE.md](./docs/EXPLORATION_GUIDE.md) - Explore GE DMS system
-- [GE_DMS_PAGES.md](./docs/GE_DMS_PAGES.md) - 30 documented GE DMS pages
-- [auth.md](./docs/auth.md) - Authentication details
+**→ [SECRETS.md](../../docs/ge-sync/SECRETS.md)** - **START HERE** for setup (local, deployed, exploration)
+- [EXPLORATION_GUIDE.md](../../docs/ge-sync/EXPLORATION_GUIDE.md) - Explore GE DMS system
+- [GE_DMS_PAGES.md](../../docs/ge-sync/GE_DMS_PAGES.md) - GE DMS page catalog
 
 ## Architecture
 
@@ -200,6 +199,36 @@ Response:
 }
 ```
 
+### `POST /sync/backhaul`
+Sync GE DMS Backhaul orders (open and optionally closed).
+
+Request:
+```json
+{
+  "locationId": "uuid-of-location",
+  "includeClosed": true,
+  "maxOrders": 0
+}
+```
+
+Response:
+```json
+{
+  "success": true,
+  "message": "Backhaul sync completed. Open: 0, Closed: 1, Lines: 80",
+  "stats": {
+    "totalGEItems": 1,
+    "newItems": 0,
+    "updatedItems": 0,
+    "changesLogged": 0
+  }
+}
+```
+
+Notes:
+- The service always syncs **open** backhauls (notComplete=Y).
+- Closed backhauls only sync once by default (unless `includeClosed: true`).
+
 Notes:
 - STA data is sourced from ERP master inventory export only (no load lists).
 - Tracks items staged for delivery or pickup.
@@ -245,15 +274,15 @@ The frontend reads the sync service URL at build time via Vite env vars.
 - **Local dev** (frontend .env):
   - `VITE_GE_SYNC_URL=http://localhost:3001`
   - `VITE_GE_SYNC_API_KEY=your_api_key`
-- **Production** (Netlify env vars):
-  - `VITE_GE_SYNC_URL=https://warehouse-production-02e6.up.railway.app`
-  - `VITE_GE_SYNC_API_KEY=<same API_KEY as Railway>`
+ - **Production** (Vercel env vars):
+   - `VITE_GE_SYNC_URL=<your-ge-sync-base-url>`
+   - `VITE_GE_SYNC_API_KEY=<same API_KEY as Railway>`
 
-Set these in Netlify's dashboard. If you change these values, you must rebuild the frontend so Vite can bake them in.
+ Set these in your frontend hosting environment. If you change these values, you must rebuild the frontend so Vite can bake them in.
 
 ## Environment Variables
 
-**See [SECRETS.md](./docs/SECRETS.md) for complete setup guide including:**
+**See [SECRETS.md](../../docs/ge-sync/SECRETS.md) for complete setup guide including:**
 - Local development setup
 - Railway deployment configuration
 - Exploration scripts setup
@@ -270,7 +299,7 @@ Quick reference:
 | `PORT` | No | Server port (default: 3001) |
 | `NODE_ENV` | No | Environment (development/production) |
 
-**IMPORTANT**: GE SSO credentials are stored in Supabase `location_configs` table, not environment variables.
+**IMPORTANT**: GE SSO credentials are stored in Supabase `settings` table, not environment variables.
 
 ## Database Requirements
 
@@ -287,3 +316,15 @@ The service expects these tables in Supabase:
 - Set `API_KEY` in production to prevent unauthorized sync requests
 - SSO credentials are stored in the `settings` table (should be encrypted)
 - Cookies are stored in memory and DB for session persistence
+
+## Audience Notes
+
+### For Developers
+- Use this as the authoritative endpoint and deployment reference for GE Sync.
+- Prefer `docs/ge-sync/` for GE DMS page details.
+
+### For Operators
+- Use Settings → GE Sync in the app for manual syncs; this doc is for IT ops.
+
+### For Agent
+- Use only for endpoint availability and service behavior, not UI workflows.

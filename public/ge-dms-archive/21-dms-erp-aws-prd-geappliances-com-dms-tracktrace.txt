@@ -1,0 +1,30 @@
+Track & Trace		Having trouble with screen display or response?	Welcome  515511228  AGENT	 | Help
+
+
+
+
+SEARCH CRITERIA
+CSO	Delivery ID	Tracking #	Customer Po	Phone	Zip Code	Delivery Date	Show only rows containing
+							
+Inv Org	Start Date
+for Search	Days to search	Order Type	EBS Account#	
+Not Delivered
+Or Cancelled
+	Search String for Address
+
+.....
+9SU
+		
+....
+....5
+....10
+....20
+....30
+....45
+....60
+....90
+	
+.....
+			
+     
+Please enter SEARCH CRITERIA and click the SEARCH button to get a list of orders .

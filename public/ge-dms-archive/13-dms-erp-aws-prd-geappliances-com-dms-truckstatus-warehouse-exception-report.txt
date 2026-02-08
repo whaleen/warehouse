@@ -1,0 +1,18 @@
+Truck - Warehouse Exception Report		Having trouble with screen display or response?	Welcome  515511228  AGENT	 | Help
+
+
+INV ORG:	
+9SU
+
+TRUCK NUMBER :	
+19SU
+CAPC04
+CAPC08
+GAT01
+GRAN07
+GRAN08
+GRAN11
+GRAN15
+RRTR01
+
+DELIVERY DATE :	

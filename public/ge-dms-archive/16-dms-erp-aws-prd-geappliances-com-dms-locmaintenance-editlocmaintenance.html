@@ -1,0 +1,1519 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd"><html><head>
+
+<script type="text/javascript">
+	history.forward();
+</script>
+<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<title>Location Contact Information</title>
+<link rel="stylesheet" type="text/css" href="/dms/resources/style/style.css">
+<link rel="stylesheet" type="text/css" href="/dms/resources/style/Dms.css">
+<link rel="stylesheet" type="text/css" href="/dms/resources/style/CalendarControl.css">
+<link rel="stylesheet" href="/dms/resources/style/jquery-ui.css">
+<script src="/dms/resources/js/jquery-1.10.2.js" type="text/javascript"></script>
+<script src="/dms/resources/js/jquery-ui.js" type="text/javascript"></script>
+<script src="/dms/resources/js/jqueryajaxcommon.js" language="javascript" type="text/javascript"></script>
+<script type="text/javascript" src="/dms/resources/js/CalendarControl.js"></script></head>
+<body onload="stripe('table_list');hidePleaseWait();" style=""><iframe id="CalendarControlIFrame" frameborder="0" scrolling="no"></iframe><div id="CalendarControl"></div>
+<script type="text/javascript" src="/dms/resources/js/FormTableSort.js"></script>
+<script type="text/javascript" src="/dms/resources/js/TableSearch.js"></script>
+<script type="text/javascript" src="/dms/resources/js/TableSelectAll.js"></script>
+<script type="text/javascript" src="/dms/resources/js/StripedTable.js"></script>
+<script type="text/javascript" src="/dms/resources/js/locMaintenance.js"></script>
+
+
+
+<style type="text/css">
+	#table_list_add {border: 1px solid #666666;}
+	#table_list_add thead tr th {
+    	font-size        : 9pt;
+        font-family      : Verdana, sans-serif;
+        text-align       : center;
+        color            : #FFFFFF;
+        background-color : #006699;
+        font-weight      : 800;
+	}
+	.ui-widget {
+			font-size: 12px;
+		}
+
+	#table_list_add tbody tr td {
+    	font-size        : 9pt;
+        font-family      : Verdana, sans-serif;
+        text-align       : left;
+        color            : black;
+        font-weight      : 600;
+	}
+</style>
+
+<script type="text/javascript">
+$(function() {
+$("#metroAreaId").autocomplete({
+    //source: "/dms/locmaintenance/getmetroarea",
+    source: function(request, response) {
+    	showPleaseWait();
+    	 $.ajax({
+             url: "/dms/locmaintenance/getmetroarea",
+             data: "term=" + request.term,
+             dataType: "json",
+             type: "Get",
+             contentType: "application/jsonp; charset=utf-8",
+             success: function(data) {
+            	 hidePleaseWait();
+                 response(data);
+                 
+             }
+    	 });
+    },
+    minLength: 2,
+    select: function( event, ui ) {
+     /*  console.log( ui.item ?
+        "Selected: " + ui.item.value + ui.item.id :
+        "Nothing selected, input was " + this.value ); */
+    }
+  });
+});
+function enableSave(index){
+    document.getElementById('save'+index).disabled=false;		
+}
+
+function formatPhone(rmPhoneNoRowNO){
+	var Phone=rmPhoneNoRowNO;
+	var strPhone=trim(Phone.value.replace(/[()-]/g, ''));
+	if(Phone.value.length == 10){ 
+		var returnStrPhone= "("+strPhone.slice(0, 3)+")"+strPhone.slice(3, 6)+"-"+strPhone.slice(6, 10);
+		return returnStrPhone;
+	}
+	return rmPhoneNoRowNO.value;
+}
+</script>
+
+
+	<!-- Header Begins -->
+
+	
+
+<script type="text/javascript">
+jQuery(document).ready(function($) {
+    window.history.pushState('forward', null, null); 
+    $(window).on('popstate', function() {
+       history.pushState(null, null, window.location.pathname);
+    }); 
+    
+});
+
+</script>
+
+<table class="messageHeader" border="0" align="center" width="100%">
+	<tbody><tr>
+		<td width="30%" style="color:#000000;"><b>Location Contact Information</b></td>
+		
+		<td align="center"></td>
+				<td align="center">
+			
+				
+					
+					
+						
+							
+						
+						
+					
+					<a href="/dms/messages/messagetitledetail?&amp;type=LOC_MAINT_HOME" target="_blank"><b><font style="text-decoration: underline" color="RED">Having trouble with screen display or response?   </font></b></a>
+				
+				
+		</td>
+		<td align="right" width="20%" style="color:#000000;">Welcome &nbsp;<b><font color="red" id="usr_login_id">515511228</font></b>
+       		
+       			
+       			
+       				&nbsp;<b>AGENT</b>
+       			
+       		
+		</td>
+		
+			
+			
+			
+			<td align="right" width="5%">&nbsp;<b>|&nbsp;<a target="_BLANK" href="/dms/faqadmin/faqsearch" style="color:blue;">Help</a></b>
+			
+			
+		
+	</td></tr>
+</tbody></table>
+<!-- Header Ends -->   
+
+	<form name="locMaintenance" method="post">
+	<input type="hidden" name="rowNo" id="rowNo">
+	<input type="hidden" name="vendorTotalRows" id="vendorTotalRows" value="7">
+	<input type="hidden" name="locDmsLoc" id="locDmsLoc" value="19SU">
+	<input type="hidden" name="locParentCmpny" id="locParentCmpny" value="BLUEJACKET ENTERPRISES INC">
+	<input type="hidden" name="locmetroArea" id="locmetroArea" value="SACRAMENTO">
+	<input type="hidden" name="locRegionManager" id="locRegionManager" value="211011378">
+	<input type="hidden" name="locfromTime" id="locfromTime" value="08:00">
+	<input type="hidden" name="loctoTime" id="loctoTime" value="17:00">
+	<input type="hidden" name="locisLocActive" id="locisLocActive" value="">
+	<input type="hidden" name="loctransitionType" id="loctransitionType" value="">
+	<input type="hidden" name="locservingADC" id="locservingADC" value="SAC">
+	<input type="hidden" name="locreplaces" id="locreplaces" value="">
+	<input type="hidden" name="locfirstShipDate" id="locfirstShipDate" value="10-03-2025">
+	<input type="hidden" name="locreplacedBy" id="locreplacedBy" value="">
+	<input type="hidden" name="loclastShipDate" id="loclastShipDate" value="01-01-2000">
+	<input type="hidden" name="locnotes" id="locnotes" value="">
+	<input type="hidden" name="agentType" id="agentType" value="COMBO - HD2.0">
+
+	
+		<table width="98%" align="center">
+			<tbody><tr></tr>
+			<tr>
+				<td>
+					<table id="table_header" width="99%" align="center" cellpadding="0" cellspacing="0" class="dataTable">
+					
+					<thead>
+							<tr>
+								<td colspan="4"> Location Contact Information</td>
+							</tr>
+					</thead>
+					<tbody>
+									<tr>
+										<td width="20%" align="left" style="text-align: right;"> Inventory Loc: </td>
+										<td width="20%" align="left" style="text-align: left;"> 
+										 <select name="dmsLoc" id="dmsLoc" style="width:70px" onchange="if (!window.__cfRLUnblockHandlers) return false; OnChangeInvOrgLocs('editLocMaintenance');">
+											 
+												<option value="19SU" selected="">9SU</option>					
+											
+									      </select>
+										</td>
+										<td rowspan="6" colspan="2">
+										<table id="table_header" width="99%" align="center" cellpadding="0" cellspacing="0" class="dataTable">
+											<tbody>
+													<tr>
+														<td width="15%" align="left" style="text-align: right;"> Agent Address:&nbsp;</td> 
+														<td width="39%" align="left" style="text-align: left;"> SDS-9SU BLUEJACKET LOGISTICS LLC</td>
+													</tr>
+													<tr>
+														<td width="15%">&nbsp;</td>
+														<td width="39%" align="left" style="text-align: left;"> BLUEJACKET LOGISTICS LLC</td>
+													</tr>
+													<tr>
+														<td width="15%">&nbsp;</td>
+														<td width="39%" align="left" style="text-align: left;">2660 INDUSTRIAL BLVD</td>
+													</tr>
+													<tr>
+														<td width="15%">&nbsp;</td>
+														<td width="39%" align="left" style="text-align: left;">WEST SACRAMENTO
+													       ,CA
+													       ,95691-3825
+														</td>
+													</tr>
+													<tr>
+														<td width="15%" align="left" style="text-align: right;"> Phone:&nbsp;</td> 
+														<td width="39%" align="left" style="text-align: left;"> 916-790-3333</td>
+													</tr>
+													<tr>
+														<td width="15%" align="left" style="text-align: right;"> Fax:&nbsp;</td> 
+														<td width="39%" align="left" style="text-align: left;"> </td>
+													</tr>
+													<tr>
+														<td width="15%" align="left" style="text-align: right;"> Email:&nbsp;</td> 
+														<td width="39%" align="left" style="text-align: left;"> 9susds@bluejacketlogistics.com</td>
+													</tr>
+												</tbody>
+											</table>								
+ 									</td>
+									</tr>
+									<tr>
+										<td width="20%" align="left" style="text-align: right;">
+										Agent Type : </td>
+										<td width="20%" align="left" style="text-align: left;" id="loc_main">COMBO - HD2.0 </td>
+									</tr>
+									<tr>
+										<td width="20%" align="left" style="text-align: right;">
+										Parent Company : </td>
+										<td width="20%" align="left" style="text-align: left;" id="loc_main">BLUEJACKET ENTERPRISES INC </td>
+									</tr>
+									<tr>
+										<td width="20%" align="left" style="text-align: right;"> Metro Area : </td>
+										<td width="20%" align="left" style="text-align: left;" id="loc_main">SACRAMENTO	</td>
+									</tr>
+									<tr>
+										<td>&nbsp;</td><td>&nbsp;</td>
+									</tr>
+									<tr>
+										<td width="20%" align="left" style="text-align: right;">Time Zone : </td>
+										<td width="20%" style="text-align: left;" id="loc_main">Pacific DLT</td>
+									</tr>
+									<tr>
+										<td width="20%" align="left" style="text-align: right;">Working Hours From : </td>
+										<td align="left" width="20%" style="text-align: left;" id="loc_main">08:00 </td>
+										<td width="15%" align="left" style="text-align: right;"><u>Warehouse Capacity Details:</u></td>
+										<td width="39%" align="left" style="text-align: left;"></td>										
+									</tr>
+									<tr>
+										<td width="20%" align="left" style="text-align: right;">To : </td>
+										<td align="left" width="20%" style="text-align: left;" id="loc_main"> 17:00 </td>
+										<td width="15%" align="left" style="text-align: right;">Warehouse Size (sq ft.)&nbsp;:</td>
+										<td width="39%" align="left" style="text-align: left;">  <input type="text" name="warehouseSizeSqFt" id="warehouseSizeSqFt" maxlength="10" value="62000">
+										</td>
+									</tr> 
+									<tr>
+										<td width="20%" colspan="3" align="left" style="text-align: right;"># of Dock Doors&nbsp;:
+										</td>
+										<td width="20%" align="left" style="text-align: left;"> <input type="text" name="warehouseDockDoorCnt" id="warehouseDockDoorCnt" maxlength="3" value="10">
+										
+										</td>
+									</tr>	
+									<tr>
+										<td width="20%" align="left" style="text-align: right;">Serving ADC  :</td>
+										<td align="left" width="20%" style="text-align: left;" id="loc_main">
+										SAC					
+										</td> 
+										<td width="15%" align="left" style="text-align: right;">~ Max Warehouse Capacity (unit qty)&nbsp;:
+											</td>
+											<td width="39%" align="left" style="text-align: left;"><input type="text" name="warehouseCapacityUnits" id="warehouseCapacityUnits" maxlength="10" value="5000">
+											</td>
+										
+										
+									</tr>
+									<tr>
+										<td width="20%" align="left" style="text-align: right;">First ADC Ship Date   :</td>
+										<td align="left" width="20%" style="text-align: left;" id="loc_main">2025-10-03 
+										</td> 
+										<td width="15%" align="left" style="text-align: right;">Allowable Inbounds Per Day&nbsp;:
+										</td>
+										<td width="39%" align="left" style="text-align: left;"> <input type="text" name="warehouseInboundPerDay" id="warehouseInboundPerDay" maxlength="3" value="2">
+											
+										</td>
+										
+									</tr>
+										
+									<tr>
+									<td width="20%" align="left" style="text-align: right;">Last ADC Ship Date :
+										</td>
+										<td width="20%" colspan="3" align="left" style="text-align: left;" id="loc_main">2000-01-01 	 
+										</td>
+									</tr>
+									<tr>
+										<td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+									</tr>
+									<tr>
+										<td width="20%" align="left" style="text-align: right;">Notes :
+										</td>
+										<td width="70%" align="left" rowspan="2" colspan="3" style="text-align: left;" id="loc_main">
+										</td>
+									</tr>
+									<tr>
+										<td width="20%" align="left" style="text-align: right;">(Limit 2000 Characters)
+										</td>
+									</tr>
+							</tbody>
+							<tfoot>
+								<tr>
+									<td colspan="4"><input type="button" id="dms_button" value="SAVE CHANGES" onclick="if (!window.__cfRLUnblockHandlers) return false; onClickUpdateWarehouseCapacityDetails();"> </td>
+								</tr>
+							</tfoot>
+					</table>
+				</td>
+			</tr>
+			<tr><td><div class="messageDisplay"></div> &nbsp;</td></tr>
+			
+			<tr><td><div class="messageDisplay">Please Note- Any PD02 and PD03 updates will still be required to be submitted via this email: <a href="mailto:SDSupdatesuserandlocation@geappliances.com">SDSupdatesuserandlocation@geappliances.com</a></div></td></tr>
+			<tr><td>&nbsp;</td></tr>
+			<tr>
+				<td>
+				<table id="table_list_add" border="1" align="left" cellpadding="1" cellspacing="0">
+					<thead>
+						<tr>
+							<th>PRIMARY</th>
+							<th>CONTACT TYPE</th>
+							<th>NAME*</th>
+							<th>SSO*</th>
+							<th>EMAIL*</th>
+							<th>PHONE #1*</th>
+							<th>PHONE #2</th>
+							<th>FAX #</th>
+							<th>LAST UPDATE</th>
+							<th>ACTION</th>
+						</tr>
+					</thead>
+					<tbody>
+					
+						<tr>
+							<td style="text-align: center;">
+							    <input type="hidden" name="primaryContact0" id="primaryContact0" value="Y">
+						       
+							          <img src="/dms/resources/images/Blacktick.jpg" border="0" height="10" width="10">
+						       &nbsp;
+						    </td>
+						    <td style="text-align: center;">
+							<input type="hidden" name="contactType0" id="contactType0" value="SITE MANAGER">
+							SITE MANAGER</td>			
+							<td style="text-align: center;">
+							<input type="hidden" name="contactId0" value="1"> 
+							<input size="35" type="text" name="contactName0" id="contactName0" maxlength="60" value="DAVE MARSHALL" style="text-transform:uppercase" onchange="if (!window.__cfRLUnblockHandlers) return false; enableSave(0)">
+							</td>
+							<td style="text-align: center;"><input size="10" type="text" name="contactSSO0" id="contactSSO0" value="515511181" maxlength="9" onkeyup="if (!window.__cfRLUnblockHandlers) return false; this.value=validateStopNumber(event)" onchange="if (!window.__cfRLUnblockHandlers) return false; enableSave(0)">&nbsp;</td>
+							<td style="text-align: center;"><input size="35" type="text" name="email0" id="email0" value="9su_locmgr@bluejacketlogistics.com" maxlength="100" onchange="if (!window.__cfRLUnblockHandlers) return false; enableSave(0)">&nbsp;</td>
+							<td style="text-align: center;"><input size="13" type="text" name="phone10" id="phone10" value="(916)790-3333" maxlength="10" onkeyup="if (!window.__cfRLUnblockHandlers) return false; this.value=validateStopNumber(event)" onfocus="if (!window.__cfRLUnblockHandlers) return false; this.value=onKeyValidation(phone10);" onchange="if (!window.__cfRLUnblockHandlers) return false; this.value=tableValidateForm(phone10);enableSave(0);" onblur="if (!window.__cfRLUnblockHandlers) return false; this.value=formatPhone(phone10);">				
+							</td>
+							<td style="text-align: center;"><input size="13" type="text" name="phone20" id="phone20" value="(707)770-8006" maxlength="10" onkeyup="if (!window.__cfRLUnblockHandlers) return false; this.value=validateStopNumber(event)" onfocus="if (!window.__cfRLUnblockHandlers) return false; this.value=onKeyValidation(phone20);" onchange="if (!window.__cfRLUnblockHandlers) return false; this.value=tableValidateForm(phone20);enableSave(0);" onblur="if (!window.__cfRLUnblockHandlers) return false; this.value=formatPhone(phone20);"></td>
+							<td style="text-align: center;"><input size="13" type="text" name="fax0" id="fax0" value="" maxlength="10" onkeyup="if (!window.__cfRLUnblockHandlers) return false; this.value=validateStopNumber(event)" onfocus="if (!window.__cfRLUnblockHandlers) return false; this.value=onKeyValidation(fax0);" onchange="if (!window.__cfRLUnblockHandlers) return false; this.value=tableValidateFax(fax0);enableSave(0);" onblur="if (!window.__cfRLUnblockHandlers) return false; this.value=formatPhone(fax0);"></td>
+							<td style="text-align: center;">09/26/2025</td>
+							
+							<td>
+							<input type="button" value="SAVE" disabled="disabled" id="save0" onclick="if (!window.__cfRLUnblockHandlers) return false; onClickbuttons('saveContact',0);">
+							
+							</td>
+						</tr>
+					
+						<tr>
+							<td style="text-align: center;">
+							    <input type="hidden" name="primaryContact1" id="primaryContact1" value="Y">
+						       
+							          <img src="/dms/resources/images/Blacktick.jpg" border="0" height="10" width="10">
+						       &nbsp;
+						    </td>
+						    <td style="text-align: center;">
+							<input type="hidden" name="contactType1" id="contactType1" value="WAREHOUSE MANAGER">
+							WAREHOUSE MANAGER</td>			
+							<td style="text-align: center;">
+							<input type="hidden" name="contactId1" value="2"> 
+							<input size="35" type="text" name="contactName1" id="contactName1" maxlength="60" value="JOSE FARRERA" style="text-transform:uppercase" onchange="if (!window.__cfRLUnblockHandlers) return false; enableSave(1)">
+							</td>
+							<td style="text-align: center;"><input size="10" type="text" name="contactSSO1" id="contactSSO1" value="515511228" maxlength="9" onkeyup="if (!window.__cfRLUnblockHandlers) return false; this.value=validateStopNumber(event)" onchange="if (!window.__cfRLUnblockHandlers) return false; enableSave(1)">&nbsp;</td>
+							<td style="text-align: center;"><input size="35" type="text" name="email1" id="email1" value="9su_whsupervisor@bluejacketlogistics.com" maxlength="100" onchange="if (!window.__cfRLUnblockHandlers) return false; enableSave(1)">&nbsp;</td>
+							<td style="text-align: center;"><input size="13" type="text" name="phone11" id="phone11" value="(916)790-3333" maxlength="10" onkeyup="if (!window.__cfRLUnblockHandlers) return false; this.value=validateStopNumber(event)" onfocus="if (!window.__cfRLUnblockHandlers) return false; this.value=onKeyValidation(phone11);" onchange="if (!window.__cfRLUnblockHandlers) return false; this.value=tableValidateForm(phone11);enableSave(1);" onblur="if (!window.__cfRLUnblockHandlers) return false; this.value=formatPhone(phone11);">				
+							</td>
+							<td style="text-align: center;"><input size="13" type="text" name="phone21" id="phone21" value="(916)508-3004" maxlength="10" onkeyup="if (!window.__cfRLUnblockHandlers) return false; this.value=validateStopNumber(event)" onfocus="if (!window.__cfRLUnblockHandlers) return false; this.value=onKeyValidation(phone21);" onchange="if (!window.__cfRLUnblockHandlers) return false; this.value=tableValidateForm(phone21);enableSave(1);" onblur="if (!window.__cfRLUnblockHandlers) return false; this.value=formatPhone(phone21);"></td>
+							<td style="text-align: center;"><input size="13" type="text" name="fax1" id="fax1" value="" maxlength="10" onkeyup="if (!window.__cfRLUnblockHandlers) return false; this.value=validateStopNumber(event)" onfocus="if (!window.__cfRLUnblockHandlers) return false; this.value=onKeyValidation(fax1);" onchange="if (!window.__cfRLUnblockHandlers) return false; this.value=tableValidateFax(fax1);enableSave(1);" onblur="if (!window.__cfRLUnblockHandlers) return false; this.value=formatPhone(fax1);"></td>
+							<td style="text-align: center;">09/26/2025</td>
+							
+							<td>
+							<input type="button" value="SAVE" disabled="disabled" id="save1" onclick="if (!window.__cfRLUnblockHandlers) return false; onClickbuttons('saveContact',1);">
+							
+							</td>
+						</tr>
+					
+						<tr>
+							<td style="text-align: center;">
+							    <input type="hidden" name="primaryContact2" id="primaryContact2" value="Y">
+						       
+							          <img src="/dms/resources/images/Blacktick.jpg" border="0" height="10" width="10">
+						       &nbsp;
+						    </td>
+						    <td style="text-align: center;">
+							<input type="hidden" name="contactType2" id="contactType2" value="CUSTOMER SERVICE">
+							CUSTOMER SERVICE</td>			
+							<td style="text-align: center;">
+							<input type="hidden" name="contactId2" value="3"> 
+							<input size="35" type="text" name="contactName2" id="contactName2" maxlength="60" value="MINDY CARRERA" style="text-transform:uppercase" onchange="if (!window.__cfRLUnblockHandlers) return false; enableSave(2)">
+							</td>
+							<td style="text-align: center;"><input size="10" type="text" name="contactSSO2" id="contactSSO2" value="515511235" maxlength="9" onkeyup="if (!window.__cfRLUnblockHandlers) return false; this.value=validateStopNumber(event)" onchange="if (!window.__cfRLUnblockHandlers) return false; enableSave(2)">&nbsp;</td>
+							<td style="text-align: center;"><input size="35" type="text" name="email2" id="email2" value="9su_officemgr@bluejacketlogistics.com" maxlength="100" onchange="if (!window.__cfRLUnblockHandlers) return false; enableSave(2)">&nbsp;</td>
+							<td style="text-align: center;"><input size="13" type="text" name="phone12" id="phone12" value="(916)790-3333" maxlength="10" onkeyup="if (!window.__cfRLUnblockHandlers) return false; this.value=validateStopNumber(event)" onfocus="if (!window.__cfRLUnblockHandlers) return false; this.value=onKeyValidation(phone12);" onchange="if (!window.__cfRLUnblockHandlers) return false; this.value=tableValidateForm(phone12);enableSave(2);" onblur="if (!window.__cfRLUnblockHandlers) return false; this.value=formatPhone(phone12);">				
+							</td>
+							<td style="text-align: center;"><input size="13" type="text" name="phone22" id="phone22" value="(916)417-8460" maxlength="10" onkeyup="if (!window.__cfRLUnblockHandlers) return false; this.value=validateStopNumber(event)" onfocus="if (!window.__cfRLUnblockHandlers) return false; this.value=onKeyValidation(phone22);" onchange="if (!window.__cfRLUnblockHandlers) return false; this.value=tableValidateForm(phone22);enableSave(2);" onblur="if (!window.__cfRLUnblockHandlers) return false; this.value=formatPhone(phone22);"></td>
+							<td style="text-align: center;"><input size="13" type="text" name="fax2" id="fax2" value="" maxlength="10" onkeyup="if (!window.__cfRLUnblockHandlers) return false; this.value=validateStopNumber(event)" onfocus="if (!window.__cfRLUnblockHandlers) return false; this.value=onKeyValidation(fax2);" onchange="if (!window.__cfRLUnblockHandlers) return false; this.value=tableValidateFax(fax2);enableSave(2);" onblur="if (!window.__cfRLUnblockHandlers) return false; this.value=formatPhone(fax2);"></td>
+							<td style="text-align: center;">09/26/2025</td>
+							
+							<td>
+							<input type="button" value="SAVE" disabled="disabled" id="save2" onclick="if (!window.__cfRLUnblockHandlers) return false; onClickbuttons('saveContact',2);">
+							
+							</td>
+						</tr>
+					
+						<tr>
+							<td style="text-align: center;">
+							    <input type="hidden" name="primaryContact3" id="primaryContact3" value="N">
+						       &nbsp;
+						    </td>
+						    <td style="text-align: center;">
+							<input type="hidden" name="contactType3" id="contactType3" value="CUSTOMER SERVICE">
+							CUSTOMER SERVICE</td>			
+							<td style="text-align: center;">
+							<input type="hidden" name="contactId3" value="21"> 
+							<input size="35" type="text" name="contactName3" id="contactName3" maxlength="60" value="CUSTOMER SERVICE" style="text-transform:uppercase" onchange="if (!window.__cfRLUnblockHandlers) return false; enableSave(3)">
+							</td>
+							<td style="text-align: center;"><input size="10" type="text" name="contactSSO3" id="contactSSO3" value="515511181" maxlength="9" onkeyup="if (!window.__cfRLUnblockHandlers) return false; this.value=validateStopNumber(event)" onchange="if (!window.__cfRLUnblockHandlers) return false; enableSave(3)">&nbsp;</td>
+							<td style="text-align: center;"><input size="35" type="text" name="email3" id="email3" value="9susds@bluejacketlogistics.com" maxlength="100" onchange="if (!window.__cfRLUnblockHandlers) return false; enableSave(3)">&nbsp;</td>
+							<td style="text-align: center;"><input size="13" type="text" name="phone13" id="phone13" value="(916)790-3333" maxlength="10" onkeyup="if (!window.__cfRLUnblockHandlers) return false; this.value=validateStopNumber(event)" onfocus="if (!window.__cfRLUnblockHandlers) return false; this.value=onKeyValidation(phone13);" onchange="if (!window.__cfRLUnblockHandlers) return false; this.value=tableValidateForm(phone13);enableSave(3);" onblur="if (!window.__cfRLUnblockHandlers) return false; this.value=formatPhone(phone13);">				
+							</td>
+							<td style="text-align: center;"><input size="13" type="text" name="phone23" id="phone23" value="" maxlength="10" onkeyup="if (!window.__cfRLUnblockHandlers) return false; this.value=validateStopNumber(event)" onfocus="if (!window.__cfRLUnblockHandlers) return false; this.value=onKeyValidation(phone23);" onchange="if (!window.__cfRLUnblockHandlers) return false; this.value=tableValidateForm(phone23);enableSave(3);" onblur="if (!window.__cfRLUnblockHandlers) return false; this.value=formatPhone(phone23);"></td>
+							<td style="text-align: center;"><input size="13" type="text" name="fax3" id="fax3" value="" maxlength="10" onkeyup="if (!window.__cfRLUnblockHandlers) return false; this.value=validateStopNumber(event)" onfocus="if (!window.__cfRLUnblockHandlers) return false; this.value=onKeyValidation(fax3);" onchange="if (!window.__cfRLUnblockHandlers) return false; this.value=tableValidateFax(fax3);enableSave(3);" onblur="if (!window.__cfRLUnblockHandlers) return false; this.value=formatPhone(fax3);"></td>
+							<td style="text-align: center;">10/20/2025</td>
+							
+							<td>
+							<input type="button" value="SAVE" disabled="disabled" id="save3" onclick="if (!window.__cfRLUnblockHandlers) return false; onClickbuttons('saveContact',3);">
+							<input type="button" value="DELETE" onclick="if (!window.__cfRLUnblockHandlers) return false; onClickbuttons('deleteContact',3);">
+							</td>
+						</tr>
+					
+						<tr>
+							<td style="text-align: center;">
+							    <input type="hidden" name="primaryContact4" id="primaryContact4" value="Y">
+						       
+							          <img src="/dms/resources/images/Blacktick.jpg" border="0" height="10" width="10">
+						       &nbsp;
+						    </td>
+						    <td style="text-align: center;">
+							<input type="hidden" name="contactType4" id="contactType4" value="BUILDER QUALITY MGR">
+							BUILDER QUALITY MGR</td>			
+							<td style="text-align: center;">
+							<input type="hidden" name="contactId4" value="4"> 
+							<input size="35" type="text" name="contactName4" id="contactName4" maxlength="60" value="DAVID MARSHALL" style="text-transform:uppercase" onchange="if (!window.__cfRLUnblockHandlers) return false; enableSave(4)">
+							</td>
+							<td style="text-align: center;"><input size="10" type="text" name="contactSSO4" id="contactSSO4" value="515551181" maxlength="9" onkeyup="if (!window.__cfRLUnblockHandlers) return false; this.value=validateStopNumber(event)" onchange="if (!window.__cfRLUnblockHandlers) return false; enableSave(4)">&nbsp;</td>
+							<td style="text-align: center;"><input size="35" type="text" name="email4" id="email4" value="9su_locmgr@bluejacketlogistics.com" maxlength="100" onchange="if (!window.__cfRLUnblockHandlers) return false; enableSave(4)">&nbsp;</td>
+							<td style="text-align: center;"><input size="13" type="text" name="phone14" id="phone14" value="(916)790-3333" maxlength="10" onkeyup="if (!window.__cfRLUnblockHandlers) return false; this.value=validateStopNumber(event)" onfocus="if (!window.__cfRLUnblockHandlers) return false; this.value=onKeyValidation(phone14);" onchange="if (!window.__cfRLUnblockHandlers) return false; this.value=tableValidateForm(phone14);enableSave(4);" onblur="if (!window.__cfRLUnblockHandlers) return false; this.value=formatPhone(phone14);">				
+							</td>
+							<td style="text-align: center;"><input size="13" type="text" name="phone24" id="phone24" value="(707)770-8006" maxlength="10" onkeyup="if (!window.__cfRLUnblockHandlers) return false; this.value=validateStopNumber(event)" onfocus="if (!window.__cfRLUnblockHandlers) return false; this.value=onKeyValidation(phone24);" onchange="if (!window.__cfRLUnblockHandlers) return false; this.value=tableValidateForm(phone24);enableSave(4);" onblur="if (!window.__cfRLUnblockHandlers) return false; this.value=formatPhone(phone24);"></td>
+							<td style="text-align: center;"><input size="13" type="text" name="fax4" id="fax4" value="" maxlength="10" onkeyup="if (!window.__cfRLUnblockHandlers) return false; this.value=validateStopNumber(event)" onfocus="if (!window.__cfRLUnblockHandlers) return false; this.value=onKeyValidation(fax4);" onchange="if (!window.__cfRLUnblockHandlers) return false; this.value=tableValidateFax(fax4);enableSave(4);" onblur="if (!window.__cfRLUnblockHandlers) return false; this.value=formatPhone(fax4);"></td>
+							<td style="text-align: center;">10/08/2025</td>
+							
+							<td>
+							<input type="button" value="SAVE" disabled="disabled" id="save4" onclick="if (!window.__cfRLUnblockHandlers) return false; onClickbuttons('saveContact',4);">
+							
+							</td>
+						</tr>
+					
+						<tr>
+							<td style="text-align: center;">
+							    <input type="hidden" name="primaryContact5" id="primaryContact5" value="Y">
+						       
+							          <img src="/dms/resources/images/Blacktick.jpg" border="0" height="10" width="10">
+						       &nbsp;
+						    </td>
+						    <td style="text-align: center;">
+							<input type="hidden" name="contactType5" id="contactType5" value="INVENTORY">
+							INVENTORY</td>			
+							<td style="text-align: center;">
+							<input type="hidden" name="contactId5" value="5"> 
+							<input size="35" type="text" name="contactName5" id="contactName5" maxlength="60" value="JOSE FARRERA" style="text-transform:uppercase" onchange="if (!window.__cfRLUnblockHandlers) return false; enableSave(5)">
+							</td>
+							<td style="text-align: center;"><input size="10" type="text" name="contactSSO5" id="contactSSO5" value="515511228" maxlength="9" onkeyup="if (!window.__cfRLUnblockHandlers) return false; this.value=validateStopNumber(event)" onchange="if (!window.__cfRLUnblockHandlers) return false; enableSave(5)">&nbsp;</td>
+							<td style="text-align: center;"><input size="35" type="text" name="email5" id="email5" value="9su_whsupervisor@bluejacketlogistics.com" maxlength="100" onchange="if (!window.__cfRLUnblockHandlers) return false; enableSave(5)">&nbsp;</td>
+							<td style="text-align: center;"><input size="13" type="text" name="phone15" id="phone15" value="(916)790-3333" maxlength="10" onkeyup="if (!window.__cfRLUnblockHandlers) return false; this.value=validateStopNumber(event)" onfocus="if (!window.__cfRLUnblockHandlers) return false; this.value=onKeyValidation(phone15);" onchange="if (!window.__cfRLUnblockHandlers) return false; this.value=tableValidateForm(phone15);enableSave(5);" onblur="if (!window.__cfRLUnblockHandlers) return false; this.value=formatPhone(phone15);">				
+							</td>
+							<td style="text-align: center;"><input size="13" type="text" name="phone25" id="phone25" value="(916)508-3004" maxlength="10" onkeyup="if (!window.__cfRLUnblockHandlers) return false; this.value=validateStopNumber(event)" onfocus="if (!window.__cfRLUnblockHandlers) return false; this.value=onKeyValidation(phone25);" onchange="if (!window.__cfRLUnblockHandlers) return false; this.value=tableValidateForm(phone25);enableSave(5);" onblur="if (!window.__cfRLUnblockHandlers) return false; this.value=formatPhone(phone25);"></td>
+							<td style="text-align: center;"><input size="13" type="text" name="fax5" id="fax5" value="" maxlength="10" onkeyup="if (!window.__cfRLUnblockHandlers) return false; this.value=validateStopNumber(event)" onfocus="if (!window.__cfRLUnblockHandlers) return false; this.value=onKeyValidation(fax5);" onchange="if (!window.__cfRLUnblockHandlers) return false; this.value=tableValidateFax(fax5);enableSave(5);" onblur="if (!window.__cfRLUnblockHandlers) return false; this.value=formatPhone(fax5);"></td>
+							<td style="text-align: center;">09/26/2025</td>
+							
+							<td>
+							<input type="button" value="SAVE" disabled="disabled" id="save5" onclick="if (!window.__cfRLUnblockHandlers) return false; onClickbuttons('saveContact',5);">
+							
+							</td>
+						</tr>
+					
+						<tr>
+							<td style="text-align: center;">
+							    <input type="hidden" name="primaryContact6" id="primaryContact6" value="N">
+						       &nbsp;
+						    </td>
+						    <td style="text-align: center;">
+							<input type="hidden" name="contactType6" id="contactType6" value="INVENTORY">
+							INVENTORY</td>			
+							<td style="text-align: center;">
+							<input type="hidden" name="contactId6" value="6"> 
+							<input size="35" type="text" name="contactName6" id="contactName6" maxlength="60" value="DAVE MARSHALL" style="text-transform:uppercase" onchange="if (!window.__cfRLUnblockHandlers) return false; enableSave(6)">
+							</td>
+							<td style="text-align: center;"><input size="10" type="text" name="contactSSO6" id="contactSSO6" value="515511181" maxlength="9" onkeyup="if (!window.__cfRLUnblockHandlers) return false; this.value=validateStopNumber(event)" onchange="if (!window.__cfRLUnblockHandlers) return false; enableSave(6)">&nbsp;</td>
+							<td style="text-align: center;"><input size="35" type="text" name="email6" id="email6" value="9susds@bluejacketlogistics.com" maxlength="100" onchange="if (!window.__cfRLUnblockHandlers) return false; enableSave(6)">&nbsp;</td>
+							<td style="text-align: center;"><input size="13" type="text" name="phone16" id="phone16" value="(916)790-3333" maxlength="10" onkeyup="if (!window.__cfRLUnblockHandlers) return false; this.value=validateStopNumber(event)" onfocus="if (!window.__cfRLUnblockHandlers) return false; this.value=onKeyValidation(phone16);" onchange="if (!window.__cfRLUnblockHandlers) return false; this.value=tableValidateForm(phone16);enableSave(6);" onblur="if (!window.__cfRLUnblockHandlers) return false; this.value=formatPhone(phone16);">				
+							</td>
+							<td style="text-align: center;"><input size="13" type="text" name="phone26" id="phone26" value="(916)790-3333" maxlength="10" onkeyup="if (!window.__cfRLUnblockHandlers) return false; this.value=validateStopNumber(event)" onfocus="if (!window.__cfRLUnblockHandlers) return false; this.value=onKeyValidation(phone26);" onchange="if (!window.__cfRLUnblockHandlers) return false; this.value=tableValidateForm(phone26);enableSave(6);" onblur="if (!window.__cfRLUnblockHandlers) return false; this.value=formatPhone(phone26);"></td>
+							<td style="text-align: center;"><input size="13" type="text" name="fax6" id="fax6" value="" maxlength="10" onkeyup="if (!window.__cfRLUnblockHandlers) return false; this.value=validateStopNumber(event)" onfocus="if (!window.__cfRLUnblockHandlers) return false; this.value=onKeyValidation(fax6);" onchange="if (!window.__cfRLUnblockHandlers) return false; this.value=tableValidateFax(fax6);enableSave(6);" onblur="if (!window.__cfRLUnblockHandlers) return false; this.value=formatPhone(fax6);"></td>
+							<td style="text-align: center;">10/20/2025</td>
+							
+							<td>
+							<input type="button" value="SAVE" disabled="disabled" id="save6" onclick="if (!window.__cfRLUnblockHandlers) return false; onClickbuttons('saveContact',6);">
+							<input type="button" value="DELETE" onclick="if (!window.__cfRLUnblockHandlers) return false; onClickbuttons('deleteContact',6);">
+							</td>
+						</tr>
+					
+						<tr>
+							<td style="text-align: center;">
+							    <input type="hidden" name="primaryContact7" id="primaryContact7" value="Y">
+						       
+							          <img src="/dms/resources/images/Blacktick.jpg" border="0" height="10" width="10">
+						       &nbsp;
+						    </td>
+						    <td style="text-align: center;">
+							<input type="hidden" name="contactType7" id="contactType7" value="WEEKEND/AFTER HOURS">
+							WEEKEND/AFTER HOURS</td>			
+							<td style="text-align: center;">
+							<input type="hidden" name="contactId7" value="7"> 
+							<input size="35" type="text" name="contactName7" id="contactName7" maxlength="60" value="DAVE MARSHALL" style="text-transform:uppercase" onchange="if (!window.__cfRLUnblockHandlers) return false; enableSave(7)">
+							</td>
+							<td style="text-align: center;"><input size="10" type="text" name="contactSSO7" id="contactSSO7" value="515511181" maxlength="9" onkeyup="if (!window.__cfRLUnblockHandlers) return false; this.value=validateStopNumber(event)" onchange="if (!window.__cfRLUnblockHandlers) return false; enableSave(7)">&nbsp;</td>
+							<td style="text-align: center;"><input size="35" type="text" name="email7" id="email7" value="9su_locmgr@bluejacketlogistics.com" maxlength="100" onchange="if (!window.__cfRLUnblockHandlers) return false; enableSave(7)">&nbsp;</td>
+							<td style="text-align: center;"><input size="13" type="text" name="phone17" id="phone17" value="(707)770-8006" maxlength="10" onkeyup="if (!window.__cfRLUnblockHandlers) return false; this.value=validateStopNumber(event)" onfocus="if (!window.__cfRLUnblockHandlers) return false; this.value=onKeyValidation(phone17);" onchange="if (!window.__cfRLUnblockHandlers) return false; this.value=tableValidateForm(phone17);enableSave(7);" onblur="if (!window.__cfRLUnblockHandlers) return false; this.value=formatPhone(phone17);">				
+							</td>
+							<td style="text-align: center;"><input size="13" type="text" name="phone27" id="phone27" value="" maxlength="10" onkeyup="if (!window.__cfRLUnblockHandlers) return false; this.value=validateStopNumber(event)" onfocus="if (!window.__cfRLUnblockHandlers) return false; this.value=onKeyValidation(phone27);" onchange="if (!window.__cfRLUnblockHandlers) return false; this.value=tableValidateForm(phone27);enableSave(7);" onblur="if (!window.__cfRLUnblockHandlers) return false; this.value=formatPhone(phone27);"></td>
+							<td style="text-align: center;"><input size="13" type="text" name="fax7" id="fax7" value="" maxlength="10" onkeyup="if (!window.__cfRLUnblockHandlers) return false; this.value=validateStopNumber(event)" onfocus="if (!window.__cfRLUnblockHandlers) return false; this.value=onKeyValidation(fax7);" onchange="if (!window.__cfRLUnblockHandlers) return false; this.value=tableValidateFax(fax7);enableSave(7);" onblur="if (!window.__cfRLUnblockHandlers) return false; this.value=formatPhone(fax7);"></td>
+							<td style="text-align: center;">09/22/2025</td>
+							
+							<td>
+							<input type="button" value="SAVE" disabled="disabled" id="save7" onclick="if (!window.__cfRLUnblockHandlers) return false; onClickbuttons('saveContact',7);">
+							
+							</td>
+						</tr>
+					
+						<tr>
+							<td style="text-align: center;">
+							    <input type="hidden" name="primaryContact8" id="primaryContact8" value="Y">
+						       
+							          <img src="/dms/resources/images/Blacktick.jpg" border="0" height="10" width="10">
+						       &nbsp;
+						    </td>
+						    <td style="text-align: center;">
+							<input type="hidden" name="contactType8" id="contactType8" value="DAMAGE">
+							DAMAGE</td>			
+							<td style="text-align: center;">
+							<input type="hidden" name="contactId8" value="8"> 
+							<input size="35" type="text" name="contactName8" id="contactName8" maxlength="60" value="DAVE MARSHALL" style="text-transform:uppercase" onchange="if (!window.__cfRLUnblockHandlers) return false; enableSave(8)">
+							</td>
+							<td style="text-align: center;"><input size="10" type="text" name="contactSSO8" id="contactSSO8" value="515511181" maxlength="9" onkeyup="if (!window.__cfRLUnblockHandlers) return false; this.value=validateStopNumber(event)" onchange="if (!window.__cfRLUnblockHandlers) return false; enableSave(8)">&nbsp;</td>
+							<td style="text-align: center;"><input size="35" type="text" name="email8" id="email8" value="9susds@bluejacketlogistics.com" maxlength="100" onchange="if (!window.__cfRLUnblockHandlers) return false; enableSave(8)">&nbsp;</td>
+							<td style="text-align: center;"><input size="13" type="text" name="phone18" id="phone18" value="(916)790-3333" maxlength="10" onkeyup="if (!window.__cfRLUnblockHandlers) return false; this.value=validateStopNumber(event)" onfocus="if (!window.__cfRLUnblockHandlers) return false; this.value=onKeyValidation(phone18);" onchange="if (!window.__cfRLUnblockHandlers) return false; this.value=tableValidateForm(phone18);enableSave(8);" onblur="if (!window.__cfRLUnblockHandlers) return false; this.value=formatPhone(phone18);">				
+							</td>
+							<td style="text-align: center;"><input size="13" type="text" name="phone28" id="phone28" value="(707)770-8006" maxlength="10" onkeyup="if (!window.__cfRLUnblockHandlers) return false; this.value=validateStopNumber(event)" onfocus="if (!window.__cfRLUnblockHandlers) return false; this.value=onKeyValidation(phone28);" onchange="if (!window.__cfRLUnblockHandlers) return false; this.value=tableValidateForm(phone28);enableSave(8);" onblur="if (!window.__cfRLUnblockHandlers) return false; this.value=formatPhone(phone28);"></td>
+							<td style="text-align: center;"><input size="13" type="text" name="fax8" id="fax8" value="" maxlength="10" onkeyup="if (!window.__cfRLUnblockHandlers) return false; this.value=validateStopNumber(event)" onfocus="if (!window.__cfRLUnblockHandlers) return false; this.value=onKeyValidation(fax8);" onchange="if (!window.__cfRLUnblockHandlers) return false; this.value=tableValidateFax(fax8);enableSave(8);" onblur="if (!window.__cfRLUnblockHandlers) return false; this.value=formatPhone(fax8);"></td>
+							<td style="text-align: center;">10/20/2025</td>
+							
+							<td>
+							<input type="button" value="SAVE" disabled="disabled" id="save8" onclick="if (!window.__cfRLUnblockHandlers) return false; onClickbuttons('saveContact',8);">
+							
+							</td>
+						</tr>
+					
+						<tr>
+							<td style="text-align: center;">
+							    <input type="hidden" name="primaryContact9" id="primaryContact9" value="Y">
+						       
+							          <img src="/dms/resources/images/Blacktick.jpg" border="0" height="10" width="10">
+						       &nbsp;
+						    </td>
+						    <td style="text-align: center;">
+							<input type="hidden" name="contactType9" id="contactType9" value="FREIGHT CLAIMS">
+							FREIGHT CLAIMS</td>			
+							<td style="text-align: center;">
+							<input type="hidden" name="contactId9" value="10"> 
+							<input size="35" type="text" name="contactName9" id="contactName9" maxlength="60" value="JOSE FARRERA" style="text-transform:uppercase" onchange="if (!window.__cfRLUnblockHandlers) return false; enableSave(9)">
+							</td>
+							<td style="text-align: center;"><input size="10" type="text" name="contactSSO9" id="contactSSO9" value="515511228" maxlength="9" onkeyup="if (!window.__cfRLUnblockHandlers) return false; this.value=validateStopNumber(event)" onchange="if (!window.__cfRLUnblockHandlers) return false; enableSave(9)">&nbsp;</td>
+							<td style="text-align: center;"><input size="35" type="text" name="email9" id="email9" value="9su_whsupervisor@bluejacketlogistics.com" maxlength="100" onchange="if (!window.__cfRLUnblockHandlers) return false; enableSave(9)">&nbsp;</td>
+							<td style="text-align: center;"><input size="13" type="text" name="phone19" id="phone19" value="(916)790-3333" maxlength="10" onkeyup="if (!window.__cfRLUnblockHandlers) return false; this.value=validateStopNumber(event)" onfocus="if (!window.__cfRLUnblockHandlers) return false; this.value=onKeyValidation(phone19);" onchange="if (!window.__cfRLUnblockHandlers) return false; this.value=tableValidateForm(phone19);enableSave(9);" onblur="if (!window.__cfRLUnblockHandlers) return false; this.value=formatPhone(phone19);">				
+							</td>
+							<td style="text-align: center;"><input size="13" type="text" name="phone29" id="phone29" value="(916)508-3004" maxlength="10" onkeyup="if (!window.__cfRLUnblockHandlers) return false; this.value=validateStopNumber(event)" onfocus="if (!window.__cfRLUnblockHandlers) return false; this.value=onKeyValidation(phone29);" onchange="if (!window.__cfRLUnblockHandlers) return false; this.value=tableValidateForm(phone29);enableSave(9);" onblur="if (!window.__cfRLUnblockHandlers) return false; this.value=formatPhone(phone29);"></td>
+							<td style="text-align: center;"><input size="13" type="text" name="fax9" id="fax9" value="" maxlength="10" onkeyup="if (!window.__cfRLUnblockHandlers) return false; this.value=validateStopNumber(event)" onfocus="if (!window.__cfRLUnblockHandlers) return false; this.value=onKeyValidation(fax9);" onchange="if (!window.__cfRLUnblockHandlers) return false; this.value=tableValidateFax(fax9);enableSave(9);" onblur="if (!window.__cfRLUnblockHandlers) return false; this.value=formatPhone(fax9);"></td>
+							<td style="text-align: center;">09/26/2025</td>
+							
+							<td>
+							<input type="button" value="SAVE" disabled="disabled" id="save9" onclick="if (!window.__cfRLUnblockHandlers) return false; onClickbuttons('saveContact',9);">
+							
+							</td>
+						</tr>
+					
+						<tr>
+							<td style="text-align: center;">
+							    <input type="hidden" name="primaryContact10" id="primaryContact10" value="N">
+						       &nbsp;
+						    </td>
+						    <td style="text-align: center;">
+							<input type="hidden" name="contactType10" id="contactType10" value="FREIGHT CLAIMS">
+							FREIGHT CLAIMS</td>			
+							<td style="text-align: center;">
+							<input type="hidden" name="contactId10" value="15"> 
+							<input size="35" type="text" name="contactName10" id="contactName10" maxlength="60" value="MINDY CARRERA" style="text-transform:uppercase" onchange="if (!window.__cfRLUnblockHandlers) return false; enableSave(10)">
+							</td>
+							<td style="text-align: center;"><input size="10" type="text" name="contactSSO10" id="contactSSO10" value="515511235" maxlength="9" onkeyup="if (!window.__cfRLUnblockHandlers) return false; this.value=validateStopNumber(event)" onchange="if (!window.__cfRLUnblockHandlers) return false; enableSave(10)">&nbsp;</td>
+							<td style="text-align: center;"><input size="35" type="text" name="email10" id="email10" value="9susds@bluejacketlogistics.com" maxlength="100" onchange="if (!window.__cfRLUnblockHandlers) return false; enableSave(10)">&nbsp;</td>
+							<td style="text-align: center;"><input size="13" type="text" name="phone110" id="phone110" value="(916)790-3333" maxlength="10" onkeyup="if (!window.__cfRLUnblockHandlers) return false; this.value=validateStopNumber(event)" onfocus="if (!window.__cfRLUnblockHandlers) return false; this.value=onKeyValidation(phone110);" onchange="if (!window.__cfRLUnblockHandlers) return false; this.value=tableValidateForm(phone110);enableSave(10);" onblur="if (!window.__cfRLUnblockHandlers) return false; this.value=formatPhone(phone110);">				
+							</td>
+							<td style="text-align: center;"><input size="13" type="text" name="phone210" id="phone210" value="(916)417-8460" maxlength="10" onkeyup="if (!window.__cfRLUnblockHandlers) return false; this.value=validateStopNumber(event)" onfocus="if (!window.__cfRLUnblockHandlers) return false; this.value=onKeyValidation(phone210);" onchange="if (!window.__cfRLUnblockHandlers) return false; this.value=tableValidateForm(phone210);enableSave(10);" onblur="if (!window.__cfRLUnblockHandlers) return false; this.value=formatPhone(phone210);"></td>
+							<td style="text-align: center;"><input size="13" type="text" name="fax10" id="fax10" value="" maxlength="10" onkeyup="if (!window.__cfRLUnblockHandlers) return false; this.value=validateStopNumber(event)" onfocus="if (!window.__cfRLUnblockHandlers) return false; this.value=onKeyValidation(fax10);" onchange="if (!window.__cfRLUnblockHandlers) return false; this.value=tableValidateFax(fax10);enableSave(10);" onblur="if (!window.__cfRLUnblockHandlers) return false; this.value=formatPhone(fax10);"></td>
+							<td style="text-align: center;">11/07/2025</td>
+							
+							<td>
+							<input type="button" value="SAVE" disabled="disabled" id="save10" onclick="if (!window.__cfRLUnblockHandlers) return false; onClickbuttons('saveContact',10);">
+							<input type="button" value="DELETE" onclick="if (!window.__cfRLUnblockHandlers) return false; onClickbuttons('deleteContact',10);">
+							</td>
+						</tr>
+					
+						<tr>
+							<td style="text-align: center;">
+							    <input type="hidden" name="primaryContact11" id="primaryContact11" value="N">
+						       &nbsp;
+						    </td>
+						    <td style="text-align: center;">
+							<input type="hidden" name="contactType11" id="contactType11" value="FREIGHT CLAIMS">
+							FREIGHT CLAIMS</td>			
+							<td style="text-align: center;">
+							<input type="hidden" name="contactId11" value="11"> 
+							<input size="35" type="text" name="contactName11" id="contactName11" maxlength="60" value="DAVE MARSHALL" style="text-transform:uppercase" onchange="if (!window.__cfRLUnblockHandlers) return false; enableSave(11)">
+							</td>
+							<td style="text-align: center;"><input size="10" type="text" name="contactSSO11" id="contactSSO11" value="515511181" maxlength="9" onkeyup="if (!window.__cfRLUnblockHandlers) return false; this.value=validateStopNumber(event)" onchange="if (!window.__cfRLUnblockHandlers) return false; enableSave(11)">&nbsp;</td>
+							<td style="text-align: center;"><input size="35" type="text" name="email11" id="email11" value="9su_locmgr@bluejacketlogistics.com" maxlength="100" onchange="if (!window.__cfRLUnblockHandlers) return false; enableSave(11)">&nbsp;</td>
+							<td style="text-align: center;"><input size="13" type="text" name="phone111" id="phone111" value="(916)790-3333" maxlength="10" onkeyup="if (!window.__cfRLUnblockHandlers) return false; this.value=validateStopNumber(event)" onfocus="if (!window.__cfRLUnblockHandlers) return false; this.value=onKeyValidation(phone111);" onchange="if (!window.__cfRLUnblockHandlers) return false; this.value=tableValidateForm(phone111);enableSave(11);" onblur="if (!window.__cfRLUnblockHandlers) return false; this.value=formatPhone(phone111);">				
+							</td>
+							<td style="text-align: center;"><input size="13" type="text" name="phone211" id="phone211" value="(707)770-8006" maxlength="10" onkeyup="if (!window.__cfRLUnblockHandlers) return false; this.value=validateStopNumber(event)" onfocus="if (!window.__cfRLUnblockHandlers) return false; this.value=onKeyValidation(phone211);" onchange="if (!window.__cfRLUnblockHandlers) return false; this.value=tableValidateForm(phone211);enableSave(11);" onblur="if (!window.__cfRLUnblockHandlers) return false; this.value=formatPhone(phone211);"></td>
+							<td style="text-align: center;"><input size="13" type="text" name="fax11" id="fax11" value="" maxlength="10" onkeyup="if (!window.__cfRLUnblockHandlers) return false; this.value=validateStopNumber(event)" onfocus="if (!window.__cfRLUnblockHandlers) return false; this.value=onKeyValidation(fax11);" onchange="if (!window.__cfRLUnblockHandlers) return false; this.value=tableValidateFax(fax11);enableSave(11);" onblur="if (!window.__cfRLUnblockHandlers) return false; this.value=formatPhone(fax11);"></td>
+							<td style="text-align: center;">09/26/2025</td>
+							
+							<td>
+							<input type="button" value="SAVE" disabled="disabled" id="save11" onclick="if (!window.__cfRLUnblockHandlers) return false; onClickbuttons('saveContact',11);">
+							<input type="button" value="DELETE" onclick="if (!window.__cfRLUnblockHandlers) return false; onClickbuttons('deleteContact',11);">
+							</td>
+						</tr>
+					
+						<tr>
+							<td style="text-align: center;">
+							    <input type="hidden" name="primaryContact12" id="primaryContact12" value="Y">
+						       
+							          <img src="/dms/resources/images/Blacktick.jpg" border="0" height="10" width="10">
+						       &nbsp;
+						    </td>
+						    <td style="text-align: center;">
+							<input type="hidden" name="contactType12" id="contactType12" value="BACKHAUL/AS IS">
+							BACKHAUL/AS IS</td>			
+							<td style="text-align: center;">
+							<input type="hidden" name="contactId12" value="12"> 
+							<input size="35" type="text" name="contactName12" id="contactName12" maxlength="60" value="JOSE FARRERA" style="text-transform:uppercase" onchange="if (!window.__cfRLUnblockHandlers) return false; enableSave(12)">
+							</td>
+							<td style="text-align: center;"><input size="10" type="text" name="contactSSO12" id="contactSSO12" value="515511228" maxlength="9" onkeyup="if (!window.__cfRLUnblockHandlers) return false; this.value=validateStopNumber(event)" onchange="if (!window.__cfRLUnblockHandlers) return false; enableSave(12)">&nbsp;</td>
+							<td style="text-align: center;"><input size="35" type="text" name="email12" id="email12" value="9su_whsupervisor@bluejacketlogistics.com" maxlength="100" onchange="if (!window.__cfRLUnblockHandlers) return false; enableSave(12)">&nbsp;</td>
+							<td style="text-align: center;"><input size="13" type="text" name="phone112" id="phone112" value="(916)790-3333" maxlength="10" onkeyup="if (!window.__cfRLUnblockHandlers) return false; this.value=validateStopNumber(event)" onfocus="if (!window.__cfRLUnblockHandlers) return false; this.value=onKeyValidation(phone112);" onchange="if (!window.__cfRLUnblockHandlers) return false; this.value=tableValidateForm(phone112);enableSave(12);" onblur="if (!window.__cfRLUnblockHandlers) return false; this.value=formatPhone(phone112);">				
+							</td>
+							<td style="text-align: center;"><input size="13" type="text" name="phone212" id="phone212" value="(916)508-3004" maxlength="10" onkeyup="if (!window.__cfRLUnblockHandlers) return false; this.value=validateStopNumber(event)" onfocus="if (!window.__cfRLUnblockHandlers) return false; this.value=onKeyValidation(phone212);" onchange="if (!window.__cfRLUnblockHandlers) return false; this.value=tableValidateForm(phone212);enableSave(12);" onblur="if (!window.__cfRLUnblockHandlers) return false; this.value=formatPhone(phone212);"></td>
+							<td style="text-align: center;"><input size="13" type="text" name="fax12" id="fax12" value="" maxlength="10" onkeyup="if (!window.__cfRLUnblockHandlers) return false; this.value=validateStopNumber(event)" onfocus="if (!window.__cfRLUnblockHandlers) return false; this.value=onKeyValidation(fax12);" onchange="if (!window.__cfRLUnblockHandlers) return false; this.value=tableValidateFax(fax12);enableSave(12);" onblur="if (!window.__cfRLUnblockHandlers) return false; this.value=formatPhone(fax12);"></td>
+							<td style="text-align: center;">09/26/2025</td>
+							
+							<td>
+							<input type="button" value="SAVE" disabled="disabled" id="save12" onclick="if (!window.__cfRLUnblockHandlers) return false; onClickbuttons('saveContact',12);">
+							
+							</td>
+						</tr>
+					
+						<tr>
+							<td style="text-align: center;">
+							    <input type="hidden" name="primaryContact13" id="primaryContact13" value="Y">
+						       
+							          <img src="/dms/resources/images/Blacktick.jpg" border="0" height="10" width="10">
+						       &nbsp;
+						    </td>
+						    <td style="text-align: center;">
+							<input type="hidden" name="contactType13" id="contactType13" value="MEET TRUCK">
+							MEET TRUCK</td>			
+							<td style="text-align: center;">
+							<input type="hidden" name="contactId13" value="13"> 
+							<input size="35" type="text" name="contactName13" id="contactName13" maxlength="60" value="DAVID MARSHALL" style="text-transform:uppercase" onchange="if (!window.__cfRLUnblockHandlers) return false; enableSave(13)">
+							</td>
+							<td style="text-align: center;"><input size="10" type="text" name="contactSSO13" id="contactSSO13" value="515551181" maxlength="9" onkeyup="if (!window.__cfRLUnblockHandlers) return false; this.value=validateStopNumber(event)" onchange="if (!window.__cfRLUnblockHandlers) return false; enableSave(13)">&nbsp;</td>
+							<td style="text-align: center;"><input size="35" type="text" name="email13" id="email13" value="9su_locmgr@bluejacketlogistics.com" maxlength="100" onchange="if (!window.__cfRLUnblockHandlers) return false; enableSave(13)">&nbsp;</td>
+							<td style="text-align: center;"><input size="13" type="text" name="phone113" id="phone113" value="(916)790-3333" maxlength="10" onkeyup="if (!window.__cfRLUnblockHandlers) return false; this.value=validateStopNumber(event)" onfocus="if (!window.__cfRLUnblockHandlers) return false; this.value=onKeyValidation(phone113);" onchange="if (!window.__cfRLUnblockHandlers) return false; this.value=tableValidateForm(phone113);enableSave(13);" onblur="if (!window.__cfRLUnblockHandlers) return false; this.value=formatPhone(phone113);">				
+							</td>
+							<td style="text-align: center;"><input size="13" type="text" name="phone213" id="phone213" value="(707)770-8006" maxlength="10" onkeyup="if (!window.__cfRLUnblockHandlers) return false; this.value=validateStopNumber(event)" onfocus="if (!window.__cfRLUnblockHandlers) return false; this.value=onKeyValidation(phone213);" onchange="if (!window.__cfRLUnblockHandlers) return false; this.value=tableValidateForm(phone213);enableSave(13);" onblur="if (!window.__cfRLUnblockHandlers) return false; this.value=formatPhone(phone213);"></td>
+							<td style="text-align: center;"><input size="13" type="text" name="fax13" id="fax13" value="" maxlength="10" onkeyup="if (!window.__cfRLUnblockHandlers) return false; this.value=validateStopNumber(event)" onfocus="if (!window.__cfRLUnblockHandlers) return false; this.value=onKeyValidation(fax13);" onchange="if (!window.__cfRLUnblockHandlers) return false; this.value=tableValidateFax(fax13);enableSave(13);" onblur="if (!window.__cfRLUnblockHandlers) return false; this.value=formatPhone(fax13);"></td>
+							<td style="text-align: center;">10/08/2025</td>
+							
+							<td>
+							<input type="button" value="SAVE" disabled="disabled" id="save13" onclick="if (!window.__cfRLUnblockHandlers) return false; onClickbuttons('saveContact',13);">
+							
+							</td>
+						</tr>
+					
+						<tr>
+							<td style="text-align: center;">
+							    <input type="hidden" name="primaryContact14" id="primaryContact14" value="Y">
+						       
+							          <img src="/dms/resources/images/Blacktick.jpg" border="0" height="10" width="10">
+						       &nbsp;
+						    </td>
+						    <td style="text-align: center;">
+							<input type="hidden" name="contactType14" id="contactType14" value="PROPERTY DAMAGE">
+							PROPERTY DAMAGE</td>			
+							<td style="text-align: center;">
+							<input type="hidden" name="contactId14" value="14"> 
+							<input size="35" type="text" name="contactName14" id="contactName14" maxlength="60" value="DAVE MARSHALL" style="text-transform:uppercase" onchange="if (!window.__cfRLUnblockHandlers) return false; enableSave(14)">
+							</td>
+							<td style="text-align: center;"><input size="10" type="text" name="contactSSO14" id="contactSSO14" value="515511181" maxlength="9" onkeyup="if (!window.__cfRLUnblockHandlers) return false; this.value=validateStopNumber(event)" onchange="if (!window.__cfRLUnblockHandlers) return false; enableSave(14)">&nbsp;</td>
+							<td style="text-align: center;"><input size="35" type="text" name="email14" id="email14" value="9su_locmgr@bluejacketlogistics.com" maxlength="100" onchange="if (!window.__cfRLUnblockHandlers) return false; enableSave(14)">&nbsp;</td>
+							<td style="text-align: center;"><input size="13" type="text" name="phone114" id="phone114" value="(916)790-3333" maxlength="10" onkeyup="if (!window.__cfRLUnblockHandlers) return false; this.value=validateStopNumber(event)" onfocus="if (!window.__cfRLUnblockHandlers) return false; this.value=onKeyValidation(phone114);" onchange="if (!window.__cfRLUnblockHandlers) return false; this.value=tableValidateForm(phone114);enableSave(14);" onblur="if (!window.__cfRLUnblockHandlers) return false; this.value=formatPhone(phone114);">				
+							</td>
+							<td style="text-align: center;"><input size="13" type="text" name="phone214" id="phone214" value="(707)770-8006" maxlength="10" onkeyup="if (!window.__cfRLUnblockHandlers) return false; this.value=validateStopNumber(event)" onfocus="if (!window.__cfRLUnblockHandlers) return false; this.value=onKeyValidation(phone214);" onchange="if (!window.__cfRLUnblockHandlers) return false; this.value=tableValidateForm(phone214);enableSave(14);" onblur="if (!window.__cfRLUnblockHandlers) return false; this.value=formatPhone(phone214);"></td>
+							<td style="text-align: center;"><input size="13" type="text" name="fax14" id="fax14" value="" maxlength="10" onkeyup="if (!window.__cfRLUnblockHandlers) return false; this.value=validateStopNumber(event)" onfocus="if (!window.__cfRLUnblockHandlers) return false; this.value=onKeyValidation(fax14);" onchange="if (!window.__cfRLUnblockHandlers) return false; this.value=tableValidateFax(fax14);enableSave(14);" onblur="if (!window.__cfRLUnblockHandlers) return false; this.value=formatPhone(fax14);"></td>
+							<td style="text-align: center;">09/26/2025</td>
+							
+							<td>
+							<input type="button" value="SAVE" disabled="disabled" id="save14" onclick="if (!window.__cfRLUnblockHandlers) return false; onClickbuttons('saveContact',14);">
+							
+							</td>
+						</tr>
+					
+						<tr>
+							<td style="text-align: center;">
+							    <input type="hidden" name="primaryContact15" id="primaryContact15" value="Y">
+						       
+							          <img src="/dms/resources/images/Blacktick.jpg" border="0" height="10" width="10">
+						       &nbsp;
+						    </td>
+						    <td style="text-align: center;">
+							<input type="hidden" name="contactType15" id="contactType15" value="INBOUND FREIGHT">
+							INBOUND FREIGHT</td>			
+							<td style="text-align: center;">
+							<input type="hidden" name="contactId15" value="16"> 
+							<input size="35" type="text" name="contactName15" id="contactName15" maxlength="60" value="JOSE FARRERA" style="text-transform:uppercase" onchange="if (!window.__cfRLUnblockHandlers) return false; enableSave(15)">
+							</td>
+							<td style="text-align: center;"><input size="10" type="text" name="contactSSO15" id="contactSSO15" value="515511228" maxlength="9" onkeyup="if (!window.__cfRLUnblockHandlers) return false; this.value=validateStopNumber(event)" onchange="if (!window.__cfRLUnblockHandlers) return false; enableSave(15)">&nbsp;</td>
+							<td style="text-align: center;"><input size="35" type="text" name="email15" id="email15" value="9su_whsupervisor@bluejacketlogistics.com" maxlength="100" onchange="if (!window.__cfRLUnblockHandlers) return false; enableSave(15)">&nbsp;</td>
+							<td style="text-align: center;"><input size="13" type="text" name="phone115" id="phone115" value="(916)790-3333" maxlength="10" onkeyup="if (!window.__cfRLUnblockHandlers) return false; this.value=validateStopNumber(event)" onfocus="if (!window.__cfRLUnblockHandlers) return false; this.value=onKeyValidation(phone115);" onchange="if (!window.__cfRLUnblockHandlers) return false; this.value=tableValidateForm(phone115);enableSave(15);" onblur="if (!window.__cfRLUnblockHandlers) return false; this.value=formatPhone(phone115);">				
+							</td>
+							<td style="text-align: center;"><input size="13" type="text" name="phone215" id="phone215" value="(916)508-3004" maxlength="10" onkeyup="if (!window.__cfRLUnblockHandlers) return false; this.value=validateStopNumber(event)" onfocus="if (!window.__cfRLUnblockHandlers) return false; this.value=onKeyValidation(phone215);" onchange="if (!window.__cfRLUnblockHandlers) return false; this.value=tableValidateForm(phone215);enableSave(15);" onblur="if (!window.__cfRLUnblockHandlers) return false; this.value=formatPhone(phone215);"></td>
+							<td style="text-align: center;"><input size="13" type="text" name="fax15" id="fax15" value="" maxlength="10" onkeyup="if (!window.__cfRLUnblockHandlers) return false; this.value=validateStopNumber(event)" onfocus="if (!window.__cfRLUnblockHandlers) return false; this.value=onKeyValidation(fax15);" onchange="if (!window.__cfRLUnblockHandlers) return false; this.value=tableValidateFax(fax15);enableSave(15);" onblur="if (!window.__cfRLUnblockHandlers) return false; this.value=formatPhone(fax15);"></td>
+							<td style="text-align: center;">09/26/2025</td>
+							
+							<td>
+							<input type="button" value="SAVE" disabled="disabled" id="save15" onclick="if (!window.__cfRLUnblockHandlers) return false; onClickbuttons('saveContact',15);">
+							
+							</td>
+						</tr>
+					
+						<tr>
+							<td style="text-align: center;">
+							    <input type="hidden" name="primaryContact16" id="primaryContact16" value="Y">
+						       
+							          <img src="/dms/resources/images/Blacktick.jpg" border="0" height="10" width="10">
+						       &nbsp;
+						    </td>
+						    <td style="text-align: center;">
+							<input type="hidden" name="contactType16" id="contactType16" value="FREIGHT CLM-INV ONLY">
+							FREIGHT CLM-INV ONLY</td>			
+							<td style="text-align: center;">
+							<input type="hidden" name="contactId16" value="17"> 
+							<input size="35" type="text" name="contactName16" id="contactName16" maxlength="60" value="JOSE FARRERA" style="text-transform:uppercase" onchange="if (!window.__cfRLUnblockHandlers) return false; enableSave(16)">
+							</td>
+							<td style="text-align: center;"><input size="10" type="text" name="contactSSO16" id="contactSSO16" value="515511228" maxlength="9" onkeyup="if (!window.__cfRLUnblockHandlers) return false; this.value=validateStopNumber(event)" onchange="if (!window.__cfRLUnblockHandlers) return false; enableSave(16)">&nbsp;</td>
+							<td style="text-align: center;"><input size="35" type="text" name="email16" id="email16" value="9su_whsupervisor@bluejacketlogistics.com" maxlength="100" onchange="if (!window.__cfRLUnblockHandlers) return false; enableSave(16)">&nbsp;</td>
+							<td style="text-align: center;"><input size="13" type="text" name="phone116" id="phone116" value="(916)790-3333" maxlength="10" onkeyup="if (!window.__cfRLUnblockHandlers) return false; this.value=validateStopNumber(event)" onfocus="if (!window.__cfRLUnblockHandlers) return false; this.value=onKeyValidation(phone116);" onchange="if (!window.__cfRLUnblockHandlers) return false; this.value=tableValidateForm(phone116);enableSave(16);" onblur="if (!window.__cfRLUnblockHandlers) return false; this.value=formatPhone(phone116);">				
+							</td>
+							<td style="text-align: center;"><input size="13" type="text" name="phone216" id="phone216" value="(916)508-3004" maxlength="10" onkeyup="if (!window.__cfRLUnblockHandlers) return false; this.value=validateStopNumber(event)" onfocus="if (!window.__cfRLUnblockHandlers) return false; this.value=onKeyValidation(phone216);" onchange="if (!window.__cfRLUnblockHandlers) return false; this.value=tableValidateForm(phone216);enableSave(16);" onblur="if (!window.__cfRLUnblockHandlers) return false; this.value=formatPhone(phone216);"></td>
+							<td style="text-align: center;"><input size="13" type="text" name="fax16" id="fax16" value="" maxlength="10" onkeyup="if (!window.__cfRLUnblockHandlers) return false; this.value=validateStopNumber(event)" onfocus="if (!window.__cfRLUnblockHandlers) return false; this.value=onKeyValidation(fax16);" onchange="if (!window.__cfRLUnblockHandlers) return false; this.value=tableValidateFax(fax16);enableSave(16);" onblur="if (!window.__cfRLUnblockHandlers) return false; this.value=formatPhone(fax16);"></td>
+							<td style="text-align: center;">09/26/2025</td>
+							
+							<td>
+							<input type="button" value="SAVE" disabled="disabled" id="save16" onclick="if (!window.__cfRLUnblockHandlers) return false; onClickbuttons('saveContact',16);">
+							
+							</td>
+						</tr>
+					
+						<tr>
+							<td style="text-align: center;">
+							    <input type="hidden" name="primaryContact17" id="primaryContact17" value="N">
+						       &nbsp;
+						    </td>
+						    <td style="text-align: center;">
+							<input type="hidden" name="contactType17" id="contactType17" value="FREIGHT CLM-INV ONLY">
+							FREIGHT CLM-INV ONLY</td>			
+							<td style="text-align: center;">
+							<input type="hidden" name="contactId17" value="18"> 
+							<input size="35" type="text" name="contactName17" id="contactName17" maxlength="60" value="DAVE MARSHALL" style="text-transform:uppercase" onchange="if (!window.__cfRLUnblockHandlers) return false; enableSave(17)">
+							</td>
+							<td style="text-align: center;"><input size="10" type="text" name="contactSSO17" id="contactSSO17" value="515511181" maxlength="9" onkeyup="if (!window.__cfRLUnblockHandlers) return false; this.value=validateStopNumber(event)" onchange="if (!window.__cfRLUnblockHandlers) return false; enableSave(17)">&nbsp;</td>
+							<td style="text-align: center;"><input size="35" type="text" name="email17" id="email17" value="9su_locmgr@bluejacketlogistics.com" maxlength="100" onchange="if (!window.__cfRLUnblockHandlers) return false; enableSave(17)">&nbsp;</td>
+							<td style="text-align: center;"><input size="13" type="text" name="phone117" id="phone117" value="(916)790-3333" maxlength="10" onkeyup="if (!window.__cfRLUnblockHandlers) return false; this.value=validateStopNumber(event)" onfocus="if (!window.__cfRLUnblockHandlers) return false; this.value=onKeyValidation(phone117);" onchange="if (!window.__cfRLUnblockHandlers) return false; this.value=tableValidateForm(phone117);enableSave(17);" onblur="if (!window.__cfRLUnblockHandlers) return false; this.value=formatPhone(phone117);">				
+							</td>
+							<td style="text-align: center;"><input size="13" type="text" name="phone217" id="phone217" value="(707)770-8006" maxlength="10" onkeyup="if (!window.__cfRLUnblockHandlers) return false; this.value=validateStopNumber(event)" onfocus="if (!window.__cfRLUnblockHandlers) return false; this.value=onKeyValidation(phone217);" onchange="if (!window.__cfRLUnblockHandlers) return false; this.value=tableValidateForm(phone217);enableSave(17);" onblur="if (!window.__cfRLUnblockHandlers) return false; this.value=formatPhone(phone217);"></td>
+							<td style="text-align: center;"><input size="13" type="text" name="fax17" id="fax17" value="" maxlength="10" onkeyup="if (!window.__cfRLUnblockHandlers) return false; this.value=validateStopNumber(event)" onfocus="if (!window.__cfRLUnblockHandlers) return false; this.value=onKeyValidation(fax17);" onchange="if (!window.__cfRLUnblockHandlers) return false; this.value=tableValidateFax(fax17);enableSave(17);" onblur="if (!window.__cfRLUnblockHandlers) return false; this.value=formatPhone(fax17);"></td>
+							<td style="text-align: center;">09/26/2025</td>
+							
+							<td>
+							<input type="button" value="SAVE" disabled="disabled" id="save17" onclick="if (!window.__cfRLUnblockHandlers) return false; onClickbuttons('saveContact',17);">
+							<input type="button" value="DELETE" onclick="if (!window.__cfRLUnblockHandlers) return false; onClickbuttons('deleteContact',17);">
+							</td>
+						</tr>
+					
+						<tr>
+							<td style="text-align: center;">
+							    <input type="hidden" name="primaryContact18" id="primaryContact18" value="Y">
+						       
+							          <img src="/dms/resources/images/Blacktick.jpg" border="0" height="10" width="10">
+						       &nbsp;
+						    </td>
+						    <td style="text-align: center;">
+							<input type="hidden" name="contactType18" id="contactType18" value="FINANCIAL CONTROLLER">
+							FINANCIAL CONTROLLER</td>			
+							<td style="text-align: center;">
+							<input type="hidden" name="contactId18" value="19"> 
+							<input size="35" type="text" name="contactName18" id="contactName18" maxlength="60" value="DAVE MARSHALL" style="text-transform:uppercase" onchange="if (!window.__cfRLUnblockHandlers) return false; enableSave(18)">
+							</td>
+							<td style="text-align: center;"><input size="10" type="text" name="contactSSO18" id="contactSSO18" value="515511181" maxlength="9" onkeyup="if (!window.__cfRLUnblockHandlers) return false; this.value=validateStopNumber(event)" onchange="if (!window.__cfRLUnblockHandlers) return false; enableSave(18)">&nbsp;</td>
+							<td style="text-align: center;"><input size="35" type="text" name="email18" id="email18" value="9su_locmgr@bluejacketlogistics.com" maxlength="100" onchange="if (!window.__cfRLUnblockHandlers) return false; enableSave(18)">&nbsp;</td>
+							<td style="text-align: center;"><input size="13" type="text" name="phone118" id="phone118" value="(707)770-8006" maxlength="10" onkeyup="if (!window.__cfRLUnblockHandlers) return false; this.value=validateStopNumber(event)" onfocus="if (!window.__cfRLUnblockHandlers) return false; this.value=onKeyValidation(phone118);" onchange="if (!window.__cfRLUnblockHandlers) return false; this.value=tableValidateForm(phone118);enableSave(18);" onblur="if (!window.__cfRLUnblockHandlers) return false; this.value=formatPhone(phone118);">				
+							</td>
+							<td style="text-align: center;"><input size="13" type="text" name="phone218" id="phone218" value="" maxlength="10" onkeyup="if (!window.__cfRLUnblockHandlers) return false; this.value=validateStopNumber(event)" onfocus="if (!window.__cfRLUnblockHandlers) return false; this.value=onKeyValidation(phone218);" onchange="if (!window.__cfRLUnblockHandlers) return false; this.value=tableValidateForm(phone218);enableSave(18);" onblur="if (!window.__cfRLUnblockHandlers) return false; this.value=formatPhone(phone218);"></td>
+							<td style="text-align: center;"><input size="13" type="text" name="fax18" id="fax18" value="" maxlength="10" onkeyup="if (!window.__cfRLUnblockHandlers) return false; this.value=validateStopNumber(event)" onfocus="if (!window.__cfRLUnblockHandlers) return false; this.value=onKeyValidation(fax18);" onchange="if (!window.__cfRLUnblockHandlers) return false; this.value=tableValidateFax(fax18);enableSave(18);" onblur="if (!window.__cfRLUnblockHandlers) return false; this.value=formatPhone(fax18);"></td>
+							<td style="text-align: center;">09/22/2025</td>
+							
+							<td>
+							<input type="button" value="SAVE" disabled="disabled" id="save18" onclick="if (!window.__cfRLUnblockHandlers) return false; onClickbuttons('saveContact',18);">
+							
+							</td>
+						</tr>
+					
+						<tr>
+							<td style="text-align: center;">
+							    <input type="hidden" name="primaryContact19" id="primaryContact19" value="Y">
+						       
+							          <img src="/dms/resources/images/Blacktick.jpg" border="0" height="10" width="10">
+						       &nbsp;
+						    </td>
+						    <td style="text-align: center;">
+							<input type="hidden" name="contactType19" id="contactType19" value="HOME DELIVERY">
+							HOME DELIVERY</td>			
+							<td style="text-align: center;">
+							<input type="hidden" name="contactId19" value="20"> 
+							<input size="35" type="text" name="contactName19" id="contactName19" maxlength="60" value="DAVE MARSHALL" style="text-transform:uppercase" onchange="if (!window.__cfRLUnblockHandlers) return false; enableSave(19)">
+							</td>
+							<td style="text-align: center;"><input size="10" type="text" name="contactSSO19" id="contactSSO19" value="515511181" maxlength="9" onkeyup="if (!window.__cfRLUnblockHandlers) return false; this.value=validateStopNumber(event)" onchange="if (!window.__cfRLUnblockHandlers) return false; enableSave(19)">&nbsp;</td>
+							<td style="text-align: center;"><input size="35" type="text" name="email19" id="email19" value="9susds@bluejacketlogistics.com" maxlength="100" onchange="if (!window.__cfRLUnblockHandlers) return false; enableSave(19)">&nbsp;</td>
+							<td style="text-align: center;"><input size="13" type="text" name="phone119" id="phone119" value="(916)790-3333" maxlength="10" onkeyup="if (!window.__cfRLUnblockHandlers) return false; this.value=validateStopNumber(event)" onfocus="if (!window.__cfRLUnblockHandlers) return false; this.value=onKeyValidation(phone119);" onchange="if (!window.__cfRLUnblockHandlers) return false; this.value=tableValidateForm(phone119);enableSave(19);" onblur="if (!window.__cfRLUnblockHandlers) return false; this.value=formatPhone(phone119);">				
+							</td>
+							<td style="text-align: center;"><input size="13" type="text" name="phone219" id="phone219" value="(707)770-8006" maxlength="10" onkeyup="if (!window.__cfRLUnblockHandlers) return false; this.value=validateStopNumber(event)" onfocus="if (!window.__cfRLUnblockHandlers) return false; this.value=onKeyValidation(phone219);" onchange="if (!window.__cfRLUnblockHandlers) return false; this.value=tableValidateForm(phone219);enableSave(19);" onblur="if (!window.__cfRLUnblockHandlers) return false; this.value=formatPhone(phone219);"></td>
+							<td style="text-align: center;"><input size="13" type="text" name="fax19" id="fax19" value="" maxlength="10" onkeyup="if (!window.__cfRLUnblockHandlers) return false; this.value=validateStopNumber(event)" onfocus="if (!window.__cfRLUnblockHandlers) return false; this.value=onKeyValidation(fax19);" onchange="if (!window.__cfRLUnblockHandlers) return false; this.value=tableValidateFax(fax19);enableSave(19);" onblur="if (!window.__cfRLUnblockHandlers) return false; this.value=formatPhone(fax19);"></td>
+							<td style="text-align: center;">11/07/2025</td>
+							
+							<td>
+							<input type="button" value="SAVE" disabled="disabled" id="save19" onclick="if (!window.__cfRLUnblockHandlers) return false; onClickbuttons('saveContact',19);">
+							
+							</td>
+						</tr>
+					
+					</tbody>
+				</table>
+				</td>
+			</tr><tr><td style="font-size:11px; color:black;" align="left">*Required fields for ALL contacts</td></tr>
+			
+			
+			<tr><td>&nbsp;</td></tr>
+		
+			<tr><td style="color:black;font-size: 10pt; font-family: Verdana, sans-serif; font-weight: 600;" align="left"><b>Additional Contacts:</b></td></tr>
+			<tr><td>&nbsp;</td></tr>
+			<tr>
+				<td>
+				<table id="table_list_add" border="1" align="left" cellpadding="1" cellspacing="0">
+					<thead>
+						<tr>
+						    <th>CONTACT TYPE</th>
+							<th>NAME*</th>
+							<th>SSO*</th>
+							<th>EMAIL*</th>
+							<th>PHONE #1*</th>
+							<th>PHONE #2</th>
+							<th>FAX #</th>
+							<th>ACTION</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr>
+							<td>
+								<select name="contactType" id="contactType">
+													
+											<option value="SITE MANAGER        ">SITE MANAGER        </option>					
+ 													
+											<option value="WAREHOUSE MANAGER   ">WAREHOUSE MANAGER   </option>					
+ 													
+											<option value="CUSTOMER SERVICE    ">CUSTOMER SERVICE    </option>					
+ 													
+											<option value="BUILDER QUALITY MGR ">BUILDER QUALITY MGR </option>					
+ 													
+											<option value="INVENTORY           ">INVENTORY           </option>					
+ 													
+											<option value="WEEKEND/AFTER HOURS ">WEEKEND/AFTER HOURS </option>					
+ 													
+											<option value="DAMAGE              ">DAMAGE              </option>					
+ 													
+											<option value="FREIGHT CLAIMS      ">FREIGHT CLAIMS      </option>					
+ 													
+											<option value="BACKHAUL/AS IS      ">BACKHAUL/AS IS      </option>					
+ 													
+											<option value="MEET TRUCK          ">MEET TRUCK          </option>					
+ 													
+											<option value="PROPERTY DAMAGE     ">PROPERTY DAMAGE     </option>					
+ 													
+											<option value="INBOUND FREIGHT     ">INBOUND FREIGHT     </option>					
+ 													
+											<option value="FREIGHT CLM-INV ONLY">FREIGHT CLM-INV ONLY</option>					
+ 													
+											<option value="FINANCIAL CONTROLLER">FINANCIAL CONTROLLER</option>					
+ 													
+											<option value="HOME DELIVERY       ">HOME DELIVERY       </option>					
+ 								
+ 								</select>
+							</td>
+							<td> <input size="35" type="text" name="contactName" id="contactName" maxlength="60" style="text-transform:uppercase"> </td>
+							<td><input size="10" type="text" name="contactSSO" id="contactSSO" maxlength="9" onkeyup="if (!window.__cfRLUnblockHandlers) return false; this.value=validateStopNumber(event)"> </td>
+							<td><input size="35" type="text" name="email" id="email" maxlength="100"> </td>
+							<td><input size="13" type="text" name="contactPhone1" id="contactPhone1" maxlength="10" onkeyup="if (!window.__cfRLUnblockHandlers) return false; this.value=validateStopNumber(event)" onfocus="if (!window.__cfRLUnblockHandlers) return false; this.value=onKeyValidation(contactPhone1);" onchange="if (!window.__cfRLUnblockHandlers) return false; this.value=tableValidateForm(contactPhone1);" onblur="if (!window.__cfRLUnblockHandlers) return false; this.value=formatPhone(contactPhone1);"> </td>
+							<td><input size="13" type="text" name="contactPhone2" id="contactPhone2" maxlength="10" onkeyup="if (!window.__cfRLUnblockHandlers) return false; this.value=validateStopNumber(event)" onfocus="if (!window.__cfRLUnblockHandlers) return false; this.value=onKeyValidation(contactPhone2);" onchange="if (!window.__cfRLUnblockHandlers) return false; this.value=tableValidateForm(contactPhone2);" onblur="if (!window.__cfRLUnblockHandlers) return false; this.value=formatPhone(contactPhone2);"> </td>
+							<td><input size="13" type="text" name="fax" id="fax" maxlength="10" onkeyup="if (!window.__cfRLUnblockHandlers) return false; this.value=validateStopNumber(event)" onfocus="if (!window.__cfRLUnblockHandlers) return false; this.value=onKeyValidation(fax);" onchange="if (!window.__cfRLUnblockHandlers) return false; this.value=tableValidateFax(fax);" onblur="if (!window.__cfRLUnblockHandlers) return false; this.value=formatPhone(fax);"> </td>
+							<td><input type="button" value="ADD" onclick="if (!window.__cfRLUnblockHandlers) return false; onClickSingelParambuttons('addContact');"> </td>
+						</tr>
+					</tbody>
+				</table>
+				</td>
+			</tr>
+			<tr><td>&nbsp;</td></tr>
+			<tr>
+				<td>
+				<table id="table_list_add" border="1" align="center" cellpadding="1" cellspacing="0">
+					<thead>
+						<tr>
+							<th>RM SSO</th>
+							<th>RM CODE</th>
+							<th>RM FIRST NAME</th>
+							<th>RM LAST NAME</th>
+							<th>RM PHONE NO</th>
+							<th>RM DIVISION</th>
+							<th>TM NAME</th>
+							<th>TM SSO</th>
+						</tr>
+					</thead>
+					<tbody>
+						
+							<tr>
+								<td style="text-align: center;">211011378 </td>
+								<td style="text-align: center;">BK</td>
+								<td>BRIAN</td>
+								<td>KUT</td>
+								<td style="text-align: center;">(502)909-4958</td>
+								<td style="text-align: center;">WESTERN        </td>
+								<td style="text-align: center;">220005482 </td>
+								<td style="text-align: center;">MARSHALL EDMONDSON  </td>
+							</tr>
+						
+					</tbody>
+				</table>
+				</td>
+			</tr>
+			<tr><td>&nbsp;</td></tr>
+			<tr>
+				<td>
+				<table id="table_list_add" border="1" align="center" cellpadding="1" cellspacing="0">
+					<thead>
+						<tr>
+							<th>VENDOR</th>
+							<th>THD <br>NEXTDAY</th>
+							<th>Orders<br>Cleared By</th>
+							<th>ETA</th>
+							<th style="width: 135px;">Ordered On</th>
+							<th>Monday</th>
+							<th>Tuesday</th>
+							<th>Wednesday</th>
+							<th>Thursday</th>
+							<th>Friday</th>
+							<th>Saturday</th>
+							<th>Sunday</th>
+						</tr>
+					</thead>
+					<tbody>
+					
+					<tr>
+					
+							<td rowspan="2"> <input type="hidden" name="vendorId0" id="vendorId0" value="O">
+							 BSH</td>
+							<td rowspan="2"><input type="hidden" name="locnextDay0" id="locnextDay0" value="N"> NO
+						
+							</td>
+							 <td rowspan="2"><input type="hidden" name="locstrOrderClearedByHour0" id="locstrOrderClearedByHour0" value="0">
+							 				 <input type="hidden" name="locstrOrderClearedByMin0" id="locstrOrderClearedByMin0" value="00">
+								
+								0:00
+								
+								
+	 						</td>
+							<td rowspan="2"><input type="hidden" name="locstrETAByHour0" id="locstrETAByHour0" value="0">
+											<input type="hidden" name="locstrETAByMin0" id="locstrETAByMin0" value="00">
+								0:00
+							</td>
+							
+							
+							<td>Shipped from ADC</td>
+							<td><input type="hidden" name="locorderMonShipFromADC0" id="locorderMonShipFromADC0" value="Wed">  
+							Wed
+							</td>
+							<td><input type="hidden" name="locorderTueShipFromADC0" id="locorderTueShipFromADC0" value="">
+							
+							</td>
+							<td><input type="hidden" name="locorderWedShipFromADC0" id="locorderWedShipFromADC0" value="Fri">
+							Fri
+							</td>
+							<td><input type="hidden" name="locorderThuShipFromADC0" id="locorderThuShipFromADC0" value="">
+							
+							</td>
+							<td><input type="hidden" name="locorderFriShipFromADC0" id="locorderFriShipFromADC0" value="Tue">
+							Tue
+							</td>
+							<td><input type="hidden" name="locorderSatShipFromADC0" id="locorderSatShipFromADC0" value="">
+							
+							</td>
+							<td><input type="hidden" name="locorderSunShipFromADC0" id="locorderSunShipFromADC0" value="">
+							
+							</td>
+						</tr>
+						<tr>
+							<td>Arrives at SDS</td>
+							<td><input type="hidden" name="locorderMonArriveSDS0" id="locorderMonArriveSDS0" value="Thu">
+							Thu
+							</td>
+							<td><input type="hidden" name="locorderTueArriveSDS0" id="locorderTueArriveSDS0" value="">
+							
+							</td>
+							<td><input type="hidden" name="locorderWedArriveSDS0" id="locorderWedArriveSDS0" value="Mon">
+							Mon
+							</td>
+							<td><input type="hidden" name="locorderThuArriveSDS0" id="locorderThuArriveSDS0" value="">
+							
+							</td>
+							<td><input type="hidden" name="locorderFriArriveSDS0" id="locorderFriArriveSDS0" value="Wed">
+							Wed
+							
+							</td>
+							<td><input type="hidden" name="locorderSatArriveSDS0" id="locorderSatArriveSDS0" value="">
+							
+							</td>
+							<td><input type="hidden" name="locorderSunArriveSDS0" id="locorderSunArriveSDS0" value="">
+							
+							
+							</td>
+						</tr>
+					
+					<tr>
+					
+							<td rowspan="2"> <input type="hidden" name="vendorId1" id="vendorId1" value="E">
+							 ELECTROLUX</td>
+							<td rowspan="2"><input type="hidden" name="locnextDay1" id="locnextDay1" value="N"> NO
+						
+							</td>
+							 <td rowspan="2"><input type="hidden" name="locstrOrderClearedByHour1" id="locstrOrderClearedByHour1" value="0">
+							 				 <input type="hidden" name="locstrOrderClearedByMin1" id="locstrOrderClearedByMin1" value="00">
+								
+								0:00
+								
+								
+	 						</td>
+							<td rowspan="2"><input type="hidden" name="locstrETAByHour1" id="locstrETAByHour1" value="0">
+											<input type="hidden" name="locstrETAByMin1" id="locstrETAByMin1" value="00">
+								0:00
+							</td>
+							
+							
+							<td>Shipped from ADC</td>
+							<td><input type="hidden" name="locorderMonShipFromADC1" id="locorderMonShipFromADC1" value="Mon">  
+							Mon
+							</td>
+							<td><input type="hidden" name="locorderTueShipFromADC1" id="locorderTueShipFromADC1" value="Tue">
+							Tue
+							</td>
+							<td><input type="hidden" name="locorderWedShipFromADC1" id="locorderWedShipFromADC1" value="Wed">
+							Wed
+							</td>
+							<td><input type="hidden" name="locorderThuShipFromADC1" id="locorderThuShipFromADC1" value="">
+							
+							</td>
+							<td><input type="hidden" name="locorderFriShipFromADC1" id="locorderFriShipFromADC1" value="">
+							
+							</td>
+							<td><input type="hidden" name="locorderSatShipFromADC1" id="locorderSatShipFromADC1" value="">
+							
+							</td>
+							<td><input type="hidden" name="locorderSunShipFromADC1" id="locorderSunShipFromADC1" value="">
+							
+							</td>
+						</tr>
+						<tr>
+							<td>Arrives at SDS</td>
+							<td><input type="hidden" name="locorderMonArriveSDS1" id="locorderMonArriveSDS1" value="Fri">
+							Fri
+							</td>
+							<td><input type="hidden" name="locorderTueArriveSDS1" id="locorderTueArriveSDS1" value="Fri">
+							Fri
+							</td>
+							<td><input type="hidden" name="locorderWedArriveSDS1" id="locorderWedArriveSDS1" value="Fri">
+							Fri
+							</td>
+							<td><input type="hidden" name="locorderThuArriveSDS1" id="locorderThuArriveSDS1" value="">
+							
+							</td>
+							<td><input type="hidden" name="locorderFriArriveSDS1" id="locorderFriArriveSDS1" value="">
+							
+							
+							</td>
+							<td><input type="hidden" name="locorderSatArriveSDS1" id="locorderSatArriveSDS1" value="">
+							
+							</td>
+							<td><input type="hidden" name="locorderSunArriveSDS1" id="locorderSunArriveSDS1" value="">
+							
+							
+							</td>
+						</tr>
+					
+					<tr>
+					
+							<td rowspan="2"> <input type="hidden" name="vendorId2" id="vendorId2" value="G">
+							 GEA</td>
+							<td rowspan="2"><input type="hidden" name="locnextDay2" id="locnextDay2" value="N"> NO
+						
+							</td>
+							 <td rowspan="2"><input type="hidden" name="locstrOrderClearedByHour2" id="locstrOrderClearedByHour2" value="0">
+							 				 <input type="hidden" name="locstrOrderClearedByMin2" id="locstrOrderClearedByMin2" value="00">
+								
+								0:00
+								
+								
+	 						</td>
+							<td rowspan="2"><input type="hidden" name="locstrETAByHour2" id="locstrETAByHour2" value="0">
+											<input type="hidden" name="locstrETAByMin2" id="locstrETAByMin2" value="00">
+								0:00
+							</td>
+							
+							
+							<td>Shipped from ADC</td>
+							<td><input type="hidden" name="locorderMonShipFromADC2" id="locorderMonShipFromADC2" value="Mon">  
+							Mon
+							</td>
+							<td><input type="hidden" name="locorderTueShipFromADC2" id="locorderTueShipFromADC2" value="Tue">
+							Tue
+							</td>
+							<td><input type="hidden" name="locorderWedShipFromADC2" id="locorderWedShipFromADC2" value="Wed">
+							Wed
+							</td>
+							<td><input type="hidden" name="locorderThuShipFromADC2" id="locorderThuShipFromADC2" value="Thu">
+							Thu
+							</td>
+							<td><input type="hidden" name="locorderFriShipFromADC2" id="locorderFriShipFromADC2" value="Fri">
+							Fri
+							</td>
+							<td><input type="hidden" name="locorderSatShipFromADC2" id="locorderSatShipFromADC2" value="">
+							
+							</td>
+							<td><input type="hidden" name="locorderSunShipFromADC2" id="locorderSunShipFromADC2" value="">
+							
+							</td>
+						</tr>
+						<tr>
+							<td>Arrives at SDS</td>
+							<td><input type="hidden" name="locorderMonArriveSDS2" id="locorderMonArriveSDS2" value="Tue">
+							Tue
+							</td>
+							<td><input type="hidden" name="locorderTueArriveSDS2" id="locorderTueArriveSDS2" value="Wed">
+							Wed
+							</td>
+							<td><input type="hidden" name="locorderWedArriveSDS2" id="locorderWedArriveSDS2" value="Thu">
+							Thu
+							</td>
+							<td><input type="hidden" name="locorderThuArriveSDS2" id="locorderThuArriveSDS2" value="Fri">
+							Fri
+							</td>
+							<td><input type="hidden" name="locorderFriArriveSDS2" id="locorderFriArriveSDS2" value="Mon">
+							Mon
+							
+							</td>
+							<td><input type="hidden" name="locorderSatArriveSDS2" id="locorderSatArriveSDS2" value="">
+							
+							</td>
+							<td><input type="hidden" name="locorderSunArriveSDS2" id="locorderSunArriveSDS2" value="">
+							
+							
+							</td>
+						</tr>
+					
+					<tr>
+					
+							<td rowspan="2"> <input type="hidden" name="vendorId3" id="vendorId3" value="L">
+							 LG</td>
+							<td rowspan="2"><input type="hidden" name="locnextDay3" id="locnextDay3" value="N"> NO
+						
+							</td>
+							 <td rowspan="2"><input type="hidden" name="locstrOrderClearedByHour3" id="locstrOrderClearedByHour3" value="0">
+							 				 <input type="hidden" name="locstrOrderClearedByMin3" id="locstrOrderClearedByMin3" value="00">
+								
+								0:00
+								
+								
+	 						</td>
+							<td rowspan="2"><input type="hidden" name="locstrETAByHour3" id="locstrETAByHour3" value="0">
+											<input type="hidden" name="locstrETAByMin3" id="locstrETAByMin3" value="00">
+								0:00
+							</td>
+							
+							
+							<td>Shipped from ADC</td>
+							<td><input type="hidden" name="locorderMonShipFromADC3" id="locorderMonShipFromADC3" value="">  
+							
+							</td>
+							<td><input type="hidden" name="locorderTueShipFromADC3" id="locorderTueShipFromADC3" value="">
+							
+							</td>
+							<td><input type="hidden" name="locorderWedShipFromADC3" id="locorderWedShipFromADC3" value="">
+							
+							</td>
+							<td><input type="hidden" name="locorderThuShipFromADC3" id="locorderThuShipFromADC3" value="">
+							
+							</td>
+							<td><input type="hidden" name="locorderFriShipFromADC3" id="locorderFriShipFromADC3" value="">
+							
+							</td>
+							<td><input type="hidden" name="locorderSatShipFromADC3" id="locorderSatShipFromADC3" value="">
+							
+							</td>
+							<td><input type="hidden" name="locorderSunShipFromADC3" id="locorderSunShipFromADC3" value="">
+							
+							</td>
+						</tr>
+						<tr>
+							<td>Arrives at SDS</td>
+							<td><input type="hidden" name="locorderMonArriveSDS3" id="locorderMonArriveSDS3" value="">
+							
+							</td>
+							<td><input type="hidden" name="locorderTueArriveSDS3" id="locorderTueArriveSDS3" value="">
+							
+							</td>
+							<td><input type="hidden" name="locorderWedArriveSDS3" id="locorderWedArriveSDS3" value="">
+							
+							</td>
+							<td><input type="hidden" name="locorderThuArriveSDS3" id="locorderThuArriveSDS3" value="">
+							
+							</td>
+							<td><input type="hidden" name="locorderFriArriveSDS3" id="locorderFriArriveSDS3" value="">
+							
+							
+							</td>
+							<td><input type="hidden" name="locorderSatArriveSDS3" id="locorderSatArriveSDS3" value="">
+							
+							</td>
+							<td><input type="hidden" name="locorderSunArriveSDS3" id="locorderSunArriveSDS3" value="">
+							
+							
+							</td>
+						</tr>
+					
+					<tr>
+					
+							<td rowspan="2"> <input type="hidden" name="vendorId4" id="vendorId4" value="M">
+							 MAYTAG</td>
+							<td rowspan="2"><input type="hidden" name="locnextDay4" id="locnextDay4" value="N"> NO
+						
+							</td>
+							 <td rowspan="2"><input type="hidden" name="locstrOrderClearedByHour4" id="locstrOrderClearedByHour4" value="0">
+							 				 <input type="hidden" name="locstrOrderClearedByMin4" id="locstrOrderClearedByMin4" value="00">
+								
+								0:00
+								
+								
+	 						</td>
+							<td rowspan="2"><input type="hidden" name="locstrETAByHour4" id="locstrETAByHour4" value="0">
+											<input type="hidden" name="locstrETAByMin4" id="locstrETAByMin4" value="00">
+								0:00
+							</td>
+							
+							
+							<td>Shipped from ADC</td>
+							<td><input type="hidden" name="locorderMonShipFromADC4" id="locorderMonShipFromADC4" value="">  
+							
+							</td>
+							<td><input type="hidden" name="locorderTueShipFromADC4" id="locorderTueShipFromADC4" value="">
+							
+							</td>
+							<td><input type="hidden" name="locorderWedShipFromADC4" id="locorderWedShipFromADC4" value="">
+							
+							</td>
+							<td><input type="hidden" name="locorderThuShipFromADC4" id="locorderThuShipFromADC4" value="">
+							
+							</td>
+							<td><input type="hidden" name="locorderFriShipFromADC4" id="locorderFriShipFromADC4" value="">
+							
+							</td>
+							<td><input type="hidden" name="locorderSatShipFromADC4" id="locorderSatShipFromADC4" value="">
+							
+							</td>
+							<td><input type="hidden" name="locorderSunShipFromADC4" id="locorderSunShipFromADC4" value="">
+							
+							</td>
+						</tr>
+						<tr>
+							<td>Arrives at SDS</td>
+							<td><input type="hidden" name="locorderMonArriveSDS4" id="locorderMonArriveSDS4" value="">
+							
+							</td>
+							<td><input type="hidden" name="locorderTueArriveSDS4" id="locorderTueArriveSDS4" value="">
+							
+							</td>
+							<td><input type="hidden" name="locorderWedArriveSDS4" id="locorderWedArriveSDS4" value="">
+							
+							</td>
+							<td><input type="hidden" name="locorderThuArriveSDS4" id="locorderThuArriveSDS4" value="">
+							
+							</td>
+							<td><input type="hidden" name="locorderFriArriveSDS4" id="locorderFriArriveSDS4" value="">
+							
+							
+							</td>
+							<td><input type="hidden" name="locorderSatArriveSDS4" id="locorderSatArriveSDS4" value="">
+							
+							</td>
+							<td><input type="hidden" name="locorderSunArriveSDS4" id="locorderSunArriveSDS4" value="">
+							
+							
+							</td>
+						</tr>
+					
+					<tr>
+					
+							<td rowspan="2"> <input type="hidden" name="vendorId5" id="vendorId5" value="U">
+							 SAMSUNG</td>
+							<td rowspan="2"><input type="hidden" name="locnextDay5" id="locnextDay5" value="N"> NO
+						
+							</td>
+							 <td rowspan="2"><input type="hidden" name="locstrOrderClearedByHour5" id="locstrOrderClearedByHour5" value="0">
+							 				 <input type="hidden" name="locstrOrderClearedByMin5" id="locstrOrderClearedByMin5" value="00">
+								
+								0:00
+								
+								
+	 						</td>
+							<td rowspan="2"><input type="hidden" name="locstrETAByHour5" id="locstrETAByHour5" value="0">
+											<input type="hidden" name="locstrETAByMin5" id="locstrETAByMin5" value="00">
+								0:00
+							</td>
+							
+							
+							<td>Shipped from ADC</td>
+							<td><input type="hidden" name="locorderMonShipFromADC5" id="locorderMonShipFromADC5" value="">  
+							
+							</td>
+							<td><input type="hidden" name="locorderTueShipFromADC5" id="locorderTueShipFromADC5" value="">
+							
+							</td>
+							<td><input type="hidden" name="locorderWedShipFromADC5" id="locorderWedShipFromADC5" value="">
+							
+							</td>
+							<td><input type="hidden" name="locorderThuShipFromADC5" id="locorderThuShipFromADC5" value="">
+							
+							</td>
+							<td><input type="hidden" name="locorderFriShipFromADC5" id="locorderFriShipFromADC5" value="">
+							
+							</td>
+							<td><input type="hidden" name="locorderSatShipFromADC5" id="locorderSatShipFromADC5" value="">
+							
+							</td>
+							<td><input type="hidden" name="locorderSunShipFromADC5" id="locorderSunShipFromADC5" value="">
+							
+							</td>
+						</tr>
+						<tr>
+							<td>Arrives at SDS</td>
+							<td><input type="hidden" name="locorderMonArriveSDS5" id="locorderMonArriveSDS5" value="">
+							
+							</td>
+							<td><input type="hidden" name="locorderTueArriveSDS5" id="locorderTueArriveSDS5" value="">
+							
+							</td>
+							<td><input type="hidden" name="locorderWedArriveSDS5" id="locorderWedArriveSDS5" value="">
+							
+							</td>
+							<td><input type="hidden" name="locorderThuArriveSDS5" id="locorderThuArriveSDS5" value="">
+							
+							</td>
+							<td><input type="hidden" name="locorderFriArriveSDS5" id="locorderFriArriveSDS5" value="">
+							
+							
+							</td>
+							<td><input type="hidden" name="locorderSatArriveSDS5" id="locorderSatArriveSDS5" value="">
+							
+							</td>
+							<td><input type="hidden" name="locorderSunArriveSDS5" id="locorderSunArriveSDS5" value="">
+							
+							
+							</td>
+						</tr>
+					
+					<tr>
+					
+							<td rowspan="2"> <input type="hidden" name="vendorId6" id="vendorId6" value="P">
+							 SHARP</td>
+							<td rowspan="2"><input type="hidden" name="locnextDay6" id="locnextDay6" value="N"> NO
+						
+							</td>
+							 <td rowspan="2"><input type="hidden" name="locstrOrderClearedByHour6" id="locstrOrderClearedByHour6" value="0">
+							 				 <input type="hidden" name="locstrOrderClearedByMin6" id="locstrOrderClearedByMin6" value="00">
+								
+								0:00
+								
+								
+	 						</td>
+							<td rowspan="2"><input type="hidden" name="locstrETAByHour6" id="locstrETAByHour6" value="0">
+											<input type="hidden" name="locstrETAByMin6" id="locstrETAByMin6" value="00">
+								0:00
+							</td>
+							
+							
+							<td>Shipped from ADC</td>
+							<td><input type="hidden" name="locorderMonShipFromADC6" id="locorderMonShipFromADC6" value="">  
+							
+							</td>
+							<td><input type="hidden" name="locorderTueShipFromADC6" id="locorderTueShipFromADC6" value="">
+							
+							</td>
+							<td><input type="hidden" name="locorderWedShipFromADC6" id="locorderWedShipFromADC6" value="">
+							
+							</td>
+							<td><input type="hidden" name="locorderThuShipFromADC6" id="locorderThuShipFromADC6" value="">
+							
+							</td>
+							<td><input type="hidden" name="locorderFriShipFromADC6" id="locorderFriShipFromADC6" value="">
+							
+							</td>
+							<td><input type="hidden" name="locorderSatShipFromADC6" id="locorderSatShipFromADC6" value="">
+							
+							</td>
+							<td><input type="hidden" name="locorderSunShipFromADC6" id="locorderSunShipFromADC6" value="">
+							
+							</td>
+						</tr>
+						<tr>
+							<td>Arrives at SDS</td>
+							<td><input type="hidden" name="locorderMonArriveSDS6" id="locorderMonArriveSDS6" value="">
+							
+							</td>
+							<td><input type="hidden" name="locorderTueArriveSDS6" id="locorderTueArriveSDS6" value="">
+							
+							</td>
+							<td><input type="hidden" name="locorderWedArriveSDS6" id="locorderWedArriveSDS6" value="">
+							
+							</td>
+							<td><input type="hidden" name="locorderThuArriveSDS6" id="locorderThuArriveSDS6" value="">
+							
+							</td>
+							<td><input type="hidden" name="locorderFriArriveSDS6" id="locorderFriArriveSDS6" value="">
+							
+							
+							</td>
+							<td><input type="hidden" name="locorderSatArriveSDS6" id="locorderSatArriveSDS6" value="">
+							
+							</td>
+							<td><input type="hidden" name="locorderSunArriveSDS6" id="locorderSunArriveSDS6" value="">
+							
+							
+							</td>
+						</tr>
+					
+					
+					</tbody>
+					
+				</table>
+				</td>
+			</tr>
+					
+		</tbody></table>
+	</form>
+
+</body></html>

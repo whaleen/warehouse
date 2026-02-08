@@ -1,0 +1,35 @@
+Anti-Tip Audit Report		Having trouble with screen display or response?	Welcome  515511228  AGENT	 | Help
+
+
+DATE : 	TRUCK: 
+ALL
+19SU
+CAPC04
+CAPC08
+GAT01
+GRAN07
+GRAN08
+GRAN11
+GRAN15
+RRTR01
+	Show only rows containing: 
+INV ORG: 
+9SU
+
+
+
+METRICS:
+
+	AT Installed %	AT Photos %
+YES	%	%
+NO - Removed from Kitchen	%	%
+NO - Sealed in Carton	%	%
+
+
+
+
+
+
+CSO/ORDER	TRACKING #	DELIVERY ID	TRUCK	DRIVER NAME	Product Type	Model	Serial	AT Flag	AT Installed?	AT Photos	POD
+
+Click HERE to export the report

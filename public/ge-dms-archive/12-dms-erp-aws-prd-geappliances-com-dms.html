@@ -1,0 +1,2839 @@
+<html><head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>GEA DELIVERS</title>
+
+<script src="/dms/resources/js/DmsFunction.js" type="text/javascript"></script>
+<link href="/dms/resources/style/Dms.css" rel="stylesheet" type="text/css">
+<link rel="stylesheet" href="/dms/resources/style/jquery-ui.css">
+<script src="/dms/resources/js/jquery-1.10.2.js" type="text/javascript"></script>
+<script src="/dms/resources/js/jquery-ui.js" type="text/javascript"></script>	
+<script src="/dms/resources/js/jqueryajaxcommon.js" type="text/javascript"></script>
+<script type="text/javascript" src="/dms/resources/js/TableSearch.js"></script>
+<script type="text/javascript" src="/dms/resources/js/TableSelectAll.js"></script>
+<script type="text/javascript" src="/dms/resources/js/FormTableSort.js"></script>
+<script type="text/javascript" src="/dms/resources/js/StripedTable.js"></script>
+<script type="text/javascript">
+	function postGotoTab(strRequest) {
+		document.getElementById("REQUEST").value = strRequest;
+		document.frmGeDelivers.action = "/dms/";
+		document.frmGeDelivers.method = "POST";
+		document.frmGeDelivers.setAttribute("target", "_self");
+		document.frmGeDelivers.submit();
+	}
+	
+	function goToWarehouseOpsTab(strUrl) {
+		document.frmGeDelivers.action = strUrl;
+		document.frmGeDelivers.method = "POST";
+		document.frmGeDelivers.setAttribute("target", "_self");
+		document.frmGeDelivers.submit();
+	}
+	
+	function goToDeliversLegacyTab(strUrl) {
+		document.frmGeDelivers.action = strUrl;
+		document.frmGeDelivers.method = "POST";
+		document.frmGeDelivers.setAttribute("target", "_self");
+		document.frmGeDelivers.submit();
+	}
+	
+	$(document).ready(function(){
+		var selectedValue=$("#geDeliversERP").attr("id");
+		$("#"+selectedValue).removeClass("menuitem");
+		$("#"+selectedValue).addClass("activemenu");
+
+		stripe('tactical_dashboard');
+	}); 
+	
+	function postGotoPage(pageUrl) {
+		document.frmGeDelivers.method = "POST";
+		document.frmGeDelivers.action = "/dms/" + pageUrl;
+		document.frmGeDelivers.setAttribute("target", "_blank");
+		document.frmGeDelivers.submit();
+	}	
+	
+	//Refresh Session  1sec - 1000
+	//72000000 - 2hr
+	//300000 - 5min
+	setInterval(function(){
+		//alert("load session");
+		// refreshSession();
+	}, 72000000);
+	
+	function refreshSession(){
+	var xmlhttp;
+	if (window.XMLHttpRequest){// code for IE7+, Firefox, Chrome, Opera, Safari
+	  xmlhttp=new XMLHttpRequest();
+	  }
+	else{// code for IE6, IE5
+	  xmlhttp=new ActiveXObject("Microsoft.XMLHTTP");
+	  }
+	xmlhttp.onreadystatechange=function(){
+	  if (xmlhttp.readyState==4 && xmlhttp.status==200){
+	    	// Reload Content
+	    }
+	  }
+	xmlhttp.open("GET","/dms",true);
+	xmlhttp.send(null);
+	}
+
+	function getGotoPage(pageUrl) {
+		document.frmGeDelivers.method = "GET";
+		document.frmGeDelivers.action = "/dms/" + pageUrl;
+		document.frmGeDelivers.setAttribute("target", "_blank");
+		document.frmGeDelivers.submit();
+	}	
+	
+	function openTacticalDBReport() {
+		if($("#startDate").val()==""){
+	    	var now = new Date();
+	    	var month = now.getMonth() + 1;
+	    	var year = now.getFullYear();
+	    	var date = now.getDate();
+	    	var formatedDate =  month + "-" + date + "-"+ year;
+	    	document.summaryReportFrm.startDate.value = formatedDate;
+	    }		
+		document.summaryReportFrm.action = "/dms/reportsummary/runreport";
+		document.summaryReportFrm.setAttribute("target", "_blank");
+		document.summaryReportFrm.method = "POST";
+		document.summaryReportFrm.submit();
+	}
+	
+	function openTacticalLink(url, row) {	
+		
+		var dmsLoc = $(row).attr('data-dmsloc');
+		var rmCode = $(row).attr('data-rmcode');
+		var territory = $(row).attr('data-rmcode');
+		
+    	var now = new Date();
+    	var month = now.getMonth() + 1;
+    	var year = now.getFullYear();
+    	var date = now.getDate();
+    	var formatedDate =  month + "-" + date + "-"+ year;   
+    	
+    	switch(url) {
+    	
+    		case "/dms/cancelreport/searchorderdetails?REQUEST=CANCELLATION_REPORT_NOTIFICATION":
+    			window.open("/dms/cancelreport/searchorderdetails?REQUEST=CANCELLATION_REPORT_NOTIFICATION&cbDmsLoc="+dmsLoc+"&filterDate="+formatedDate, '_blank');
+    		break;
+    		
+    		case "/dms/inbound":
+    			window.open("/dms/inbound?dmsLoc="+dmsLoc, '_blank');
+    		break;
+    		
+    		case "/dms/checkin":
+    			window.open("/dms/checkin?dmsLoc="+dmsLoc, '_blank');
+    		break;
+    		
+    		case "/dms/reportsummary?reportType=open_orders":
+    			window.open("/dms/reportsummary?reportType=open_orders&dmsLoc="+dmsLoc+"&regionManager="+rmCode, '_blank');
+    		break;
+    		
+    		case "/dms/reportsummary/locationreport":
+    			window.open("/dms/reportsummary/locationreport?reportType=tactical_dashboard_REVERSE_LOGISTICS&noOfDays=1&dmsLoc="+dmsLoc+"&startDate="+formatedDate, '_blank');
+    		break;
+    		
+    		case "/dms/reportsummary?reportType=open_orders":
+    			window.open("/dms/reportsummary?reportType=open_orders&dmsLoc="+dmsLoc+"&regionManager="+rmCode, '_blank');
+    		break;
+    		
+    		case "/dms/epod":
+    			window.open("/dms/epod", '_blank');
+    		break;
+    		
+    		case "/dms/agentcommunication/search":
+    			window.open("/dms/agentcommunication/search?noOfDays=1&dmsLoc="+dmsLoc+"&startDate="+formatedDate);
+    		break;
+    		
+    		default:
+    			window.open(url+"&noOfDays=1&dmsLoc="+dmsLoc+"&startDate="+formatedDate, '_blank');
+    		break;
+    	}
+		return false;
+	}
+	
+	var intervalId;
+	var totalReloadCount = 3;
+	
+	window.onload=function(){
+		if(localStorage.getItem("reloadCount")==null || parseInt(localStorage.getItem("reloadCount")) <= 3)
+			intervalId = setInterval(myInterval, 300000); // 5 mins
+	};
+	
+	function myInterval(){
+			var totalReloaded = localStorage.getItem("reloadCount");
+			if(totalReloaded == null){
+				localStorage.setItem("reloadCount",0);
+				totalReloaded = parseInt(localStorage.getItem("reloadCount"));
+			}
+			if(totalReloadCount > totalReloaded){
+				localStorage.setItem("reloadCount", parseInt(localStorage.getItem("reloadCount")) + 1);
+				window.location.reload();
+			} else {
+				clearInterval(intervalId);
+				localStorage.removeItem("reloadCount");
+			}
+	}
+</script>
+</head>
+
+<body style="">
+	<form name="frmGeDelivers">
+		<input type="hidden" name="REQUEST" id="REQUEST" value="GE_DELIVERS"> 
+		<input type="hidden" name="hDmsLoc" id="hDmsLoc" value="">
+		<input type="hidden" name="hUid" id="hUid" value="L765145">
+	
+		
+		
+		<!-- Header Begins -->
+
+
+	
+	
+
+<script type="text/javascript">
+jQuery(document).ready(function($) {
+    window.history.pushState('forward', null, null); 
+    $(window).on('popstate', function() {
+       history.pushState(null, null, window.location.pathname);
+    }); 
+    
+});
+
+</script>
+
+<table class="messageHeader" border="0" align="center" width="100%">
+	<tbody><tr>
+		<td width="30%" style="color:#000000;"><b>GEA DELIVERS - ERP</b></td>
+		
+		<td align="center"></td>
+				<td align="center">
+			
+				
+					
+					
+						
+							
+						
+						
+					
+					<a href="/dms/messages/messagetitledetail?&amp;type=GE_DELIVERS" target="_blank"><b><font style="text-decoration: underline" color="RED">Having trouble with screen display or response?   </font></b></a>
+				
+				
+		</td>
+		<td align="right" width="20%" style="color:#000000;">Welcome &nbsp;<b><font color="red" id="usr_login_id">515511228</font></b>
+       		
+       			
+       			
+       				&nbsp;<b>AGENT</b>
+       			
+       		
+		</td>
+		
+			
+			
+			
+			<td align="right" width="5%">&nbsp;<b>|&nbsp;<a target="_BLANK" href="/dms/faqadmin/faqsearch" style="color:blue;">Help</a></b>
+			
+			
+		
+	</td></tr>
+</tbody></table>
+<!-- Header Ends -->   
+
+		
+		
+			<br>
+			
+ 		
+ 			
+ 			
+ 				
+					
+				
+				   
+				
+				<table width="100%" cellpadding="0" cellspacing="0" align="center">
+					<tbody><tr valign="top">
+						
+						<td valign="top">					
+							<table id="ge_delivers" width="100%" align="center">
+								<thead>
+									<tr>
+										<td height="15">Daily Operations</td>
+									</tr>
+								</thead>
+								
+								
+									      
+       									       
+       										     
+       									     
+       									   
+       								
+       								
+									
+									
+										
+										
+									    
+       									 
+       									
+       									     <tbody>
+											 <tr style="height: 20">
+	       									    <td>
+	       									    	<a href="javascript:postGotoPage('cancelreport/searchorderdetails')" onmouseover="if (!window.__cfRLUnblockHandlers) return false; javascript:window.status='AutoCancel Cancel Notification';return 0">
+																<img alt="AutoCancel Cancel Notification" src="/dms/resources/images/information.jpg" border="0" height="10" width="10">Cancellations
+												    </a>
+											    </td> 
+											  </tr>
+											  </tbody>
+										
+									
+									
+								
+								
+								
+									      
+       									       
+       										     
+       									     
+       									   
+       								
+       								
+									
+									
+										
+										
+									    
+       									 
+       									
+       									     <tbody>
+											 <tr style="height: 20">
+	       									    <td>
+	       									    	<a href="javascript:postGotoPage('checkin')" onmouseover="if (!window.__cfRLUnblockHandlers) return false; javascript:window.status='Submit completed delivery information (Attempts, Completions, Exceptions)';return 0">
+																<img alt="Submit completed delivery information (Attempts, Completions, Exceptions)" src="/dms/resources/images/information.jpg" border="0" height="10" width="10">Check In
+												    </a>
+											    </td> 
+											  </tr>
+											  </tbody>
+										
+									
+									
+								
+								
+								
+									      
+       									       
+       										     
+       									     
+       									   
+       								
+       								
+									
+									
+										
+										
+									    
+       									 
+       									
+       									     <tbody>
+											 <tr style="height: 20">
+	       									    <td>
+	       									    	<a href="javascript:postGotoPage('checkin/checkinpodsfortrucks')" onmouseover="if (!window.__cfRLUnblockHandlers) return false; javascript:window.status='Submit completed delivery information (Attempts, Completions, Exceptions)';return 0">
+																<img alt="Submit completed delivery information (Attempts, Completions, Exceptions)" src="/dms/resources/images/information.jpg" border="0" height="10" width="10">Check In POD(s)
+												    </a>
+											    </td> 
+											  </tr>
+											  </tbody>
+										
+									
+									
+								
+								
+								
+									      
+       									     
+       									
+       										   
+       				 					   
+       								
+       								
+									
+									
+										
+										
+									    
+									        
+									                 
+									                
+									                    
+									                     
+									                        
+									                        
+									                    
+									                
+											 
+											
+												<tbody>
+													<tr style="height: 20">
+										        		<td>
+			       									    	<a href="https://prd.digideck.appliancedms.com/communicationportal/comm?sso=515511228&amp;invOrg=9SU" target="_blank" onmouseover="if (!window.__cfRLUnblockHandlers) return false; javascript:window.status='Communication Portal';return 0">
+																		<img alt="Communication Portal" src="/dms/resources/images/information.jpg" border="0" height="10" width="10">Communication Portal
+														    </a>
+													    </td> 
+												    </tr>
+												</tbody>
+											
+       									
+       									 
+       									
+									
+									
+								
+								
+								
+									      
+       									     
+       									
+       										   
+       				 					   
+       								
+       								
+									
+									
+										
+										
+									    
+       									 
+       									
+       									     <tbody>
+											 <tr style="height: 20">
+	       									    <td>
+	       									    	<a href="/dms/downloads" target="_blank" onmouseover="if (!window.__cfRLUnblockHandlers) return false; javascript:window.status='Reporting Page';return 0">
+																<img alt="Reporting Page" src="/dms/resources/images/information.jpg" border="0" height="10" width="10">Downloads
+												    </a>
+											    </td> 
+											  </tr>
+											  </tbody>
+										
+									
+									
+								
+								
+								
+									      
+       									       
+       										     
+       									     
+       									   
+       								
+       								
+									
+									
+										
+										
+									    
+       									 
+       									
+       									     <tbody>
+											 <tr style="height: 20">
+	       									    <td>
+	       									    	<a href="javascript:postGotoPage('inbound')" onmouseover="if (!window.__cfRLUnblockHandlers) return false; javascript:window.status='Mark inbound trucks arrived and unloaded; record exceptions';return 0">
+																<img alt="Mark inbound trucks arrived and unloaded; record exceptions" src="/dms/resources/images/information.jpg" border="0" height="10" width="10">Inbound
+												    </a>
+											    </td> 
+											  </tr>
+											  </tbody>
+										
+									
+									
+								
+								
+								
+									      
+       									     
+       									
+       										   
+       				 					   
+       								
+       								
+									
+									
+										
+										
+									    
+       									 
+       									
+       									     <tbody>
+											 <tr style="height: 20">
+	       									    <td>
+	       									    	<a href="/dms/manifest/viewManifest" target="_blank" onmouseover="if (!window.__cfRLUnblockHandlers) return false; javascript:window.status='Assign Trucks/Stops/Contact Status - Manage Trucks and Delivery Team - Reschedule Open Orders';return 0">
+																<img alt="Assign Trucks/Stops/Contact Status - Manage Trucks and Delivery Team - Reschedule Open Orders" src="/dms/resources/images/information.jpg" border="0" height="10" width="10">Manifesting
+												    </a>
+											    </td> 
+											  </tr>
+											  </tbody>
+										
+									
+									
+								
+								
+								
+									      
+       									     
+       									
+       										   
+       				 					   
+       								
+       								
+									
+									
+										
+										
+									    
+       									 
+       									
+       									     <tbody>
+											 <tr style="height: 20">
+	       									    <td>
+	       									    	<a href="/dms/meettruck/meetTruckHelp" target="_blank" onmouseover="if (!window.__cfRLUnblockHandlers) return false; javascript:window.status='Meet Truck &amp; Multi-Family SDS Orders';return 0">
+																<img alt="Meet Truck &amp; Multi-Family SDS Orders" src="/dms/resources/images/information.jpg" border="0" height="10" width="10">Meet Truck &amp; Multi-Family SDS Orders
+												    </a>
+											    </td> 
+											  </tr>
+											  </tbody>
+										
+									
+									
+								
+								
+								
+									      
+       									     
+       									
+       										   
+       				 					   
+       								
+       								
+									
+									
+										
+										
+									    
+       									 
+       									
+       									     <tbody>
+											 <tr style="height: 20">
+	       									    <td>
+	       									    	<a href="/dms/orderdata" target="_blank" onmouseover="if (!window.__cfRLUnblockHandlers) return false; javascript:window.status='View/download order data for review/routin';return 0">
+																<img alt="View/download order data for review/routin" src="/dms/resources/images/information.jpg" border="0" height="10" width="10">Order Download
+												    </a>
+											    </td> 
+											  </tr>
+											  </tbody>
+										
+									
+									
+								
+								
+								
+									      
+       									     
+       									
+       										   
+       				 					   
+       								
+       								
+									
+									
+										
+										
+									    
+       									 
+       									
+       									     <tbody>
+											 <tr style="height: 20">
+	       									    <td>
+	       									    	<a href="/dms/parkinglot" target="_blank" onmouseover="if (!window.__cfRLUnblockHandlers) return false; javascript:window.status='View all Will Call/Common Carrier Orders and Customer/Common Carrier Returns';return 0">
+																<img alt="View all Will Call/Common Carrier Orders and Customer/Common Carrier Returns" src="/dms/resources/images/information.jpg" border="0" height="10" width="10">Parking Lot
+												    </a>
+											    </td> 
+											  </tr>
+											  </tbody>
+										
+									
+									
+								
+								
+								
+									      
+       									       
+       										     
+       									     
+       									   
+       								
+       								
+									
+									
+										
+										
+									    
+       									 
+       									
+       									     <tbody>
+											 <tr style="height: 20">
+	       									    <td>
+	       									    	<a href="javascript:postGotoPage('rrc')" onmouseover="if (!window.__cfRLUnblockHandlers) return false; javascript:window.status='Input/Approve Returns and Cancellation';return 0">
+																<img alt="Input/Approve Returns and Cancellation" src="/dms/resources/images/information.jpg" border="0" height="10" width="10">Return Request Or Cancel
+												    </a>
+											    </td> 
+											  </tr>
+											  </tbody>
+										
+									
+									
+								
+								
+								
+									      
+       									       
+       										     
+       									     
+       									   
+       								
+       								
+									
+									
+										
+										
+									    
+       									 
+       									
+       									     <tbody>
+											 <tr style="height: 20">
+	       									    <td>
+	       									    	<a href="javascript:postGotoPage('checkin/rar')" onmouseover="if (!window.__cfRLUnblockHandlers) return false; javascript:window.status='RETURNS RECEIVING';return 0">
+																<img alt="RETURNS RECEIVING" src="/dms/resources/images/information.jpg" border="0" height="10" width="10">Returns Receiving
+												    </a>
+											    </td> 
+											  </tr>
+											  </tbody>
+										
+									
+									
+								
+								
+								
+									      
+       									     
+       									
+       										   
+       				 					   
+       								
+       								
+									
+									
+										
+										
+									    
+       									 
+       									
+       									     <tbody>
+											 <tr style="height: 20">
+	       									    <td>
+	       									    	<a href="/dms/truckstatus/warehouse_exception_report" target="_blank" onmouseover="if (!window.__cfRLUnblockHandlers) return false; javascript:window.status='Warehouse Exception Report';return 0">
+																<img alt="Warehouse Exception Report" src="/dms/resources/images/information.jpg" border="0" height="10" width="10">Warehouse Exception Report
+												    </a>
+											    </td> 
+											  </tr>
+											  </tbody>
+										
+									
+									
+								
+								
+								
+									      
+       									     
+       									
+       										   
+       				 					   
+       								
+       								
+									
+									
+										
+										
+									    
+       									 
+       									
+       									     <tbody>
+											 <tr style="height: 20">
+	       									    <td>
+	       									    	<a href="https://PAT.geappliances.com" target="_blank" onmouseover="if (!window.__cfRLUnblockHandlers) return false; javascript:window.status='PAT';return 0">
+																<img alt="PAT" src="/dms/resources/images/information.jpg" border="0" height="10" width="10">PAT
+												    </a>
+											    </td> 
+											  </tr>
+											  </tbody>
+										
+									
+									
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+							</table>
+						</td>
+						
+						<td valign="top">					
+							<table id="ge_delivers" width="100%" align="center">
+								<thead>
+									<tr>
+										<td height="15">Op Tools</td>
+									</tr>
+								</thead>
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+									      
+       									     
+       									
+       										   
+       				 					   
+       								
+       								
+									
+									
+										
+										
+									    
+       									 
+       									
+       									     <tbody>
+											 <tr style="height: 20">
+	       									    <td>
+	       									    	<a href="/dms/agentcommunication/search" target="_blank" onmouseover="if (!window.__cfRLUnblockHandlers) return false; javascript:window.status='Agent Communication';return 0">
+																<img alt="Agent Communication" src="/dms/resources/images/information.jpg" border="0" height="10" width="10">Agent Communication
+												    </a>
+											    </td> 
+											  </tr>
+											  </tbody>
+										
+									
+									
+								
+								
+								
+									      
+       									     
+       									
+       										   
+       				 					   
+       								
+       								
+									
+									
+										
+										
+									    
+       									 
+       									
+       									     <tbody>
+											 <tr style="height: 20">
+	       									    <td>
+	       									    	<a href="/dms/damage/viewDamageSummary" target="_blank" onmouseover="if (!window.__cfRLUnblockHandlers) return false; javascript:window.status='Search for Reported Product Damages (find current status, check history)';return 0">
+																<img alt="Search for Reported Product Damages (find current status, check history)" src="/dms/resources/images/information.jpg" border="0" height="10" width="10">Damage/Defective Tool
+												    </a>
+											    </td> 
+											  </tr>
+											  </tbody>
+										
+									
+									
+								
+								
+								
+									      
+       									       
+       										     
+       									     
+       									   
+       								
+       								
+									
+									
+										
+										
+									    
+       									 
+       									
+       									     <tbody>
+											 <tr style="height: 20">
+	       									    <td>
+	       									    	<a href="javascript:postGotoPage('adt')" onmouseover="if (!window.__cfRLUnblockHandlers) return false; javascript:window.status='Input/Approve Returns and Cancellation';return 0">
+																<img alt="Input/Approve Returns and Cancellation" src="/dms/resources/images/information.jpg" border="0" height="10" width="10">APP Deployment Tool
+												    </a>
+											    </td> 
+											  </tr>
+											  </tbody>
+										
+									
+									
+								
+								
+								
+									      
+       									     
+       									
+       										   
+       				 					   
+       								
+       								
+									
+									
+										
+										
+									    
+       									 
+       									
+       									     <tbody>
+											 <tr style="height: 20">
+	       									    <td>
+	       									    	<a href="/dms/haulawaysummary" target="_blank" onmouseover="if (!window.__cfRLUnblockHandlers) return false; javascript:window.status='Haulaway Summary Detail';return 0">
+																<img alt="Haulaway Summary Detail" src="/dms/resources/images/information.jpg" border="0" height="10" width="10">Haulaway Summary 
+												    </a>
+											    </td> 
+											  </tr>
+											  </tbody>
+										
+									
+									
+								
+								
+								
+									      
+       									     
+       									
+       										   
+       				 					   
+       								
+       								
+									
+									
+										
+										
+									    
+       									 
+       									
+       									     <tbody>
+											 <tr style="height: 20">
+	       									    <td>
+	       									    	<a href="/dms/payment/getsdslocations" target="_blank" onmouseover="if (!window.__cfRLUnblockHandlers) return false; javascript:window.status='Haulaway Summary Detail';return 0">
+																<img alt="Haulaway Summary Detail" src="/dms/resources/images/information.jpg" border="0" height="10" width="10">Payment Correction
+												    </a>
+											    </td> 
+											  </tr>
+											  </tbody>
+										
+									
+									
+								
+								
+								
+									      
+       									     
+       									
+       										   
+       				 					   
+       								
+       								
+									
+									
+										
+										
+									    
+       									 
+       									
+       									     <tbody>
+											 <tr style="height: 20">
+	       									    <td>
+	       									    	<a href="/dms/recycle" target="_blank" onmouseover="if (!window.__cfRLUnblockHandlers) return false; javascript:window.status='Recycling Bill Of Lading';return 0">
+																<img alt="Recycling Bill Of Lading" src="/dms/resources/images/information.jpg" border="0" height="10" width="10">Recycle BOL
+												    </a>
+											    </td> 
+											  </tr>
+											  </tbody>
+										
+									
+									
+								
+								
+								
+									      
+       									     
+       									
+       										   
+       				 					   
+       								
+       								
+									
+									
+										
+										
+									    
+       									 
+       									
+       									     <tbody>
+											 <tr style="height: 20">
+	       									    <td>
+	       									    	<a href="https://intake.sedgwick.com/u/haierappliances/GEABuilder" target="_blank" onmouseover="if (!window.__cfRLUnblockHandlers) return false; javascript:window.status='Sedgwick Claim Initiation';return 0">
+																<img alt="Sedgwick Claim Initiation" src="/dms/resources/images/information.jpg" border="0" height="10" width="10">Sedgwick Claim Initiation
+												    </a>
+											    </td> 
+											  </tr>
+											  </tbody>
+										
+									
+									
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+							</table>
+						</td>
+						
+						<td valign="top">					
+							<table id="ge_delivers" width="100%" align="center">
+								<thead>
+									<tr>
+										<td height="15">Reports, Tracking &amp; Help</td>
+									</tr>
+								</thead>
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+									      
+       									     
+       									
+       										   
+       				 					   
+       								
+       								
+									
+									
+										
+										
+									    
+       									 
+       									
+       									     <tbody>
+											 <tr style="height: 20">
+	       									    <td>
+	       									    	<a href="/dms/antitippaudit/antitip_audit_report" target="_blank" onmouseover="if (!window.__cfRLUnblockHandlers) return false; javascript:window.status='Anti-Tip Audit Report';return 0">
+																<img alt="Anti-Tip Audit Report" src="/dms/resources/images/information.jpg" border="0" height="10" width="10">Anti-Tip Audit Report
+												    </a>
+											    </td> 
+											  </tr>
+											  </tbody>
+										
+									
+									
+								
+								
+								
+									      
+       									     
+       									
+       										   
+       				 					   
+       								
+       								
+									
+									
+										
+										
+									    
+       									 
+       									
+       									     <tbody>
+											 <tr style="height: 20">
+	       									    <td>
+	       									    	<a href="/dms/faqadmin/faqsearch" target="_blank" onmouseover="if (!window.__cfRLUnblockHandlers) return false; javascript:window.status='Find Answers (Manifest, IVR, Check-in)';return 0">
+																<img alt="Find Answers (Manifest, IVR, Check-in)" src="/dms/resources/images/information.jpg" border="0" height="10" width="10">Frequently Asked Questions
+												    </a>
+											    </td> 
+											  </tr>
+											  </tbody>
+										
+									
+									
+								
+								
+								
+									      
+       									     
+       									
+       										   
+       				 					   
+       								
+       								
+									
+									
+										
+										
+									    
+       									 
+       									
+       									     <tbody>
+											 <tr style="height: 20">
+	       									    <td>
+	       									    	<a href="/dms/locmaintenance/editLocMaintenance" target="_blank" onmouseover="if (!window.__cfRLUnblockHandlers) return false; javascript:window.status='Location Contact Information';return 0">
+																<img alt="Location Contact Information" src="/dms/resources/images/information.jpg" border="0" height="10" width="10">Location Contact Information
+												    </a>
+											    </td> 
+											  </tr>
+											  </tbody>
+										
+									
+									
+								
+								
+								
+									      
+       									     
+       									
+       										   
+       				 					   
+       								
+       								
+									
+									
+										
+										
+									    
+       									 
+       									
+       									     <tbody>
+											 <tr style="height: 20">
+	       									    <td>
+	       									    	<a href="/dms/pod/search" target="_blank" onmouseover="if (!window.__cfRLUnblockHandlers) return false; javascript:window.status='POD Search';return 0">
+																<img alt="POD Search" src="/dms/resources/images/information.jpg" border="0" height="10" width="10">Online POD Search
+												    </a>
+											    </td> 
+											  </tr>
+											  </tbody>
+										
+									
+									
+								
+								
+								
+									      
+       									     
+       									
+       										   
+       				 					   
+       								
+       								
+									
+									
+										
+										
+									    
+       									 
+       									
+       									     <tbody>
+											 <tr style="height: 20">
+	       									    <td>
+	       									    	<a href="/dms/openorderreport" target="_blank" onmouseover="if (!window.__cfRLUnblockHandlers) return false; javascript:window.status='National Builder Open Orders by Customer';return 0">
+																<img alt="National Builder Open Orders by Customer" src="/dms/resources/images/information.jpg" border="0" height="10" width="10">National Builder Open Orders by Customer
+												    </a>
+											    </td> 
+											  </tr>
+											  </tbody>
+										
+									
+									
+								
+								
+								
+									      
+       									       
+       										     
+       									     
+       									   
+       								
+       								
+									
+									
+										
+										
+									    
+       									 
+       									
+       									     <tbody>
+											 <tr style="height: 20">
+	       									    <td>
+	       									    	<a href="javascript:postGotoPage('oip/orderinprocess')" onmouseover="if (!window.__cfRLUnblockHandlers) return false; javascript:window.status='Orders in Process';return 0">
+																<img alt="Orders in Process" src="/dms/resources/images/information.jpg" border="0" height="10" width="10">Orders in Process
+												    </a>
+											    </td> 
+											  </tr>
+											  </tbody>
+										
+									
+									
+								
+								
+								
+									      
+       									     
+       									
+       										   
+       				 					   
+       								
+       								
+									
+									
+										
+										
+									    
+       									 
+       									
+       									     <tbody>
+											 <tr style="height: 20">
+	       									    <td>
+	       									    	<a href="/dms/reportsummary" target="_blank" onmouseover="if (!window.__cfRLUnblockHandlers) return false; javascript:window.status='Access to key data with drill down to location levels';return 0">
+																<img alt="Access to key data with drill down to location levels" src="/dms/resources/images/information.jpg" border="0" height="10" width="10">Reporting
+												    </a>
+											    </td> 
+											  </tr>
+											  </tbody>
+										
+									
+									
+								
+								
+								
+									      
+       									     
+       									
+       										   
+       				 					   
+       								
+       								
+									
+									
+										
+										
+									    
+       									 
+       									
+       									     <tbody>
+											 <tr style="height: 20">
+	       									    <td>
+	       									    	<a href="/dms/tracktrace" target="_blank" onmouseover="if (!window.__cfRLUnblockHandlers) return false; javascript:window.status='Search for Orders (find current status, check history)';return 0">
+																<img alt="Search for Orders (find current status, check history)" src="/dms/resources/images/information.jpg" border="0" height="10" width="10">Track &amp; Trace
+												    </a>
+											    </td> 
+											  </tr>
+											  </tbody>
+										
+									
+									
+								
+								
+								
+									      
+       									     
+       									
+       										   
+       				 					   
+       								
+       								
+									
+									
+										
+										
+									    
+       									 
+       									
+       									     <tbody>
+											 <tr style="height: 20">
+	       									    <td>
+	       									    	<a href="/dms/truckstatus" target="_blank" onmouseover="if (!window.__cfRLUnblockHandlers) return false; javascript:window.status='Data from all the trucks on the road today.';return 0">
+																<img alt="Data from all the trucks on the road today." src="/dms/resources/images/information.jpg" border="0" height="10" width="10">Truck Status - Delivery
+												    </a>
+											    </td> 
+											  </tr>
+											  </tbody>
+										
+									
+									
+								
+								
+								
+									      
+       									     
+       									
+       										   
+       				 					   
+       								
+       								
+									
+									
+										
+										
+									    
+       									 
+									        
+									                 
+									                
+									                    
+									                     
+									                         
+									                        
+									                    
+									                
+											 
+											
+												<tbody>
+														<tr style="height: 20">
+											        		<td>
+				       									    	<a href="https://prd.digideck.appliancedms.com/scanbyeachstaging/scan?invOrg=9SU" target="_blank" onmouseover="if (!window.__cfRLUnblockHandlers) return false; javascript:window.status='Staging Report';return 0">
+																			<img alt="Staging Report" src="/dms/resources/images/information.jpg" border="0" height="10" width="10">Truck Status - Staging
+															    </a>
+														    </td> 
+													    </tr>
+												</tbody>
+											
+       									
+       									
+									
+									
+								
+								
+								
+									      
+       									     
+       									
+       										   
+       				 					   
+       								
+       								
+									
+									
+										
+										
+									    
+       									 
+       									
+       									     <tbody>
+											 <tr style="height: 20">
+	       									    <td>
+	       									    	<a href="/dms/checkinaudit/checkin_audit_report" target="_blank" onmouseover="if (!window.__cfRLUnblockHandlers) return false; javascript:window.status='Check In - Audit';return 0">
+																<img alt="Check In - Audit" src="/dms/resources/images/information.jpg" border="0" height="10" width="10">Check In - Audit
+												    </a>
+											    </td> 
+											  </tr>
+											  </tbody>
+										
+									
+									
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+							</table>
+						</td>
+						
+						<td valign="top">					
+							<table id="ge_delivers" width="100%" align="center">
+								<thead>
+									<tr>
+										<td height="15">Inventory</td>
+									</tr>
+								</thead>
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+									      
+       									     
+       									
+       										   
+       				 					   
+       								
+       								
+									
+									
+										
+										
+									    
+       									 
+       									
+       									     <tbody>
+											 <tr style="height: 20">
+	       									    <td>
+	       									    	<a href="/dms/newasis" target="_blank" onmouseover="if (!window.__cfRLUnblockHandlers) return false; javascript:window.status='Data from all the trucks on the road today.';return 0">
+																<img alt="Data from all the trucks on the road today." src="/dms/resources/images/information.jpg" border="0" height="10" width="10">ASIS
+												    </a>
+											    </td> 
+											  </tr>
+											  </tbody>
+										
+									
+									
+								
+								
+								
+									      
+       									     
+       									
+       										   
+       				 					   
+       								
+       								
+									
+									
+										
+										
+									    
+       									 
+       									
+       									     <tbody>
+											 <tr style="height: 20">
+	       									    <td>
+	       									    	<a href="/dms/backhaul" target="_blank" onmouseover="if (!window.__cfRLUnblockHandlers) return false; javascript:window.status='GEA Backhaul';return 0">
+																<img alt="GEA Backhaul" src="/dms/resources/images/information.jpg" border="0" height="10" width="10">Backhaul
+												    </a>
+											    </td> 
+											  </tr>
+											  </tbody>
+										
+									
+									
+								
+								
+								
+									      
+       									     
+       									
+       										   
+       				 					   
+       								
+       								
+									
+									
+										
+										
+									    
+       									 
+       									
+       									     <tbody>
+											 <tr style="height: 20">
+	       									    <td>
+	       									    	<a href="/dms/cyclecount/invorgs" target="_blank" onmouseover="if (!window.__cfRLUnblockHandlers) return false; javascript:window.status='Cutover - Pilot ';return 0">
+																<img alt="Cutover - Pilot " src="/dms/resources/images/information.jpg" border="0" height="10" width="10">Cycle Count / Physical Inventory
+												    </a>
+											    </td> 
+											  </tr>
+											  </tbody>
+										
+									
+									
+								
+								
+								
+									      
+       									     
+       									
+       										   
+       				 					   
+       								
+       								
+									
+									
+										
+										
+									    
+       									 
+       									
+       									     <tbody>
+											 <tr style="height: 20">
+	       									    <td>
+	       									    	<a href="/dms/erpCheckInventory" target="_blank" onmouseover="if (!window.__cfRLUnblockHandlers) return false; javascript:window.status='ERP On Hand Qty';return 0">
+																<img alt="ERP On Hand Qty" src="/dms/resources/images/information.jpg" border="0" height="10" width="10">ERP On Hand Qty
+												    </a>
+											    </td> 
+											  </tr>
+											  </tbody>
+										
+									
+									
+								
+								
+								
+									      
+       									     
+       									
+       										   
+       				 					   
+       								
+       								
+									
+									
+										
+										
+									    
+       									 
+       									
+       									     <tbody>
+											 <tr style="height: 20">
+	       									    <td>
+	       									    	<a href="/dms/inventoryadjforms" target="_blank" onmouseover="if (!window.__cfRLUnblockHandlers) return false; javascript:window.status='Data from all the trucks on the road today.';return 0">
+																<img alt="Data from all the trucks on the road today." src="/dms/resources/images/information.jpg" border="0" height="10" width="10">Inventory Adjustment Forms
+												    </a>
+											    </td> 
+											  </tr>
+											  </tbody>
+										
+									
+									
+								
+								
+								
+									      
+       									     
+       									
+       										   
+       				 					   
+       								
+       								
+									
+									
+										
+								        
+								                 
+								                
+								                    
+								                     
+								                        
+								                        
+								                    
+								                
+										 
+										
+											<tbody>
+												<tr style="height: 20">
+									        		<td>
+		       									    	<a href="https://prd.digideck.appliancedms.com/inventory/report?invOrg=9SU" target="_blank" onmouseover="if (!window.__cfRLUnblockHandlers) return false; javascript:window.status='Inventory Report';return 0">
+																	<img alt="Inventory Report" src="/dms/resources/images/information.jpg" border="0" height="10" width="10">Inventory Report
+													    </a>
+												    </td> 
+											    </tr>
+											</tbody>
+										
+										
+										
+									    
+       									 
+       									
+									
+									
+								
+								
+								
+									      
+       									     
+       									
+       										   
+       				 					   
+       								
+       								
+									
+									
+										
+										
+									    
+       									 
+       									
+       									     <tbody>
+											 <tr style="height: 20">
+	       									    <td>
+	       									    	<a href="/dms/backhaulnew/non-gebackhaul" target="_blank" onmouseover="if (!window.__cfRLUnblockHandlers) return false; javascript:window.status='Non GEA Backhaul';return 0">
+																<img alt="Non GEA Backhaul" src="/dms/resources/images/information.jpg" border="0" height="10" width="10">Non GEA Backhaul
+												    </a>
+											    </td> 
+											  </tr>
+											  </tbody>
+										
+									
+									
+								
+								
+								
+									      
+       									     
+       									
+       										   
+       				 					   
+       								
+       								
+									
+									
+										
+										
+									    
+       									 
+       									
+       									     <tbody>
+											 <tr style="height: 20">
+	       									    <td>
+	       									    	<a href="/dms/inventory/sflsPendingOrders" target="_blank" onmouseover="if (!window.__cfRLUnblockHandlers) return false; javascript:window.status='Data from all the trucks on the road today.';return 0">
+																<img alt="Data from all the trucks on the road today." src="/dms/resources/images/information.jpg" border="0" height="10" width="10">SFLS
+												    </a>
+											    </td> 
+											  </tr>
+											  </tbody>
+										
+									
+									
+								
+								
+								
+									      
+       									     
+       									
+       										   
+       				 					   
+       								
+       								
+									
+									
+										
+										
+									    
+       									 
+       									
+       									     <tbody>
+											 <tr style="height: 20">
+	       									    <td>
+	       									    	<a href="/dms/scrap?init=1" target="_blank" onmouseover="if (!window.__cfRLUnblockHandlers) return false; javascript:window.status='Scrap Units By Adjusting Inventory';return 0">
+																<img alt="Scrap Units By Adjusting Inventory" src="/dms/resources/images/information.jpg" border="0" height="10" width="10">Scrap
+												    </a>
+											    </td> 
+											  </tr>
+											  </tbody>
+										
+									
+									
+								
+								
+								
+									      
+       									     
+       									
+       										   
+       				 					   
+       								
+       								
+									
+									
+										
+										
+									    
+       									 
+       									
+       									     <tbody>
+											 <tr style="height: 20">
+	       									    <td>
+	       									    	<a href="/dms/tracktrace/searchbyserial" target="_blank" onmouseover="if (!window.__cfRLUnblockHandlers) return false; javascript:window.status='Search RA or PSE by Serial';return 0">
+																<img alt="Search RA or PSE by Serial" src="/dms/resources/images/information.jpg" border="0" height="10" width="10">Search RA or PSE by Serial
+												    </a>
+											    </td> 
+											  </tr>
+											  </tbody>
+										
+									
+									
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+							</table>
+						</td>
+						
+						<td valign="top">					
+							<table id="ge_delivers" width="100%" align="center">
+								<thead>
+									<tr>
+										<td height="15">Links</td>
+									</tr>
+								</thead>
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+								
+									      
+       									     
+       									
+       										   
+       				 					   
+       								
+       								
+									
+									
+										
+										
+									    
+       									 
+       									
+       									     <tbody>
+											 <tr style="height: 20">
+	       									    <td>
+	       									    	<a href="https://geapplight.service-now.com/gea?id=sc_cat_item&amp;sys_id=d04f8cb4dbaf13401df7f6e9af9619b8" target="_blank" onmouseover="if (!window.__cfRLUnblockHandlers) return false; javascript:window.status='Contact IT Support';return 0">
+																<img alt="Contact IT Support" src="/dms/resources/images/information.jpg" border="0" height="10" width="10">Contact IT Support 
+												    </a>
+											    </td> 
+											  </tr>
+											  </tbody>
+										
+									
+									
+								
+								
+								
+									      
+       									     
+       									
+       										   
+       				 					   
+       								
+       								
+									
+									
+										
+										
+									    
+       									 
+       									
+       									     <tbody>
+											 <tr style="height: 20">
+	       									    <td>
+	       									    	<a href="/dms/newdmsapplication/home" target="_blank" onmouseover="if (!window.__cfRLUnblockHandlers) return false; javascript:window.status='Coverage and Capacity';return 0">
+																<img alt="Coverage and Capacity" src="/dms/resources/images/information.jpg" border="0" height="10" width="10">Coverage and Capacity
+												    </a>
+											    </td> 
+											  </tr>
+											  </tbody>
+										
+									
+									
+								
+								
+								
+									      
+       									     
+       									
+       										   
+       				 					   
+       								
+       								
+									
+									
+										
+										
+									    
+       									 
+       									
+       									     <tbody>
+											 <tr style="height: 20">
+	       									    <td>
+	       									    	<a href="/dms/driverAppPhotos" target="_blank" onmouseover="if (!window.__cfRLUnblockHandlers) return false; javascript:window.status='Driver App - Photos';return 0">
+																<img alt="Driver App - Photos" src="/dms/resources/images/information.jpg" border="0" height="10" width="10">Driver App - Photos
+												    </a>
+											    </td> 
+											  </tr>
+											  </tbody>
+										
+									
+									
+								
+								
+								
+									      
+       									     
+       									
+       										   
+       				 					   
+       								
+       								
+									
+									
+										
+										
+									    
+       									 
+       									
+       									     <tbody>
+											 <tr style="height: 20">
+	       									    <td>
+	       									    	<a href="/dms/resources/download/GEAD_eTicket_AgentTraining.v2.pdf" target="_blank" onmouseover="if (!window.__cfRLUnblockHandlers) return false; javascript:window.status='E-Ticket Training';return 0">
+																<img alt="E-Ticket Training" src="/dms/resources/images/information.jpg" border="0" height="10" width="10">E-Ticket Training
+												    </a>
+											    </td> 
+											  </tr>
+											  </tbody>
+										
+									
+									
+								
+								
+								
+									      
+       									     
+       									
+       										   
+       				 					   
+       								
+       								
+									
+									
+										
+										
+									    
+       									 
+       									
+       									     <tbody>
+											 <tr style="height: 20">
+	       									    <td>
+	       									    	<a href="https://globalerp.appl.ge.com" target="_blank" onmouseover="if (!window.__cfRLUnblockHandlers) return false; javascript:window.status='EBS';return 0">
+																<img alt="EBS" src="/dms/resources/images/information.jpg" border="0" height="10" width="10">EBS
+												    </a>
+											    </td> 
+											  </tr>
+											  </tbody>
+										
+									
+									
+								
+								
+								
+									      
+       									     
+       									
+       										   
+       				 					   
+       								
+       								
+									
+									
+										
+										
+									    
+       									 
+       									
+       									     <tbody>
+											 <tr style="height: 20">
+	       									    <td>
+	       									    	<a href="/dms/epod" target="_blank" onmouseover="if (!window.__cfRLUnblockHandlers) return false; javascript:window.status='ePOD Home';return 0">
+																<img alt="ePOD Home" src="/dms/resources/images/information.jpg" border="0" height="10" width="10">ePOD
+												    </a>
+											    </td> 
+											  </tr>
+											  </tbody>
+										
+									
+									
+								
+								
+								
+									      
+       									     
+       									
+       										   
+       				 					   
+       								
+       								
+									
+									
+										
+										
+									    
+       									 
+       									
+       									     <tbody>
+											 <tr style="height: 20">
+	       									    <td>
+	       									    	<a href="/dms/_home" target="_blank" onmouseover="if (!window.__cfRLUnblockHandlers) return false; javascript:window.status='GEA Delivers - ERP v1.0';return 0">
+																<img alt="GEA Delivers - ERP v1.0" src="/dms/resources/images/information.jpg" border="0" height="10" width="10">GEA Delivers - ERP v1.0
+												    </a>
+											    </td> 
+											  </tr>
+											  </tbody>
+										
+									
+									
+								
+								
+								
+									      
+       									     
+       									
+       										   
+       				 					   
+       								
+       								
+									
+									
+										
+										
+									    
+       									 
+       									
+       									     <tbody>
+											 <tr style="height: 20">
+	       									    <td>
+	       									    	<a href="https://forms.office.com/pages/responsepage.aspx?id=ywjFQzPFg0CBBXda4er3IZ8DMGKCCytNqxVKlsvRtRZUMzdYWFMyTkEzR0xGUE5WMFY0MkkxNUREMiQlQCN0PWcu&amp;route=shorturl" target="_blank" onmouseover="if (!window.__cfRLUnblockHandlers) return false; javascript:window.status='Delivery Company Audit ';return 0">
+																<img alt="Delivery Company Audit " src="/dms/resources/images/information.jpg" border="0" height="10" width="10">Delivery Company Audit 
+												    </a>
+											    </td> 
+											  </tr>
+											  </tbody>
+										
+									
+									
+								
+								
+								
+									      
+       									     
+       									
+       										   
+       				 					   
+       								
+       								
+									
+									
+										
+										
+									    
+       									 
+       									
+       									     <tbody>
+											 <tr style="height: 20">
+	       									    <td>
+	       									    	<a href="https://supplierportal.geappliances.com" target="_blank" onmouseover="if (!window.__cfRLUnblockHandlers) return false; javascript:window.status='iSupplier';return 0">
+																<img alt="iSupplier" src="/dms/resources/images/information.jpg" border="0" height="10" width="10">iSupplier
+												    </a>
+											    </td> 
+											  </tr>
+											  </tbody>
+										
+									
+									
+								
+								
+								
+									      
+       									     
+       									
+       										   
+       				 					   
+       								
+       								
+									
+									
+										
+										
+									    
+       									 
+       									
+       									     <tbody>
+											 <tr style="height: 20">
+	       									    <td>
+	       									    	<a href="https://learning.geappliancesco.com/pages/111/final-mile" target="_blank" onmouseover="if (!window.__cfRLUnblockHandlers) return false; javascript:window.status='Develop U';return 0">
+																<img alt="Develop U" src="/dms/resources/images/information.jpg" border="0" height="10" width="10">Develop U
+												    </a>
+											    </td> 
+											  </tr>
+											  </tbody>
+										
+									
+									
+								
+								
+								
+									      
+       									     
+       									
+       										   
+       				 					   
+       								
+       								
+									
+									
+										
+										
+									    
+       									 
+       									
+       									     <tbody>
+											 <tr style="height: 20">
+	       									    <td>
+	       									    	<a href="http://ldlearning.appliancedms.com/" target="_blank" onmouseover="if (!window.__cfRLUnblockHandlers) return false; javascript:window.status='Local Delivery Learning Portal';return 0">
+																<img alt="Local Delivery Learning Portal" src="/dms/resources/images/information.jpg" border="0" height="10" width="10">Local Delivery Learning Portal
+												    </a>
+											    </td> 
+											  </tr>
+											  </tbody>
+										
+									
+									
+								
+								
+								
+									      
+       									     
+       									
+       										   
+       				 					   
+       								
+       								
+									
+									
+										
+										
+									    
+       									 
+       									
+       									     <tbody>
+											 <tr style="height: 20">
+	       									    <td>
+	       									    	<a href="https://sl.geappl.io/*SDSUserRequest" target="_blank" onmouseover="if (!window.__cfRLUnblockHandlers) return false; javascript:window.status='New User Account Request Form';return 0">
+																<img alt="New User Account Request Form" src="/dms/resources/images/information.jpg" border="0" height="10" width="10">New User Account Request Form
+												    </a>
+											    </td> 
+											  </tr>
+											  </tbody>
+										
+									
+									
+								
+								
+								
+									      
+       									     
+       									
+       										   
+       				 					   
+       								
+       								
+									
+									
+										
+										
+									    
+       									 
+       									
+       									     <tbody>
+											 <tr style="height: 20">
+	       									    <td>
+	       									    	<a href="https://geappliances.medallia.com/sso/geappliances/logonSubmit.do" target="_blank" onmouseover="if (!window.__cfRLUnblockHandlers) return false; javascript:window.status='Quality of Service Surveys';return 0">
+																<img alt="Quality of Service Surveys" src="/dms/resources/images/information.jpg" border="0" height="10" width="10">Quality of Service Surveys
+												    </a>
+											    </td> 
+											  </tr>
+											  </tbody>
+										
+									
+									
+								
+								
+								
+									      
+       									     
+       									
+       										   
+       				 					   
+       								
+       								
+									
+									
+										
+										
+									    
+       									 
+       									
+       									     <tbody>
+											 <tr style="height: 20">
+	       									    <td>
+	       									    	<a href="/dms/users/userListByLocation" target="_blank" onmouseover="if (!window.__cfRLUnblockHandlers) return false; javascript:window.status='Meet Truck: Site Readiness Guide/Installation Punch-list';return 0">
+																<img alt="Meet Truck: Site Readiness Guide/Installation Punch-list" src="/dms/resources/images/information.jpg" border="0" height="10" width="10">User List By Location
+												    </a>
+											    </td> 
+											  </tr>
+											  </tbody>
+										
+									
+									
+								
+								
+								
+									      
+       									     
+       									
+       										   
+       				 					   
+       								
+       								
+									
+									
+										
+										
+									    
+       									 
+       									
+       									     <tbody>
+											 <tr style="height: 20">
+	       									    <td>
+	       									    	<a href="https://customernet.geappliances.com/CustomerNet/index.html" target="_blank" onmouseover="if (!window.__cfRLUnblockHandlers) return false; javascript:window.status='Customernet/ Parts Net';return 0">
+																<img alt="Customernet/ Parts Net" src="/dms/resources/images/information.jpg" border="0" height="10" width="10">Customernet/ Parts Net
+												    </a>
+											    </td> 
+											  </tr>
+											  </tbody>
+										
+									
+									
+								
+								
+								
+									      
+       									     
+       									
+       										   
+       				 					   
+       								
+       								
+									
+									
+										
+										
+									    
+       									 
+       									
+       									     <tbody>
+											 <tr style="height: 20">
+	       									    <td>
+	       									    	<a href="https://tableau.appl.ge.com/#/workbooks/3951/views" target="_blank" onmouseover="if (!window.__cfRLUnblockHandlers) return false; javascript:window.status='Tableau Payment Dashboard';return 0">
+																<img alt="Tableau Payment Dashboard" src="/dms/resources/images/information.jpg" border="0" height="10" width="10">Tableau Payment Dashboard
+												    </a>
+											    </td> 
+											  </tr>
+											  </tbody>
+										
+									
+									
+								
+								
+							</table>
+						</td>
+						
+					</tr>
+				</tbody></table>
+		
+		
+		
+		
+		<!-- Agent Tactical Dashboard -->
+		
+		
+		
+		
+		    
+		     <table cellpadding="0" cellspacing="0" style="margin-top: 5px;">
+		       <thead>
+				    
+					<tr>
+					  <td align="left" class="tactical_header">TACTICAL DASHBOARD</td>
+					</tr>
+			   </thead>
+			</table>
+			<table id="ge_delivers" border="1" align="left" cellpadding="1" cellspacing="0" style="margin-top: 5px;margin-bottom: 10px;">
+				<thead>
+						<tr>
+							<td style="display: none;"></td>
+							<td width="100px" style="background-color: #66ccca;color: black;">INV ORG</td>
+							<td width="100px" style="background-color: #66ccca;color: black;">RM</td>
+							
+		    				  <td width="100px" style="background-color: #66ccca;color: black;" title="&nbsp;These are cancellation requests from order services that the agent are expected to act upon.   Last Update On : 02/07/2026 11:02:47 PM  Refresh interval: 30 min "><span>CANCELLATIONS</span></td>
+							
+		    				  <td width="100px" style="background-color: #66ccca;color: black;" title="&nbsp;Inbound trucks that are greater than 4hrs past their scheduled arrival time  Last Update On : 02/07/2026 11:32:28 PM  Refresh interval: 60 min "><span>INBOUND NOT REC. <br>&gt;4 HRS</span></td>
+							
+		    				  <td width="100px" style="background-color: #66ccca;color: black;" title="&nbsp;Drivers whose badge expiration date is within 30 days  Last Update On : 02/07/2026 02:32:25 PM  Refresh interval: 720 min "><span>BADGE EXP (30 DAYS)</span></td>
+							
+		    				  <td width="100px" style="background-color: #66ccca;color: black;" title="&nbsp;These are the open trucks greater than 48hrs old that need to be checked in  Last Update On : 02/07/2026 11:32:26 PM  Refresh interval: 60 min "><span>OPEN TRUCKS <br>&gt;48 HRS</span></td>
+							
+		    				  <td width="100px" style="background-color: #66ccca;color: black;" title="&nbsp;These are ERP open SDS orders &gt;11 days old.  Last Update On : 02/07/2026 10:02:53 PM  Refresh interval: 120 min "><span>ERP SDS Aged 11+ Days</span></td>
+							
+		    				  <td width="100px" style="background-color: #66ccca;color: black;" title="&nbsp;These are ERP open Home Delivery orders &gt;30 days old.  Last Update On : 02/07/2026 02:32:25 PM  Refresh interval: 720 min "><span>ERP Home Delivery Aged 30+ Days</span></td>
+							
+		    				  <td width="100px" style="background-color: #66ccca;color: black;" title="&nbsp;These are ERP open returns &gt;10 days old.  Last Update On : 02/07/2026 02:32:37 PM  Refresh interval: 720 min "><span>ERP Returns Aged 10+ Days</span></td>
+							
+		    				  <td width="100px" style="background-color: #66ccca;color: black;" title="&nbsp;These are all pending ePOD requests.  Last Update On : 02/07/2026 11:32:26 PM  Refresh interval: 60 min "><span>ePODS</span></td>
+							
+		    				  <td width="100px" style="background-color: #66ccca;color: black;" title="&nbsp;Agent Communication Tool (ACT) cases that are pending AGENT action   Last Update On : 02/07/2026 11:32:26 PM  Refresh interval: 60 min "><span>ACT Cases</span></td>
+							
+		    				  <td width="100px" style="background-color: #66ccca;color: black;" title="&nbsp;TTL Open Claims   Last Update On : 02/07/2026 08:02:21 PM  Refresh interval: 720 min "><span>TTL Open Claims </span></td>
+							
+		    				  <td width="100px" style="background-color: #66ccca;color: black;" title="&nbsp;Total of Pending Meet Trucks from the Meet Truck Pending screen  Last Update On : 02/07/2026 11:32:27 PM  Refresh interval: 1 min "><span>Pending Meet Trucks</span></td>
+							
+		    				  <td width="100px" style="background-color: #66ccca;color: black;" title="&nbsp;Total Shipped Not Billed Meet Trucks from the Meet Truck Shipped screen  Last Update On : 02/07/2026 11:32:28 PM  Refresh interval: 1 min "><span>Shipped Not Billed Meet Trucks</span></td>
+							
+		    				  <td width="100px" style="background-color: #66ccca;color: black;" title="&nbsp;Warehouse Capacity Percent  Last Update On : 02/07/2026 02:32:37 PM  Refresh interval: 720 min "><span>Warehouse Capacity %</span></td>
+							
+						</tr>
+				</thead>
+				<tbody>
+				       
+						
+							
+							
+							
+								
+			    					
+			    				   		 
+			    				   			
+			    				   			
+			    				   		
+			    					
+							
+								
+			    					
+							
+								
+			    					
+							
+								
+			    					
+							
+								
+			    					
+							
+								
+			    					
+							
+								
+			    					
+							
+								
+			    					
+							
+								
+			    					
+							
+								
+			    					
+							
+								
+			    					
+							
+								
+			    					
+							
+								
+			    					
+							 
+							
+								<tr>			
+									<td style="display: none;"></td>
+									<td>9SU</td>
+									<td>BK</td>
+									<!-- iterate over header td third onwards to get tactical_key_name -->
+									
+									          		
+										      		<td>
+										      			<a data-rmcode="BK" data-dmsloc="19SU" href="#" onclick="if (!window.__cfRLUnblockHandlers) return false; javascript:openTacticalLink('/dms/cancelreport/searchorderdetails?REQUEST=CANCELLATION_REPORT_NOTIFICATION', this);return false;">0</a>
+										      		</td>
+			    				          
+								   
+									          		
+										      		<td>
+										      			<a data-rmcode="BK" data-dmsloc="19SU" href="#" onclick="if (!window.__cfRLUnblockHandlers) return false; javascript:openTacticalLink('/dms/inbound', this);return false;">1</a>
+										      		</td>
+			    				          
+								   
+									          		
+										      		<td>
+										      			<a data-rmcode="BK" data-dmsloc="19SU" href="#" onclick="if (!window.__cfRLUnblockHandlers) return false; javascript:openTacticalLink('/dms/reportsummary/locationreport?reportType=badge_expiration_30_days', this);return false;">2</a>
+										      		</td>
+			    				          
+								   
+									          		
+										      		<td>
+										      			<a data-rmcode="BK" data-dmsloc="19SU" href="#" onclick="if (!window.__cfRLUnblockHandlers) return false; javascript:openTacticalLink('/dms/checkin', this);return false;">0</a>
+										      		</td>
+			    				          
+								   
+									          		
+										      		<td>
+										      			<a data-rmcode="BK" data-dmsloc="19SU" href="#" onclick="if (!window.__cfRLUnblockHandlers) return false; javascript:openTacticalLink('/dms/reportsummary?reportType=erp_open_orders', this);return false;">4</a>
+										      		</td>
+			    				          
+								   
+									          		
+										      		<td>
+										      			<a data-rmcode="BK" data-dmsloc="19SU" href="#" onclick="if (!window.__cfRLUnblockHandlers) return false; javascript:openTacticalLink('/dms/reportsummary?reportType=erp_open_orders', this);return false;">0</a>
+										      		</td>
+			    				          
+								   
+									          		
+										      		<td>
+										      			<a data-rmcode="BK" data-dmsloc="19SU" href="#" onclick="if (!window.__cfRLUnblockHandlers) return false; javascript:openTacticalLink('/dms/reportsummary?reportType=erp_open_orders', this);return false;">1</a>
+										      		</td>
+			    				          
+								   
+									          		
+										      		<td>
+										      			<a data-rmcode="BK" data-dmsloc="19SU" href="#" onclick="if (!window.__cfRLUnblockHandlers) return false; javascript:openTacticalLink('/dms/epod', this);return false;">0</a>
+										      		</td>
+			    				          
+								   
+									          		
+										      		<td>
+										      			<a data-rmcode="BK" data-dmsloc="19SU" href="#" onclick="if (!window.__cfRLUnblockHandlers) return false; javascript:openTacticalLink('/dms/agentcommunication/search', this);return false;">1</a>
+										      		</td>
+			    				          
+								   
+									          		
+										      		<td>
+										      			<a data-rmcode="BK" data-dmsloc="19SU" href="#" onclick="if (!window.__cfRLUnblockHandlers) return false; javascript:openTacticalLink('/dms/agentcommunication/search', this);return false;">1</a>
+										      		</td>
+			    				          
+								   
+									          		
+										      		<td>
+										      			<a data-rmcode="BK" data-dmsloc="19SU" href="#" onclick="if (!window.__cfRLUnblockHandlers) return false; javascript:openTacticalLink('/dms/meettruck/meettruckpending?', this);return false;">0</a>
+										      		</td>
+			    				          
+								   
+									          		
+										      		<td>
+										      			<a data-rmcode="BK" data-dmsloc="19SU" href="#" onclick="if (!window.__cfRLUnblockHandlers) return false; javascript:openTacticalLink('/dms/meettruck/meettruckdeliverycomplete?', this);return false;">0</a>
+										      		</td>
+			    				          
+								   
+									          		
+										      		<td>
+										      			<a data-rmcode="BK" data-dmsloc="19SU" href="#" onclick="if (!window.__cfRLUnblockHandlers) return false; javascript:openTacticalLink('//prd.digideck.appliancedms.com/inventory/report?', this);return false;">0</a>
+										      		</td>
+			    				          
+								   
+							   </tr>
+						   
+						      
+						
+							
+							
+							
+								
+			    					
+			    				   		
+			    					
+							
+								
+			    					
+			    				   		
+			    					
+							
+								
+			    					
+			    				   		
+			    					
+							
+								
+			    					
+			    				   		
+			    					
+							
+								
+			    					
+			    				   		
+			    					
+							
+								
+			    					
+			    				   		
+			    					
+							
+								
+			    					
+			    				   		
+			    					
+							
+								
+			    					
+			    				   		
+			    					
+							
+								
+			    					
+			    				   		
+			    					
+							
+								
+			    					
+			    				   		
+			    					
+							
+								
+			    					
+			    				   		
+			    					
+							
+								
+			    					
+			    				   		
+			    					
+							
+								
+			    					
+			    				   		
+			    					
+							 
+							
+						      
+						
+							
+							
+							
+								
+			    					
+			    				   		
+			    					
+							
+								
+			    					
+			    				   		
+			    					
+							
+								
+			    					
+			    				   		
+			    					
+							
+								
+			    					
+			    				   		
+			    					
+							
+								
+			    					
+			    				   		
+			    					
+							
+								
+			    					
+			    				   		
+			    					
+							
+								
+			    					
+			    				   		
+			    					
+							
+								
+			    					
+			    				   		
+			    					
+							
+								
+			    					
+			    				   		
+			    					
+							
+								
+			    					
+			    				   		
+			    					
+							
+								
+			    					
+			    				   		
+			    					
+							
+								
+			    					
+			    				   		
+			    					
+							
+								
+			    					
+			    				   		
+			    					
+							 
+							
+						      
+						
+				</tbody>	
+			</table>
+		
+		
+	</form>
+	
+	
+
+
+</body></html>

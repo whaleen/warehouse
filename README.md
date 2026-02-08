@@ -10,7 +10,7 @@ This is an internal tool for warehouse operations. The core workflow:
 
 2. **Loads are managed and prepped** - Loads are mirrored from GE ASIS and enriched locally (friendly name, color, notes, prep checklist).
 
-3. **Scanning is for verification ("sanity checks")** - When a load is ready for pickup, start a scanning session to verify all items are present. Think of it as a "job": boss says "let's confirm Load Q is all there" → scan each item → get final count → done. This sanity count is part of the prep checklist, typically done day-of pickup as a final stamp of approval.
+3. **Scanning is for verification ("sanity checks")** - When a load is ready for pickup, use the Map scanner (Fog of War or Ad-hoc) to verify items are present. Think of it as a "job": boss says "let's confirm Load Q is all there" → scan each item → get final count → done. This sanity count is part of the prep checklist, typically done day-of pickup as a final stamp of approval.
 
 4. **Floor displays show live status** - TV screens on the warehouse floor showing load summaries, parts alerts, and active sessions via Supabase Realtime.
 
@@ -20,7 +20,7 @@ This is an internal tool for warehouse operations. The core workflow:
 - [x] Load management (GE-synced; no manual load creation; prep checklist + status tracking)
 - [x] Load prep checklist (tagged, wrapped, pickup date)
 - [x] Barcode scanning (camera + manual entry)
-- [x] Scanning sessions for verification counts
+- [x] Map scanner (Fog of War + Ad-hoc) for verification counts
 - [x] Product database with search
 - [x] Floor displays with 6-digit pairing (public, unauthenticated)
 - [x] Floor display widgets (loads summary, parts alerts, active sessions, clock, text)
@@ -128,8 +128,8 @@ src/
 │   ├── Inventory/          # Inventory + load management
 │   ├── Navigation/         # Header, user menu, location switcher
 │   ├── Products/           # Product search and details
-│   ├── Scanner/            # Barcode scanning
-│   ├── Session/            # Scanning sessions
+│   ├── Scanner/            # Barcode scanning + scan overlay
+│   ├── Map/                # Warehouse map + scan view
 │   └── Settings/           # Settings + user manager + display manager
 ├── context/
 │   └── AuthContext.tsx     # Authentication state
@@ -137,12 +137,12 @@ src/
 │   ├── supabase.ts         # Supabase client
 │   ├── displayManager.ts   # Floor display CRUD + Realtime
 │   ├── loadManager.ts      # Load data access + updates
-│   ├── sessionManager.ts   # Session persistence
+│   ├── sessionManager.ts   # Scan session persistence (scanner-managed)
 │   ├── scanMatcher.ts      # Barcode matching logic
 │   └── utils.ts            # General utilities
 ├── types/
 │   ├── inventory.ts        # Inventory & product types
-│   ├── session.ts          # Session types
+│   ├── session.ts          # Scan session types
 │   └── display.ts          # Floor display types
 ├── App.tsx
 └── main.tsx
@@ -192,7 +192,7 @@ Supported widgets:
 ┌─────────────────────────┐   ┌─────────────────────────┐
 │  Mobile App (Auth)       │   │  Floor Display (Public)  │
 │  - Load management       │   │  - /display route        │
-│  - Scanning sessions     │   │  - 6-digit pairing       │
+│  - Map scanner           │   │  - 6-digit pairing       │
 │  - Inventory CRUD        │   │  - Realtime widgets      │
 │  - Display configuration │   │  - No auth required      │
 └─────────────────────────┘   └─────────────────────────┘
@@ -231,6 +231,13 @@ pnpm exec serve dist -s   # -s flag for SPA routing
 
 The build includes legacy browser support via `@vitejs/plugin-legacy`.
 
-## License
+## Audience Notes
 
-MIT License
+### For Developers
+- This is the high-level product/tech overview. Use `docs/INDEX.md` for validated docs.
+
+### For Operators
+- This is a technical overview; daily workflows are in the Docs UI (Warehouse + GE DMS sections).
+
+### For Agent
+- Treat this as a broad overview only; prefer detailed docs for workflow steps.

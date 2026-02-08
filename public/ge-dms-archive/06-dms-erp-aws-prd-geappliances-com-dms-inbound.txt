@@ -1,0 +1,65 @@
+Inbound - Summary		Having trouble with screen display or response?	Welcome  515511228  AGENT
+
+
+
+
+Inbound Summary
+	
+Inbound DSSO Review
+	
+Inbound ASN
+
+
+Inv Org:  	
+9SU
+	15 days before:		SHOW ONLY ROWS CONTAINING:	
+
+
+Inbound Arrival
+(Required on every Shipment)
+	
+Record Inbound Exception
+(Record Inbound Exception Only)
+	
+Inbound History
+(Shipments that have been submitted)
+
+
+View Pending Inbound Replacement
+
+Planned (not shipped) GEA Inbounds
+
+
+
+
+
+Vendor	SCAC	Actual Gate Date
+MM-DD-YYYY	Actual Gate Time	Truck Number	Scheduled Arrival Date	Arrival Date
+MM-DD-YYYY	Scheduled Arrival Time	Arrival Time
+HH:MM	Labels/BOL/RCVD	Inbound Shipment Number	Units	Points	Late Truck Notify	Receiving Report	Submit Shipment Arrival	Seal Status	Admin
+ELX	GECL			Vehicle_ID	02-05-2026		06:00		
+BOL
+LABELS
+NONE
+BOTH
+	E0230146 - 1
+PODs
+Will Call PODs	1
+	0
+	Mail Sent	Receiving Report			
+
+GEA	DLGK	02-06-2026	23:45	7028	02-09-2026		08:00		
+BOL
+LABELS
+NONE
+BOTH
+	S0387188 - 2
+Labels
+PODs
+Will Call PODs	230
+	110
+		Receiving Report			
+
+
+      
+

@@ -1,0 +1,164 @@
+<html><head>
+	<title>WAREHOUSE - EXCEPTION - STATUS</title>
+	<script type="text/javascript" src="/dms/resources/js/jquery-1.10.2.js"></script>
+	<script type="text/javascript" src="/dms/resources/js/jquery-ui.js"></script>
+	<script type="text/javascript" src="/dms/resources/js/jqueryajaxcommon.js"></script>
+	<script type="text/javascript" src="/dms/resources/js/CalendarControl.js"></script></head>
+
+ 
+ <body link="blue" vlink="purple" alink="red" style=""><iframe id="CalendarControlIFrame" frameborder="0" scrolling="no"></iframe><div id="CalendarControl"></div>
+	<link href="/dms/resources/style/Dms.css" rel="stylesheet" type="text/css">
+	<link rel="stylesheet" type="text/css" href="/dms/resources/style/CalendarControl.css">
+
+ <!-- Header Begins -->
+
+	
+
+<script type="text/javascript">
+jQuery(document).ready(function($) {
+    window.history.pushState('forward', null, null); 
+    $(window).on('popstate', function() {
+       history.pushState(null, null, window.location.pathname);
+    }); 
+    
+});
+
+</script>
+
+<table class="messageHeader" border="0" align="center" width="100%">
+	<tbody><tr>
+		<td width="30%" style="color:#000000;"><b>Truck - Warehouse Exception Report</b></td>
+		
+		<td align="center"></td>
+				<td align="center">
+			
+				
+					
+					
+						
+							
+						
+						
+					
+					<a href="/dms/messages/messagetitledetail?&amp;type=TRUCK_STATUS" target="_blank"><b><font style="text-decoration: underline" color="RED">Having trouble with screen display or response?   </font></b></a>
+				
+				
+		</td>
+		<td align="right" width="20%" style="color:#000000;">Welcome &nbsp;<b><font color="red" id="usr_login_id">515511228</font></b>
+       		
+       			
+       			
+       				&nbsp;<b>AGENT</b>
+       			
+       		
+		</td>
+		
+			
+			
+			
+			<td align="right" width="5%">&nbsp;<b>|&nbsp;<a target="_BLANK" href="/dms/faqadmin/faqsearch" style="color:blue;">Help</a></b>
+			
+			
+		
+	</td></tr>
+</tbody></table>
+<!-- Header Ends -->   
+
+ <br>
+ <table align="center">
+	<tbody><tr>
+		<td align="center"><div class="messageDisplay"></div></td>
+	</tr>
+</tbody></table>
+<form name="warehouseExceptionForm">
+<table width="70%" align="center">
+	<tbody><tr>
+		<td align="right" height="35">
+                        INV ORG: <input type="hidden" value="" name="invOrg">
+        </td>
+         <td align="left" height="35">
+            <select name="dmsLoc" style="margin:2%;width:35%; padding: 5px;" size="1" onchange="if (!window.__cfRLUnblockHandlers) return false; onChangeDmsLoc();" onfocus="if (!window.__cfRLUnblockHandlers) return false; hideCalendarControl();">
+                       
+							
+								
+									<option style="text-align-last:center;" value="19SU" selected="">9SU</option>
+								
+								
+							
+					   
+           </select>   
+        </td> 
+	</tr>
+	<tr>
+		<td align="right" height="35">TRUCK NUMBER : </td>
+		<td align="left" height="35">
+			 <select name="truckNumber" style="margin:2%;width:35%; padding: 5px;" size="1" onfocus="if (!window.__cfRLUnblockHandlers) return false; hideCalendarControl();">
+                       
+							<option style="text-align-last:center;" value="19SU  ">19SU  </option>
+					   
+							<option style="text-align-last:center;" value="CAPC04">CAPC04</option>
+					   
+							<option style="text-align-last:center;" value="CAPC08">CAPC08</option>
+					   
+							<option style="text-align-last:center;" value="GAT01 ">GAT01 </option>
+					   
+							<option style="text-align-last:center;" value="GRAN07">GRAN07</option>
+					   
+							<option style="text-align-last:center;" value="GRAN08">GRAN08</option>
+					   
+							<option style="text-align-last:center;" value="GRAN11">GRAN11</option>
+					   
+							<option style="text-align-last:center;" value="GRAN15">GRAN15</option>
+					   
+							<option style="text-align-last:center;" value="RRTR01">RRTR01</option>
+					   
+							<option style="text-align-last:center;" value=" "> </option>
+					   
+           	 </select>   
+		</td>
+	</tr>
+	<tr>
+		<td align="right" height="35">DELIVERY DATE : </td>
+		<td align="left" height="35">
+			<input style="margin:2%;padding: 5px; width: 36%;text-align: center;" id="DELIVERY_DATE" type="text" name="deliveryDate" value="02-07-2026" onfocus="if (!window.__cfRLUnblockHandlers) return false; showCalendarControl(this)" autocomplete="off" readonly="readonly">
+   	 	</td>
+	</tr>
+	<tr>
+		<td colspan="2" align="center" height="35"><input style="margin-left:5%;cursor:pointer;" type="button" value="GET WAREHOUSE EXCEPTION REPORT" onclick="if (!window.__cfRLUnblockHandlers) return false; getWarehouseExceptionReport()"></td>
+	</tr>
+</tbody></table>
+	</form>
+	<script type="text/javascript">
+		function getWarehouseExceptionReport(){
+			if(document.warehouseExceptionForm.dmsLoc.value ==''){
+				alert("Please select the Inv Org");
+				return;
+			}
+			if(document.warehouseExceptionForm.truckNumber.value ==''){
+				alert("Please input the Truck Number");
+				return;
+			}
+			if(document.warehouseExceptionForm.deliveryDate.value ==''){
+				alert("Please select the Delivery Date");
+				return;
+			}
+			document.warehouseExceptionForm.invOrg.value = $('select[name="dmsLoc"]').find('option:selected').html();
+			document.warehouseExceptionForm.action = "/dms/truckstatus/getWarehouseExceptionReport";
+			document.warehouseExceptionForm.method = "GET";
+			document.warehouseExceptionForm.target = "_blank";
+			document.warehouseExceptionForm.submit();
+		}
+
+		function onChangeDmsLoc() {
+			showPleaseWait();
+			//lockAllControls();
+			var baseURL = "/dms/truckstatus/warehouse_exception_report";
+			document.warehouseExceptionForm.action = baseURL;
+			document.warehouseExceptionForm.method = 'POST';
+			document.warehouseExceptionForm.target = '_self';
+			document.warehouseExceptionForm.submit();
+		}
+	</script>
+ 
+
+        </body></html>

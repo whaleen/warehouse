@@ -21,7 +21,8 @@ export type AppView =
   | 'floor-display'
   | 'map'
   | 'agent'
-  | 'data-quality';
+  | 'data-quality'
+  | 'docs';
 
 export type RouteState = {
   view: AppView;
@@ -66,6 +67,8 @@ export function getPathForView(view: AppView, _sessionId?: string | null, displa
       return '/agent';
     case 'data-quality':
       return '/data-quality';
+    case 'docs':
+      return '/docs';
     case 'settings-locations':
       return '/settings/locations';
     case 'settings-location':
@@ -127,6 +130,8 @@ export function parseRoute(pathname: string): RouteState {
       return { view: 'agent' };
     case 'data-quality':
       return { view: 'data-quality' };
+    case 'docs':
+      return { view: 'docs' };
     case 'settings':
       switch (second) {
         case 'location':

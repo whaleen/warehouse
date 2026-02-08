@@ -1,0 +1,25 @@
+Inventory - On Hand Qty			Welcome  515511228  AGENT	 | Help
+ 
+
+
+INV ORG:   
+9SU
+            SUBINVENTORY:   
+....
+ASIS
+FG
+NONRES
+RCV
+RFSCRAP
+SCRAP
+STA
+SURDEF
+UFG
+
+	
+
+SHOW ONLY ROWS CONTAINING:   
+	
+Spreadsheet
+Model #   	Serial #   	Inv Qty   	Availability Status   	Availability Message   
+Please select a SubInventory

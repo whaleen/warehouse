@@ -1,0 +1,25 @@
+Meet Truck		Having trouble with screen display or response?	Welcome  515511228  AGENT
+
+
+WORKING - MT Orders in Process
+	
+PENDING - MT Contact Customer
+	
+SHIPPED - MT Delivery Complete
+	
+ALL
+	
+PENDING - Multi-Family SDS Orders
+
+
+DESCRIPTION OF MEET TRUCK MENU OPTIONS
+ 
+WORKING - MT Orders in Process	List of all meet truck orders which aren't ready to schedule with customer. These are potential future orders.
+ 
+PENDING - MT Contact Customer	List of all meet truck orders ready for you to contact customer to confirm the delivery. Contains link to Notify Logistic Team to request delivery, move the delivery date or cancel.
+ 
+SHIPPED - MT Delivery Complete	List of all meet truck orders shipped by the ADC but needing to be submitted through Check IN to bill customer and pay the Delivery Agent. Contains the ability to report late trucks, receiving report and carrier details.
+ 
+ALL	This option will let you review all meet truck orders in regardless of status.
+ 
+PENDING - Multi-Family SDS Orders	List of all Pending Multi-Family SDS Delivery orders.

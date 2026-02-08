@@ -1,0 +1,21 @@
+Inventory - Backhaul			Welcome  515511228  AGENT
+
+ 
+
+
+INV ORG:   
+9SU
+         SHOW ONLY ROWS CONTAINING:   
+
+
+Reporting Period: Yearly 
+2026
+2025
+2024
+2023
+2022
+	Not Complete   			
+ 
+
+Inv Org   	ISO   	Start Date   	End Date   	Backhaul Status   	Cancel   	Total Units   	Total Points   	Type   	Sub Inventory   	ADC   	BOL   	SCAC   
+9SU	18925939	01/17/2026	01/23/2026	COMPLETE	0	83	92	PUSH	FG	SAC	Print	DLAM

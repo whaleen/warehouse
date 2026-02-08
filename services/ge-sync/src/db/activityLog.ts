@@ -3,7 +3,7 @@ import { getSupabase } from './supabase.js';
 interface LogActivityParams {
   locationId: string;
   companyId: string;
-  action: 'asis_sync' | 'asis_wipe' | 'fg_sync' | 'sta_sync' | 'inventory_sync' | 'inbound_sync';
+  action: 'asis_sync' | 'asis_wipe' | 'fg_sync' | 'sta_sync' | 'inventory_sync' | 'inbound_sync' | 'backhaul_sync';
   success: boolean;
   details: Record<string, unknown>;
   error?: string;

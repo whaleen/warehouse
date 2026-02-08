@@ -1,0 +1,283 @@
+<html><head>
+<title>TRUCK - STATUS</title>
+<script type="text/javascript">history.forward();</script>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<script type="text/javascript" src="/dms/resources/js/CalendarControl.js"></script></head>
+
+ 
+ <body link="blue" vlink="purple" alink="red" onload="calcTime();" style=""><iframe id="CalendarControlIFrame" frameborder="0" scrolling="no"></iframe><div id="CalendarControl"></div>
+<script type="text/javascript" src="/dms/resources/js/DmsFunction.js"></script>
+<link rel="stylesheet" href="/dms/resources/style/jquery-ui.css">	
+<script src="/dms/resources/js/jquery-1.10.2.js" type="text/javascript"></script>
+<script src="/dms/resources/js/jquery-ui.js" type="text/javascript"></script>
+<script src="/dms/resources/js/jqueryajaxcommon.js" language="javascript" type="text/javascript"></script>
+<script type="text/javascript" src="/dms/resources/js/truckstatus.js"></script>
+<link href="/dms/resources/style/CalendarControl.css" rel="stylesheet" type="text/css">
+<link href="/dms/resources/style/Dms.css" rel="stylesheet" type="text/css">
+<link href="/dms/resources/style/meettruck.css" rel="stylesheet" type="text/css">
+<script language="JavaScript" type="text/javascript">
+
+
+function calcTime() {
+
+	//GMT is -4 for EST Zone
+	var offset = "-4";
+	
+    // create Date object for current location
+    d = new Date();
+    
+    // convert to msec
+    // add local time zone offset 
+    // get UTC time in msec
+    utc = d.getTime() + (d.getTimezoneOffset() * 60000);
+    
+    // create new Date object for different city
+    // using supplied offset
+    nd = new Date(utc + (3600000*offset));
+    
+    // return time as a string
+    var time = nd.toLocaleString();
+    var date=time.split(",");
+    date=date[0].split("/");
+    if(date[0].length == 1){
+    	date[0]="0"+date[0];
+    }
+    if(date[1].length == 1){
+    	date[1]="0"+date[1];
+    }
+    date = date[0]+"-"+date[1]+"-"+date[2];
+    time = time.substring( (time.indexOf(",")+2), time.lastIndexOf(":") ) ;
+    var format = time.split(":");
+    if(format[0].length == 1){
+    	time = "0"+format[0]+":"+format[1];
+    }
+    
+    document.getElementById('currTime').innerHTML = "Time : "+time+" Eastern DLT";
+    document.getElementById('currDate').innerHTML = "Date : "+date;
+
+}
+
+function trcukStatusDetails(dmsLoc,truckNumber){
+	document.frmTruckStatus.hDmsLoc.value = dmsLoc;
+	document.frmTruckStatus.hTruckNumber.value = truckNumber;
+	document.frmTruckStatus.action = "/dms/truckstatus/viewTruckStatusDetail";
+	document.frmTruckStatus.method = "POST";
+	document.frmTruckStatus.target = "_blank";
+	document.frmTruckStatus.submit();
+}
+</script>
+<style type="text/css"> dt {font-family: "arial unicode MS", arial, geneva, sans-serif;} </style>
+
+<style type="text/css">
+body {
+	font-family: ge inspira, verdana;
+	font-size: 12px;
+}
+
+dt {
+	font-family: "arial unicode MS", arial, geneva, sans-serif;
+}
+
+.ui-widget {
+	font-size: 12px;
+}
+
+#accordion .ui-accordion-content {
+	max-height: 100px;
+}
+
+a.nounderline:link {
+	color: black;
+	text-decoration: none;
+}
+</style>
+<script type="text/javascript">
+	history.forward();
+	$(function() {
+	});
+</script>
+<style type="text/css">
+
+        .dataTableOddRowsThis
+        {
+           background-color:white;
+           color:black;
+           height:35;
+           font-family:GE Inspira, verdana;
+           font-size:11;
+        }        
+
+        .dataTableEvenRowsThis
+        {
+           background-color:rgb(65,133,147);
+           color:black;
+           height:35;
+           font-family:GE Inspira, verdana;
+           font-size:11;        
+        }  
+        
+        .dataTableHeaderTruckStatus{
+        	font-family: ge inspira, verdana, arial;
+			font-size: 11;
+			font-weight: bold;
+			background-color: #3b73b9;
+			color: white;
+			height: 35;
+        }
+        .selectionTabletruckStatus {
+			width: 877;
+			border: 0;
+			font-family: ge inspira, verdana, arial;
+			font-size: 9pt;
+		}
+
+</style>
+
+
+
+
+ <!-- Header Begins -->
+
+	
+
+<script type="text/javascript">
+jQuery(document).ready(function($) {
+    window.history.pushState('forward', null, null); 
+    $(window).on('popstate', function() {
+       history.pushState(null, null, window.location.pathname);
+    }); 
+    
+});
+
+</script>
+
+<table class="messageHeader" border="0" align="center" width="100%">
+	<tbody><tr>
+		<td width="30%" style="color:#000000;"><b>Truck - Status</b></td>
+		
+		<td align="center"></td>
+				<td align="center">
+			
+				
+					
+					
+						
+							
+						
+						
+					
+					<a href="/dms/messages/messagetitledetail?&amp;type=TRUCK_STATUS" target="_blank"><b><font style="text-decoration: underline" color="RED">Having trouble with screen display or response?   </font></b></a>
+				
+				
+		</td>
+		<td align="right" width="20%" style="color:#000000;">Welcome &nbsp;<b><font color="red" id="usr_login_id">515511228</font></b>
+       		
+       			
+       			
+       				&nbsp;<b>AGENT</b>
+       			
+       		
+		</td>
+		
+			
+			
+			
+			<td align="right" width="5%">&nbsp;<b>|&nbsp;<a target="_BLANK" href="/dms/faqadmin/faqsearch" style="color:blue;">Help</a></b>
+			
+			
+		
+	</td></tr>
+</tbody></table>
+<!-- Header Ends -->   
+
+ <br>
+ <table align="center">
+	<tbody><tr>
+		<td align="center"><div class="messageDisplay"></div></td>
+	</tr>
+</tbody></table>
+ <form name="frmTruckStatus">
+  <input type="hidden" name="hDmsLoc" value="19SU">
+  <input type="hidden" name="hTruckNumber" value="">
+  <input type="hidden" name="dmsLoc" id="dmsLoc" value="">
+  <input type="hidden" name="truckNumber" id="truckNumber" value="">
+  <input type="hidden" name="deliveryDate" id="deliveryDate" value="">
+ <table cellpadding="0" cellspacing="0" class="selectionTabletruckStatus" align="center" border="0">
+  <tbody><tr>
+                    <td width="100%" height="15" colspan="8"></td>
+                </tr>
+                <tr>
+                    <td width="15%" align="right" height="23">
+                        <b><i>INV ORG: &nbsp;</i></b>
+                    </td>
+                    <td width="15%" align="left" height="23">
+                        <select name="cbDmsLoc" style="border: 1px solid #E2E2E2" size="1" onchange="if (!window.__cfRLUnblockHandlers) return false; onChangeDmsLoc();" onfocus="if (!window.__cfRLUnblockHandlers) return false; hideCalendarControl();">
+                               
+								
+									
+										<option value="19SU" selected="">9SU</option>
+									
+									
+								
+							
+                                </select>                          
+                    </td>
+                    <td width="16%" align="right" height="23" nowrap="">
+                        <b><i>Date : &nbsp; 02-07-2026  </i></b>
+                    </td>
+                    <td width="10%" align="left" height="23">
+                        &nbsp;
+                    </td>                    
+                    <td width="23%" align="right" height="23" nowrap="">
+                        <b><i>Time : &nbsp; 20:56  Pacific  DLT </i></b>
+                    </td>
+                    <td width="10%" align="left" height="23">
+                        &nbsp;
+                    </td>
+                    <td width="12%" align="right" height="23">
+                     <!--input type=button value="Refresh" onClick="history.go()"-->
+                     <input type="button" value="Refresh" onclick="if (!window.__cfRLUnblockHandlers) return false; ShowTruckStatusData()">
+                    </td>
+                    <td width="9%" align="left" height="23">
+                        &nbsp;
+                    </td>                                                                                                                
+                </tr>
+                <tr style="height:20">
+                    <td colspan="8"></td>
+                </tr>
+                <tr>
+                    <td colspan="8" align="center" class="message"></td>
+                </tr>
+                <tr style="height:20">
+                    <td colspan="8"></td>
+                </tr>
+ </tbody></table>
+<!--   <table class="dataTable" align="center" cellspacing="0" cellpadding="0" border="1">
+   <tr>
+                 <td> -->
+					<table style="width: 1000" class="dataTable12" align="center" cellspacing="0" cellpadding="0" border="1">
+                        <thead class="dataTableHeaderTruckStatus">
+                           <tr>
+                              <td width="09%" align="center">TRUCK</td>
+                              <td width="16%" align="center">PRIMARY DRIVER</td>
+                              <td width="08%" align="center">DRIVER ID</td>                                          
+                              <td width="10%" align="center">PHONE #1</td>
+                              <td width="06%" align="center">CURRENT STOP</td>
+                              <td width="15%" align="center">IVR RESPONSE FOR CURRENT STOP</td>
+                              <td width="10%" align="center">TIME FRAME</td>
+                              <td width="12%" align="center">IVR DATE/TIME STAMP</td>
+                              <td width="6%" align="center">LINKS</td>  
+                              <td width="10%" align="center">Warehouse Exception Report</td>                                       
+                           </tr>
+                        </thead>
+                         <tbody>
+                         
+                        </tbody>
+                      </table>
+<!--                   </td>
+               </tr>
+  </table> -->
+ </form>       
+ 
+
+        </body></html>

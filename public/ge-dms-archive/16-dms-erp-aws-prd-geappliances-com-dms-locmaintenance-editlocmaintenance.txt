@@ -1,0 +1,108 @@
+Location Contact Information		Having trouble with screen display or response?	Welcome  515511228  AGENT	 | Help
+
+
+Location Contact Information
+Inventory Loc:	
+9SU
+	
+Agent Address: 	SDS-9SU BLUEJACKET LOGISTICS LLC
+ 	BLUEJACKET LOGISTICS LLC
+ 	2660 INDUSTRIAL BLVD
+ 	WEST SACRAMENTO ,CA ,95691-3825
+Phone: 	916-790-3333
+Fax: 	
+Email: 	9susds@bluejacketlogistics.com
+
+Agent Type :	COMBO - HD2.0
+Parent Company :	BLUEJACKET ENTERPRISES INC
+Metro Area :	SACRAMENTO
+ 	 
+Time Zone :	Pacific DLT
+Working Hours From :	08:00	Warehouse Capacity Details:	
+To :	17:00	Warehouse Size (sq ft.) :	
+# of Dock Doors :	
+Serving ADC :	SAC	~ Max Warehouse Capacity (unit qty) :	
+First ADC Ship Date :	2025-10-03	Allowable Inbounds Per Day :	
+Last ADC Ship Date :	2000-01-01
+ 	 	 	 
+Notes :	
+(Limit 2000 Characters)
+
+
+
+ 
+
+Please Note- Any PD02 and PD03 updates will still be required to be submitted via this email: SDSupdatesuserandlocation@geappliances.com
+
+ 
+
+PRIMARY	CONTACT TYPE	NAME*	SSO*	EMAIL*	PHONE #1*	PHONE #2	FAX #	LAST UPDATE	ACTION
+  	SITE MANAGER		 	 				09/26/2025	
+  	WAREHOUSE MANAGER		 	 				09/26/2025	
+  	CUSTOMER SERVICE		 	 				09/26/2025	
+ 	CUSTOMER SERVICE		 	 				10/20/2025	 
+  	BUILDER QUALITY MGR		 	 				10/08/2025	
+  	INVENTORY		 	 				09/26/2025	
+ 	INVENTORY		 	 				10/20/2025	 
+  	WEEKEND/AFTER HOURS		 	 				09/22/2025	
+  	DAMAGE		 	 				10/20/2025	
+  	FREIGHT CLAIMS		 	 				09/26/2025	
+ 	FREIGHT CLAIMS		 	 				11/07/2025	 
+ 	FREIGHT CLAIMS		 	 				09/26/2025	 
+  	BACKHAUL/AS IS		 	 				09/26/2025	
+  	MEET TRUCK		 	 				10/08/2025	
+  	PROPERTY DAMAGE		 	 				09/26/2025	
+  	INBOUND FREIGHT		 	 				09/26/2025	
+  	FREIGHT CLM-INV ONLY		 	 				09/26/2025	
+ 	FREIGHT CLM-INV ONLY		 	 				09/26/2025	 
+  	FINANCIAL CONTROLLER		 	 				09/22/2025	
+  	HOME DELIVERY		 	 				11/07/2025	
+
+*Required fields for ALL contacts
+ 
+Additional Contacts:
+ 
+
+CONTACT TYPE	NAME*	SSO*	EMAIL*	PHONE #1*	PHONE #2	FAX #	ACTION
+
+SITE MANAGER
+WAREHOUSE MANAGER
+CUSTOMER SERVICE
+BUILDER QUALITY MGR
+INVENTORY
+WEEKEND/AFTER HOURS
+DAMAGE
+FREIGHT CLAIMS
+BACKHAUL/AS IS
+MEET TRUCK
+PROPERTY DAMAGE
+INBOUND FREIGHT
+FREIGHT CLM-INV ONLY
+FINANCIAL CONTROLLER
+HOME DELIVERY
+							
+
+ 
+
+RM SSO	RM CODE	RM FIRST NAME	RM LAST NAME	RM PHONE NO	RM DIVISION	TM NAME	TM SSO
+211011378	BK	BRIAN	KUT	(502)909-4958	WESTERN	220005482	MARSHALL EDMONDSON
+
+ 
+
+VENDOR	THD
+NEXTDAY	Orders
+Cleared By	ETA	Ordered On	Monday	Tuesday	Wednesday	Thursday	Friday	Saturday	Sunday
+BSH	NO	0:00	0:00	Shipped from ADC	Wed		Fri		Tue		
+Arrives at SDS	Thu		Mon		Wed		
+ELECTROLUX	NO	0:00	0:00	Shipped from ADC	Mon	Tue	Wed				
+Arrives at SDS	Fri	Fri	Fri				
+GEA	NO	0:00	0:00	Shipped from ADC	Mon	Tue	Wed	Thu	Fri		
+Arrives at SDS	Tue	Wed	Thu	Fri	Mon		
+LG	NO	0:00	0:00	Shipped from ADC							
+Arrives at SDS							
+MAYTAG	NO	0:00	0:00	Shipped from ADC							
+Arrives at SDS							
+SAMSUNG	NO	0:00	0:00	Shipped from ADC							
+Arrives at SDS							
+SHARP	NO	0:00	0:00	Shipped from ADC							
+Arrives at SDS							

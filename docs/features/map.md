@@ -87,3 +87,18 @@ WHERE plh.product_id IS NULL
   AND plh.inventory_item_id = ii.id
   AND ii.product_fk IS NOT NULL;
 ```
+
+## Related Docs
+- Warehouse Map (user guide): `/docs?doc=docs%2Fwarehouse%2Fwarehouse-map.md`
+
+## Audience Notes
+
+### For Developers
+- This is the source of truth for map data flow and table usage.
+- Keep in sync with `WarehouseMapNew.tsx` changes.
+
+### For Operators
+- This doc is technical; use the Warehouse Map guide for UI steps.
+
+### For Agent
+- Use this only for data flow and storage details, not UI instructions.

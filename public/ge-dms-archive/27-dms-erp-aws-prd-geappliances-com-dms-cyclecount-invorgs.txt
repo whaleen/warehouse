@@ -1,0 +1,19 @@
+Inventory - Cycle Count/Physical Inventory			Welcome  515511228  AGENT	 | Help
+
+
+
+
+
+
+INV ORG :	
+--
+9SU
+		
+
+
+
+Date	Type	Inv Accuracy	ASIS	FG	SCRAP	Score
+Book	Count	Match	Book	Count	Match	Book	Count	Match
+01/29/2026	CYCLE COUNT	99.5	778	774	774	64	64	64	0	0	0	100
+12/01/2025	CYCLE COUNT (25 Q4 WEST MANDATORY)	100	800	800	800	3	3	3	0	0	0	100
+11/13/2025	CYCLE COUNT	99.3	401	398	398	12	12	12	0	0	0	100

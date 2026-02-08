@@ -1,0 +1,40 @@
+GEA DELIVERS - SUMMARY REPORTS		Having trouble with screen display or response?	Welcome  515511228  AGENT	 | Help
+
+
+	 	Select Report: 	
+-----
+Tactical Dashboard
+Badge Expirations
+eTicket Report
+ERP Inbound Report
+ERP Open Orders/Returns
+IVR Usage Report
+Precall Activity Report
+Prop. Damage Claim
+		 	 	 	 
+Territory: 	
+-----
+EASTERN
+WESTERN
+CENTRAL
+	Region Manager: 	
+-----
+BC
+BK
+DB
+DC
+HQ
+JD
+ME
+ML
+RT
+SA
+SB
+SS
+	 	INV ORG: 	
+-----
+9SU
+	Input Start Date: 	
+Show only rows containing:  		 	 	 			No of Days before start: 	
+ 	EXPORT TO SPREADSHEET
+Select your criteria and click on the RUN REPORT button

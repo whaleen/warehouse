@@ -2,22 +2,22 @@
 
 ## GE Sync Service
 
-**Base URL:** `https://warehouse-production-02e6.up.railway.app`
+**Base URL:** Use your deployed GE sync base URL (for example, the value of `VITE_GE_SYNC_URL`).
 
 ### Health Check
 ```bash
-curl https://warehouse-production-02e6.up.railway.app/health
+curl <GE_SYNC_BASE_URL>/health
 ```
 
 ### Authentication Status
 ```bash
-curl "https://warehouse-production-02e6.up.railway.app/auth/status?locationId=YOUR_LOCATION_UUID" \
+curl "<GE_SYNC_BASE_URL>/auth/status?locationId=YOUR_LOCATION_UUID" \
   -H "X-API-Key: YOUR_API_KEY"
 ```
 
 ### Force Re-Authentication
 ```bash
-curl -X POST https://warehouse-production-02e6.up.railway.app/auth/refresh \
+curl -X POST <GE_SYNC_BASE_URL>/auth/refresh \
   -H "Content-Type: application/json" \
   -H "X-API-Key: YOUR_API_KEY" \
   -d '{"locationId": "YOUR_LOCATION_UUID"}'
@@ -25,7 +25,7 @@ curl -X POST https://warehouse-production-02e6.up.railway.app/auth/refresh \
 
 ### Sync ASIS Inventory
 ```bash
-curl -X POST https://warehouse-production-02e6.up.railway.app/sync/asis \
+curl -X POST <GE_SYNC_BASE_URL>/sync/asis \
   -H "Content-Type: application/json" \
   -H "X-API-Key: YOUR_API_KEY" \
   -d '{"locationId": "YOUR_LOCATION_UUID"}'
@@ -33,7 +33,7 @@ curl -X POST https://warehouse-production-02e6.up.railway.app/sync/asis \
 
 ### Sync FG (Finished Goods) Inventory
 ```bash
-curl -X POST https://warehouse-production-02e6.up.railway.app/sync/fg \
+curl -X POST <GE_SYNC_BASE_URL>/sync/fg \
   -H "Content-Type: application/json" \
   -H "X-API-Key: YOUR_API_KEY" \
   -d '{"locationId": "YOUR_LOCATION_UUID"}'
@@ -41,7 +41,15 @@ curl -X POST https://warehouse-production-02e6.up.railway.app/sync/fg \
 
 ### Sync STA (Staged) Inventory
 ```bash
-curl -X POST https://warehouse-production-02e6.up.railway.app/sync/sta \
+curl -X POST <GE_SYNC_BASE_URL>/sync/sta \
+
+### Sync Backhaul Orders
+```bash
+curl -X POST <GE_SYNC_BASE_URL>/sync/backhaul \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: YOUR_API_KEY" \
+  -d '{"locationId": "YOUR_LOCATION_UUID", "includeClosed": true}'
+```
   -H "Content-Type: application/json" \
   -H "X-API-Key: YOUR_API_KEY" \
   -d '{"locationId": "YOUR_LOCATION_UUID"}'
@@ -53,7 +61,7 @@ curl -X POST https://warehouse-production-02e6.up.railway.app/sync/sta \
 Set in Doppler and injected at build time:
 
 ```bash
-VITE_GE_SYNC_URL=https://warehouse-production-02e6.up.railway.app
+VITE_GE_SYNC_URL=<your-ge-sync-base-url>
 VITE_GE_SYNC_API_KEY=<your-api-key>
 ```
 
@@ -78,17 +86,17 @@ export API_KEY="your-api-key-here"
 export LOCATION_ID="your-location-uuid-here"
 
 # Run all syncs
-curl -X POST https://warehouse-production-02e6.up.railway.app/sync/asis \
+curl -X POST <GE_SYNC_BASE_URL>/sync/asis \
   -H "Content-Type: application/json" \
   -H "X-API-Key: $API_KEY" \
   -d "{\"locationId\": \"$LOCATION_ID\"}"
 
-curl -X POST https://warehouse-production-02e6.up.railway.app/sync/fg \
+curl -X POST <GE_SYNC_BASE_URL>/sync/fg \
   -H "Content-Type: application/json" \
   -H "X-API-Key: $API_KEY" \
   -d "{\"locationId\": \"$LOCATION_ID\"}"
 
-curl -X POST https://warehouse-production-02e6.up.railway.app/sync/sta \
+curl -X POST <GE_SYNC_BASE_URL>/sync/sta \
   -H "Content-Type: application/json" \
   -H "X-API-Key: $API_KEY" \
   -d "{\"locationId\": \"$LOCATION_ID\"}"
@@ -133,3 +141,15 @@ WHERE location_id = 'YOUR_LOCATION_UUID'
 GROUP BY inventory_type, source
 ORDER BY last_sync DESC;
 ```
+
+## Audience Notes
+
+### For Developers
+- Use this for service endpoints and environment wiring.
+- Replace `<GE_SYNC_BASE_URL>` with your deployment URL.
+
+### For Operators
+- Use Settings → GE Sync in the app to run syncs; this is a reference for IT.
+
+### For Agent
+- Use only to explain endpoint availability, not to run commands.

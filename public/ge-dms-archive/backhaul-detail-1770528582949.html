@@ -1,0 +1,1618 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd"><html><head>
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<title>Inventory-Backhaul ISO</title>
+<!-- <script type="text/javascript" src="https://code.jquery.com/jquery-1.10.2.js"></script> -->
+<script type="text/javascript" src="/dms/resources/js/jquery-1.10.2.js"></script>
+<!-- <script type="text/javascript" src="https://code.jquery.com/ui/1.11.1/jquery-ui.js"></script> -->
+<script type="text/javascript" src="/dms/resources/js/jquery-ui.js"></script><!--<script type="text/javascript" src="/dms/resources/js/jquery-ui.js"></script>--> 
+<!--<script type="text/javascript" src="/dms/resources/js/CalendarControl.js"></script>-->
+<!--<script type="text/javascript" src="/dms/resources/js/DmsFunction.js"></script>-->
+<!--<script type="text/javascript" src="/dms/resources/js/jqueryajaxcommon.js"></script>-->
+<!--<script type="text/javascript" src="/dms/resources/js/FormTableSort.js"></script>-->
+<!--<script type="text/javascript" src="/dms/resources/js/TableSearch.js"></script>-->
+<!--<script type="text/javascript" src="/dms/resources/js/TableSelectAll.js"></script>-->
+<!--<script type="text/javascript" src="/dms/resources/js/StripedTable.js"></script>-->
+<!--<script type="text/javascript" src="/dms/resources/js/jqueryajaxcommon.js"></script>-->
+<!--<script type="text/javascript" src="/dms/resources/js/gebackhaul.js"></script>-->
+<!-- CSS -->
+<link rel="stylesheet" type="text/css" href="/dms/resources/style/jquery-ui.css">
+<link rel="stylesheet" type="text/css" href="/dms/resources/style/style.css">
+<link rel="stylesheet" type="text/css" href="/dms/resources/style/Dms.css">
+<link rel="stylesheet" type="text/css" href="/dms/resources/style/CalendarControl.css">
+<link rel="stylesheet" type="text/css" href="/dms/resources/style/checkin.css">
+<!--<script type="text/javascript">
+
+</script>-->
+
+<style>
+/*  Carrier Information*/
+/* .ci-first-column-cls{
+margin-left:4px;
+float:left;
+padding:5px;
+width:30%;
+}
+.ci-second-column-cls{
+float:left;
+padding:5px;
+width:30%;
+}
+.ci-third-column-cls{
+padding:5px;
+
+} */
+
+.second-section{
+    width: 65%;
+    background: #fff;
+    margin-left: 18%;
+    height: 125px;
+}
+.second-section-header{
+
+	font-size: 9pt;
+    font-family: Verdana, sans-serif;
+    text-align: center;
+    color: #FFFFFF;
+    background-color: #006699;
+    font-weight: 800;
+   }
+   
+  /*  .carrier-label-cls{
+	    padding: 4px;
+	    font-size: 9pt;
+	    font-family: Verdana, sans-serif;
+	    font-weight: 800;
+	   color: #3c3939;
+    }
+    .carrier-val-cls {
+	    padding: 4px;
+	    font-size: 9pt;
+	    font-family: Verdana, sans-serif;
+	    color:#3c3939;
+    }
+    .ci-input{
+    	padding: 0px 0px 0px 0px;
+    }
+    .ci-seal-input{
+   		 margin-left: 20px;
+    }
+    .ci-first-row-inner-cls{
+    	padding: 5px;
+    }
+    .ci-second-row-inner-cls{
+    	padding: 5px;
+    }
+    .ci-third-row-inner-cls{
+    	padding: 5px;
+    }
+ */
+/*end CInformation*/
+  .ship-confirm-btn{
+    /* float:right; */
+    padding-right: 137px;
+    padding-top: 13px;
+     padding-bottom: 10px;
+    }
+    
+     .pick-list-btn{
+    /* float:right; */
+    padding-right: 137px;
+    padding-top: 13px;
+     padding-bottom: 10px;
+    }
+    
+.backhaul_print {
+	color: blue;
+}
+
+.ge_background_color {
+	background-color: #1a63a2;
+	text-align: center;
+	font-weight: 600;
+	font-size: 14px;
+}
+
+.search-screen tr, .search-screen td {
+	border: 1.5px solid gray;
+}
+
+.action-buttons {
+	cursor: pointer;
+	font-size: 12px;
+	padding: 1%;
+}
+
+.messageHeader {
+	font-size: 12px;
+	height: 30px;
+}
+
+.search-screen {
+	font-weight: 600;
+	font-size: 14px;
+}
+
+input, select {
+	padding: 4px 30px 4px 2px;
+	text-align: center;
+}
+
+select {
+	text-align-last: center;
+}
+
+.search-result {
+	margin: 2% 10% 5% 10%;
+	text-align: center;
+}
+
+.search-result tr {
+	height: 30px;
+}
+
+/* mdel code  */
+
+/* The Modal (background) */
+.modal {
+	display: none; /* Hidden by default */
+	position: fixed; /* Stay in place */
+	z-index: 1; /* Sit on top */
+	left: 0;
+	top: 0;
+	width: 100%; /* Full width */
+	height: 100%; /* Full height */
+	overflow: auto; /* Enable scroll if needed */
+	background-color: rgb(0, 0, 0); /* Fallback color */
+	background-color: rgba(0, 0, 0, 0.4); /* Black w/ opacity */
+	-webkit-animation-name: fadeIn; /* Fade in the background */
+	-webkit-animation-duration: 0.4s;
+	animation-name: fadeIn;
+	animation-duration: 0.4s
+}
+
+/* Modal Content */
+.modal-content {
+	position: fixed;
+	top: 120px;
+	background-color: #fefefe;
+	-webkit-animation-name: slideIn;
+	-webkit-animation-duration: 0.4s;
+	animation-name: slideIn;
+	animation-duration: 0.4s;
+	left: 24%;
+	padding: 5px;
+}
+
+/* The Close Button */
+.close {
+	color: #ccc;
+	float: right;
+	font-size: 28px;
+	font-weight: bold;
+}
+
+.close:hover, .close:focus {
+	color: #000;
+	text-decoration: none;
+	cursor: pointer;
+}
+
+.modal-header {
+	padding: 2px 16px;
+	color: white;
+}
+
+.model_header_text {
+	font-size: 8.5pt;
+	font-family: Verdana, sans-serif;
+	font-weight: 600;
+	/* padding-bottom: 72
+px
+; */
+	/* padding-top: 76
+px
+; */
+	/* padding: 31
+px
+; */
+	margin-bottom: 10 px;
+	padding: 10 px;
+}
+
+.modal-body {
+	padding: 2px 16px;
+}
+
+.modal-footer {
+	padding: 2px 16px;
+	color: white;
+}
+
+/* Add Animation */
+@
+-webkit-keyframes slideIn {
+	from {bottom: -300px;
+	opacity: 0
+}
+
+to {
+	bottom: 0;
+	opacity: 1
+}
+
+}
+@
+keyframes slideIn {
+	from {bottom: -300px;
+	opacity: 0
+}
+
+to {
+	bottom: 0;
+	opacity: 1
+}
+
+}
+@
+-webkit-keyframes fadeIn {
+	from {opacity: 0
+}
+
+to {
+	opacity: 1
+}
+
+}
+@
+keyframes fadeIn {
+	from {opacity: 0
+}
+
+to {
+	opacity: 1
+}
+
+}
+.button_txt {
+	font-size: 8.5pt;
+	font-family: Verdana, sans-serif;
+	font-weight: 600;
+	color: #006699;
+}
+
+.pickup_button_txt {
+	font-size: 8.5pt;
+	font-family: Verdana, sans-serif;
+	font-weight: 600;
+	color: #006699;
+}
+
+/* .seal_number_input {
+	padding: 20px;
+} */
+
+.button_model {
+	margin-left: 45%;
+	margin-top: 10px;
+}
+
+.backhaul_input {
+	padding: 0px 0px 0px 0px;
+	border: 1.5px solid;
+	margin: 1px;
+}
+
+.backhaul_input1 {
+	padding: 0px 0px 0px 0px;
+	border: 1.5px solid;
+	//margin: 1px;
+}
+
+.backhaul_text_value {
+	font-weight: 200;
+}
+/*  Error Popup css*/
+
+/* The Modal (background) */
+.modalerror {
+  display: none; /* Hidden by default */
+  position: fixed; /* Stay in place */
+  z-index: 1; /* Sit on top */
+  padding-top: 100px; /* Location of the box */
+  left: 0;
+  top: 0;
+  width: 100%; /* Full width */
+  height: 100%; /* Full height */
+  overflow: auto; /* Enable scroll if needed */
+  background-color: rgb(0,0,0); /* Fallback color */
+  background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+}
+
+/* Modal Content */
+.modal-content-error {
+  background-color: #fefefe;
+  margin: auto;
+  padding-bottom: 20px;
+  padding-left: 0px;
+  padding-top: 0px;
+  border: 1px solid #888;
+  width: 50%;
+}
+
+.model-header-close-btn{
+  text-align: right;
+  height: 21px;
+  color: #FFFFFF;
+  background-color: #006699;
+  font-weight: 800;
+  margin-bottom: 7px;
+  }
+  
+#close_backhaul_error_popup{
+      margin: 0px;
+  }
+  
+#subinventorypop{
+       color: #FFFFFF;
+    }
+/* The Close Button */
+.close-error {
+  color: #aaaaaa;
+  float: right;
+  font-size: 28px;
+  font-weight: bold;
+}
+
+.close-error:hover,
+.close-error:focus {
+  color: #000;
+  text-decoration: none;
+  cursor: pointer;
+}
+table th{border:1px solid black; border-collapse:collapse;}
+
+/*  Carrier Information start*/
+.ci-first-column-cls{
+margin-left:30px;
+display: inline-block;
+float:left;
+padding:2px;
+width:40%;
+}
+.ci-second-column-cls{
+display: inline-block;
+vertical-align: top;
+float:right;
+padding:5px;
+ width:45%; 
+}
+
+
+   .carrier-label-cls{
+	    padding: 4px;
+	    font-size: 9pt;
+	    font-family: Verdana, sans-serif;
+	    font-weight: 800;
+	   color: #3c3939;
+    }
+    .carrier-val-cls {
+	    padding: 4px;
+	    font-size: 9pt;
+	    font-family: Verdana, sans-serif;
+	    color:#3c3939;
+    }
+    .ci-input{
+    	padding: 0px 0px 0px 0px;
+    }
+    .ci-seal-input{
+   		 margin-left: 20px;
+    }
+    .ci-left-col{
+    	padding: 5px;
+    	text-allign:left;
+    }
+    
+     .ci-right-col{
+    	padding: 5px;
+    	text-allign:right;
+    }
+    
+.button_txt {
+	font-size: 8.5pt;
+	font-family: Verdana, sans-serif;
+	font-weight: 600;
+	color: #006699;
+}
+
+#carrier_name_label{
+margin-left: 12px;
+}
+/* #carrier_contact_label{
+margin-left: 3px;
+} */
+#carrier_scac_label{
+margin-left: 16px;
+}
+#carrier_phone_label{
+margin-left: 10px;
+}
+#carrier_email_label{
+margin-left: 15px;
+}
+
+#vehicle-number-col{
+margin-left: 9px;
+}
+#seal-no-col{
+margin-left: 30px;
+}
+#notes-col{
+margin-left: 41px;
+}
+ /*  Carrier Information end*/   
+
+ </style>
+
+<link rel="preload" as="script" href="/dms/resources/js/gebackhaul.js"><link rel="preload" as="script" href="/dms/resources/js/jqueryajaxcommon.js"><link rel="preload" as="script" href="/dms/resources/js/StripedTable.js"><link rel="preload" as="script" href="/dms/resources/js/TableSelectAll.js"><link rel="preload" as="script" href="/dms/resources/js/TableSearch.js"><link rel="preload" as="script" href="/dms/resources/js/FormTableSort.js"><link rel="preload" as="script" href="/dms/resources/js/jqueryajaxcommon.js"><link rel="preload" as="script" href="/dms/resources/js/DmsFunction.js"><link rel="preload" as="script" href="/dms/resources/js/CalendarControl.js"><link rel="preload" as="script" href="/dms/resources/js/jquery-ui.js"><link rel="preload" as="script" href="/dms/resources/js/jquery-1.10.2.js"></head>
+<body>
+	<!-- Header Begins -->
+
+	
+
+<!--<script type="text/javascript">
+jQuery(document).ready(function($) {
+    window.history.pushState('forward', null, null); 
+    $(window).on('popstate', function() {
+       history.pushState(null, null, window.location.pathname);
+    }); 
+    
+});
+
+</script>-->
+
+<table class="messageHeader" border="0" align="center" width="100%">
+	<tbody><tr>
+		<td width="30%" style="color:#000000;"><b>Inventory - Backhaul ISO</b></td>
+		
+		<td align="center"></td>
+				<td align="center">
+				
+		</td>
+		<td align="right" width="20%" style="color:#000000;">Welcome &nbsp;<b><font color="red" id="usr_login_id">515511228</font></b>
+       		
+       			
+       			
+       				&nbsp;<b>AGENT</b>
+       			
+       		
+		</td>
+			
+		
+	</tr>
+</tbody></table>
+<!-- Header Ends -->   
+
+	
+
+
+
+<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<title></title>
+
+
+
+<!--<script type="text/javascript">
+function calliso(iso_id,iso_li_id,bhtype) {
+		var isoresponse;
+	var getisoreq={"current_screen": "GEAD INV BACKHAUL ITEM STATUS","gead_user":{"sso": "515511228","user_authority": "AGENT"},"search_criteria":{"iso_id": iso_id}}
+	var data = JSON.stringify(getisoreq);
+	//var isoresponse={ "status": "SUCCESS", "error_message": "", "list": [ { "key": { "iso_id": "3", "iso_id": "0" }, "data": { "inv_org": "54H", "iso": "MANUAL", "backhaul_start_date": "20211027000000", "backhaul_end_date": "", "backhaul_status": "MANUAL ADD", "backhaul_cancel_units": "0", "backhaul_total_units": "7", "backhaul_total_points": "0", "backhaul_type": "MANUAL", "backhaul_subinventory": "FG", "backhaul_adc": "LOU", "carrier_name": " ", "carrier_contact": " ", "carrier_email": " ", "carrier_scac": " ", "carrier_phone": " ", "manual_error_message": " ", "vehicle_number": " ", "seal_code": " ", "iso_confirm_error_message": " " } } ] };
+	var isoresponse;
+	var url="https://k7cn34eq14.execute-api.us-east-1.amazonaws.com/prd/get_backhaul";
+	showPleaseWait();
+	$.ajax({
+	  type: 'POST',
+	  url:url,
+	  data: data,
+	  dataType: 'json',
+	  contentType: 'application/json; charset=utf-8',
+	  success: function(response) {
+		hidePleaseWait();
+		isoresponse=response;
+	   callisoLine(iso_id,iso_li_id,bhtype,isoresponse);
+	   
+	  },error: function (jqXHR, exception) {
+		hidePleaseWait();
+	  }
+	});
+	 
+};
+
+function callisoLine(iso_id, iso_li_id,bhtype,gbresponse) {
+	var req = { "current_screen": "GEAD INV BACKHAUL ITEM STATUS", "gead_user": { "sso": "515511228", "user_authority": "AGENT" }, "search_criteria": { "iso_id": iso_id, "iso_line_id": iso_li_id } }
+	var data1 = JSON.stringify(req);
+	//var manuallineresponse ='{ "satatus": "SUCCESS", "error_message": "", "list": [ { "key": { "manual_id": "3", "manual_line_id": "2" }, "data": { "model_no": "121345", "serial_no": "1213455", "accessory_qty": "0", "manual_backhaul_line_status": " ", "iso_line_number": " ", "iso_line_status": " ", "iso_confirm_status": " ", "manual_error_message": " ", "iso_confirm_error_message": " " } } ] }';
+	// var manuallineurl= $('.getmanualurl').val();
+	var gblineresponse;
+	//var manuallineurl = "https://okj295n7q1.execute-api.us-east-1.amazonaws.com/dev/get_backhaul_lines_manual";
+	var url = "https://k7cn34eq14.execute-api.us-east-1.amazonaws.com/prd/get_backhaul_lines_iso";
+	showPleaseWait();
+	$.ajax({
+		type: 'POST',
+		url: url,
+		data: data1,
+		dataType: 'json',
+		contentType: 'application/json; charset=utf-8',
+		success: function(response) {
+			hidePleaseWait();
+			gblineresponse = response;
+			getErpStatus(bhtype,gbresponse, gblineresponse);
+		}, error: function(jqXHR, exception) {
+			hidePleaseWait();
+		}
+	});
+};
+
+function getErpStatus(bhtype,manualresponse,manuallineresponse){
+	var erpurl="https://prd.api.appliancedms.com/api/ior-backhaul-service/erp/getERPItemStatus";
+	var erpreq={  "current_screen":"GEAD INV BACKHAUL ITEM STATUS",  "gead_user":{"sso": "515511228","user_authority": "AGENT"},  "list":[{ "key": {"inv_org": manualresponse.list[0].data.inv_org, "model_no": manuallineresponse.list[0].data.model_no, "serial_no": manuallineresponse.list[0].data.serial_no, "accessory_qty": manuallineresponse.list[0].data.accessory_qty    } }]   };
+    var data1 = JSON.stringify(erpreq);
+	var erpStatusResponse= {};
+	showPleaseWait();
+	$.ajax({
+		  type: 'POST',
+		  url:erpurl,
+		  headers: {
+	           'X-API-KEY':"0588c165-ea63-4a3e-acc9-ca450f4603a4",
+	           'Content-Type': 'application/json'
+	      		},
+		  data: data1,
+		  dataType: 'json',
+		  contentType: 'application/json; charset=utf-8',
+		  success: function(response) {
+		    hidePleaseWait();
+		    console.log('getErpStatusReq= success');
+		    erpStatusResponse=response;
+		    getErpmoveStatus(bhtype,manualresponse,manuallineresponse,erpStatusResponse);
+		  },error: function (jqXHR, exception) {
+			hidePleaseWait();
+		  }
+		});
+};
+
+function getErpmoveStatus(bhtype,manualresponse,manuallineresponse,erpresponse){
+	var movestatusreq={  "current_screen":"GEAD INV BACKHAUL ITEM STATUS", "gead_user":{"sso": "515511228","user_authority": "AGENT"}, "search_criteria":{ "inv_org": manualresponse.list[0].data.inv_org, "model_no": manuallineresponse.list[0].data.model_no, "serial_no": manuallineresponse.list[0].data.serial_no, "accessory_qty": manuallineresponse.list[0].data.accessory_qty }} ;
+	var data1 = JSON.stringify(movestatusreq);
+	console.log('getErpmoveStatusReq==',JSON.stringify(data1));
+//	erpmovestatusresp={ "status": "Pending", "error_message":"" , "list": [ { "key": { "inv_transaction_id": "", }, "data": { "erp_transaction_date": "01/01/1992", "erp_transaction": "success", "erp_transaction_move_from": "FG", "erp_transaction_move_to": "ASIS", "erp_transaction_status": "ERROR", "erp_error_message": "ERROR" } } ]  } ;
+	var erpstatusurl="https://k7cn34eq14.execute-api.us-east-1.amazonaws.com/prd/get_erp_item_subinv_move_status";
+	showPleaseWait();
+	return $.ajax({
+		  type: 'POST',
+		  url:erpstatusurl,
+		  data: data1,
+		  dataType: 'json',
+		  contentType: 'application/json; charset=utf-8',
+		  success: function(response) {
+		    hidePleaseWait();
+		    erpmovestatusresp=response;
+		    displayData(bhtype,manualresponse,manuallineresponse,erpresponse,erpmovestatusresp);
+		  
+		  },error: function (jqXHR, exception) {
+			hidePleaseWait();
+		  }
+	});
+};
+
+function displayData(bhtype,manualresponse, manuallineresponse, erpresponse, erpmovestatusresp) {
+	console.log('displayData',bhtype);
+	var iso = manualresponse.list[0].data.iso;
+	var inv_org = manualresponse.list[0].data.inv_org;
+	//var manualSubmitStatus = manualresponse.list[0].data.manual_error_message;
+	//var isoSubmitStatus = manualresponse.list[0].data.iso_confirm_error_message;
+	
+	var isoline = manuallineresponse.list[0].data.iso_line_number;
+	var model_no = manuallineresponse.list[0].data.model_no;
+	var serial_no = manuallineresponse.list[0].data.serial_no;
+	var accessory_qty = manuallineresponse.list[0].data.accessory_qty;	
+	var manualLineStatus = manuallineresponse.list[0].data.manual_error_message;
+	var isoLineStatus = manuallineresponse.list[0].data.iso_confirm_error_message;
+	var erpsubinvt="";
+	//inventory
+	if(erpresponse.list.length > 0){
+		if(erpresponse.list[0].hasOwnProperty('data')){
+			erpsubinvt = erpresponse.list[0].data.subinventory;
+		}else{
+			erpsubinvt = erpresponse.list[0].list[0].subinventory;
+		}
+	}
+
+	/* if(serial_no.trim()==""){
+		//var erpsubinvt = (typeof(erpresponse.list[0].list[0]) != "undefined" )?erpresponse.list[0].list[0].subinventory:"";
+	}else{
+		var erpsubinvt = (typeof(erpresponse.list[0].data) != "undefined" )?erpresponse.list[0].data.subinventory:"";
+	} */
+	
+	//console.log
+	
+	//erp move status table
+	var inv_transaction_id ='',erp_error_message='',erp_transaction_date='',erp_transaction='',erp_transaction_move_from='',erp_transaction_move_to='',erp_transaction_status='';
+	if(erpmovestatusresp.list.length > 0){
+		var inv_transaction_id = erpmovestatusresp.list[0].key.inv_transaction_id;
+		var erp_error_message = erpmovestatusresp.list[0].data.erp_error_message;
+		var erp_transaction_date = erpmovestatusresp.list[0].data.erp_transaction_date;
+		var erp_transaction = erpmovestatusresp.list[0].data.erp_transaction;
+		var erp_transaction_move_from = erpmovestatusresp.list[0].data.erp_transaction_move_from;
+		var erp_transaction_move_to = erpmovestatusresp.list[0].data.erp_transaction_move_to;
+		var erp_transaction_status = erpmovestatusresp.list[0].data.erp_transaction_status;
+		console.log('erp_transaction_status='+erp_transaction_status);
+	}else{
+		console.log('ERP Item Subinventory Move Status->No items are returned in the list');
+	}
+	
+	//var dialogBox = '<div id="manual_modal" class=" main-dial-up model-header-close-btn" onClick="closeDialogBox(this.id)" ><p id="close_backhaul_id">x </p></div>';
+	 var dialogBox = '<div id="manual_modal" class="modalerror" style="font-family: auto;">&nbsp;<div class="modal-content-error">';
+	
+	 
+
+	 dialogBox += '<div  class="model-header-close-btn" ><p id="close_backhaul_error_popup">X</p></div>';
+	if(bhtype=='PUSH'){
+		dialogBox += '<div style="color:black; margin-left:25%;"><strong><span >PUSH BACKHAUL</span><span>&nbsp;&nbsp;ISO=' + iso + '</span><span>&nbsp;&nbsp;LINE=' + isoline + '</span></strong></div>';
+	}else{
+		if(iso=='MANUAL'){
+			dialogBox += '<div style="color:black; margin-left:40%;"><strong><span >MANUAL BACKHAUL</span></strong></div>';
+		}else{
+			dialogBox += '<div style="color:black; margin-left:25%;"><strong><span >MANUAL BACKHAUL</span><span>&nbsp;&nbsp;ISO=' + iso + '</span><span>&nbsp;&nbsp;LINE=' + isoline + '</span></strong></div>';
+		}
+	}
+	
+	 
+	 dialogBox +=  '<table align="center" class="erpMoveStatusMsg"><tr><td  text-align:center;"><div id="erpMoveStatusMsg"></td></tr></table>';
+    //dialogBox += '<div id="erpMoveStatus"style="color:red; margin-left:10%; text-align:center;"></div>';
+	 
+	dialogBox +='<table border="0px" class="bodytabHead" style="margin-left:18%;width:75%;text-align: left;"></div>';
+	dialogBox += '<tr><th class="bodytabHead">Inv Org :</th><th class="bodytabHeadValue"  >' + inv_org + '</th><th class="bodytabHead">&nbsp;&nbsp;</th><th class="bodytabHead">Model#:</th><th class="bodytabHeadValue" >' + model_no + '</th><th class="bodytabHead">&nbsp;&nbsp;</th><th class="bodytabHead">Serial#:</th>';
+	if(serial_no.trim()==""){
+		dialogBox += '<th class="bodytabHeadValue" >&nbsp;&nbsp;&nbsp;&nbsp;</th><th class="bodytabHead">&nbsp;&nbsp;</th><th class="bodytabHead">Accessory Qty :</th><th class="bodytabHeadValue" >' + accessory_qty + '</th></tr></table>';
+	}else{
+		dialogBox += '<th class="bodytabHeadValue" >' + serial_no + '</th><th class="bodytabHead">&nbsp;&nbsp;</th><th class="bodytabHead">Accessory Qty :</th><th class="bodytabHeadValue" >' + accessory_qty + '</th></tr></table>';
+	}
+	
+	
+	//mbackhaul
+	if(iso=='MANUAL'){
+	//dialogBox +='<br/>';
+	dialogBox += '<table style="color:black; text-align:right; margin-left:18%;"><tr><th style=" border: 0px;">Manual Backhaul Line Status:&nbsp;</th><td style="color:red;"><strong>' + manualLineStatus  + '</strong></td> </table>';
+	}else{
+		dialogBox += '<table style="color:black; text-align:right; margin-left:18%;"><tr><th style=" border: 0px;">Iso Ship Confirm Line Status:</th><td style="color:red;"><strong>' + isoLineStatus + '</strong></td> </table>';
+	}//Iso
+	
+	
+	//subinvetory
+	//dialogBox +='<br/>';
+	dialogBox += '<table style="color:black; text-align:right; margin-left:2%;"><tr><th style=" border: 0px;">SUBINVENTORY:&nbsp;&nbsp;&nbsp;&nbsp;Current:</th><td class="subFrom" style="font-size:12px;">' + erpsubinvt + '</td> </table>';
+	
+	//moveTo
+	dialogBox += '<table  class="subinvbtn" style="color:black;text-align:right; margin-left:18%;"><tr><th style="border: 0px">Move To:</th><td><select class="subTo" style=" height: 23px; font-size:12px;  "><option value=""></option><option value="FG">FG</option><option value="ASIS">ASIS</option><option value="SURDEF">SURDEF</option></select></td>';
+    
+	//submit button
+	dialogBox += '<td><button class="submitButton subinvbtn" id ="subinvbtn" value="Move To Subinventory">Move To Subinventory</button></td></table>';
+	
+	if (erpmovestatusresp.list.length > 0) {
+	//Last Move
+	dialogBox += '<table  style="color:black; text-align:right; margin-left:18%;"><tr><th  style="border: 0px">Last Move:</th><td  style="color:red; text-align:left"><strong>' + erp_error_message + '</strong></td></table>';
+	//erp table
+	dialogBox +=  '<table class="dataTable "  border="1"  style="margin-left:18%;width:70%"><thread>';
+	dialogBox +=  '<tr id="subinventorypop" style="background-color:#3b73b9;font-size:14px; "><th  >Date/Time</th><th suberptrans" >ERP Transaction</th><th >From</th><th>To</th>';
+	dialogBox += '<th >ERP Status</th><th class="errorcls" >Action</th></thread>';
+	dialogBox +=  '<tbody style="color:black; border: 1px;"></tr><tr style="text-align:center;"><td class=" subtime">'+erp_transaction_date+'</td><td>'+erp_transaction+'</td><td class=" subfrom">'+erp_transaction_move_from+'</td><td class=" subto">'+erp_transaction_move_to+'</td><td style="font-size:10px;" class="suberror">'+erp_transaction_status+'</td><td class=" errorcls" id ="erpMoveRetryButton" style="color: blue;cursor: pointer;"><strong>RETRY</strong></td></tr></tbody></table>';
+	
+	
+	}
+	dialogBox += '</div></div>';
+
+	$(".ErpDailogBox").html(dialogBox);
+	
+
+	//$('.subinvbtn').show();//TOREMOVE
+	 if ((erpmovestatusresp.list.length > 0) && (erp_transaction_status.toLowerCase()=='pending' || erp_transaction_status.toLowerCase()=='in process')) {
+		$('.subinvbtn').hide();
+		$('.errorcls').hide();
+	} 
+
+
+	(typeof ($('#authuser').val()) == "undefined" && !$('#authuser').val()) ? $('.popbutton').hide() : $('.popbutton').show()
+	$(".bodytab").css({ "border": "0px solid black", "border-collapse": "collapse", "color": "black" });
+	$(".bodytabHead").css({ "border": "0px solid silver", "border-collapse": "collapse", "color": "black" });
+	$(".bodytabHeadValue").css({ "border": "0px solid silver", "border-collapse": "collapse", "color":"black","text-align":"left", "font-weight": "normal"});
+	
+	if(erp_transaction_status.toLowerCase()=='error'){
+		$(".suberror").css({ "color":"red","font-weight": "bold"});
+	}
+
+	//$(".silverBorder th").css({ "border": "1px solid silver", "border-collapse": "collapse" });
+	var modal = document.getElementById("manual_modal")
+	modal.style.display = "block";
+	
+	var popclose = document.getElementById("close_backhaul_error_popup");
+	popclose.onclick = function() {
+		closeModalError();
+	}
+	
+	var subInvbtn = document.getElementById("subinvbtn");
+	subInvbtn.onclick = function() {
+		moveToSubInvt(inv_org,model_no,serial_no,accessory_qty,manualresponse, manuallineresponse, erpresponse,bhtype);
+	}
+	
+    if ((erpmovestatusresp.list.length > 0) && (erp_transaction_status.toLowerCase()!='pending' && erp_transaction_status.toLowerCase()!='in process')) {
+		var erpMoveRetryButton = document.getElementById("erpMoveRetryButton");
+		erpMoveRetryButton.onclick = function() {
+		  retryMoveToSubInvt(inv_transaction_id,manualresponse, manuallineresponse, erpresponse,bhtype);
+		}
+    }
+	
+};
+
+
+
+function moveToSubInvt(inv_org,model_no,serial_no,accessory_qty,manualresponse, manuallineresponse, erpresponse,bhtype) {
+	console.log(inv_org,model_no,serial_no,accessory_qty);
+	var currentSubInv =  $('.subFrom').html();
+	var moveToSubInv = $('.subTo :selected').val();
+	console.log(currentSubInv,moveToSubInv);
+	if(jQuery.trim(currentSubInv) == jQuery.trim(moveToSubInv)) {
+		alert("Please Select Different SUBINVENTORY");
+		return false;
+	}
+	
+	if(jQuery.trim(moveToSubInv) == "") {
+		alert("Please Select Target SUBINVENTORY");
+		return false;
+	}
+	
+	movesubreq = { "current_screen": "GEAD INV BACKHAUL ITEM STATUS", "gead_user": { "sso": "515511228", "user_authority": "AGENT" }, "list": [{ "key": { "inv_org": inv_org, "model_no": model_no, "serial_no": serial_no, "accessory_qty": accessory_qty }, "data": { "subinventory_from": currentSubInv, "subinventory_to": moveToSubInv, "reason": "", "reference_note": "515511228" } }] };
+	//var movetoinvurl = "https://vo7xp6cwt5.execute-api.us-east-1.amazonaws.com/dev/getERPItemStatus";
+	var movetoinvurl = "https://bwmmekso3h.execute-api.us-east-1.amazonaws.com/prd/subinventory_move";
+	var data1 = JSON.stringify(movesubreq);
+	showPleaseWait();
+	$.ajax({
+		type: 'POST',
+		url: movetoinvurl,
+		data: data1,
+		dataType: 'json',
+		contentType: 'application/json; charset=utf-8',
+		success: function(subInventoryMoveResponse) {
+			hidePleaseWait();
+			if(subInventoryMoveResponse.status.toUpperCase() == "SUCCESS" ||subInventoryMoveResponse.status == "") {
+				console.log('subInventoryMove status=SUCCESS, fetch data');
+				//getErpmoveStatus(manualresponse,manuallineresponse,erpresponse);
+				$.when(getErpmoveStatus(bhtype,manualresponse,manuallineresponse,erpresponse)).then(function () {
+					console.log('Update success, updating msg');
+					$('#erpMoveStatusMsg').html("<span style='color:green'>Backhaul has been requested to be moved to the selected subinventory</span>");
+				 });
+				
+			}else{
+				console.log('subInventoryMove status not success');
+			    $('#erpMoveStatusMsg').html("<span style='color:red'>"+subInventoryMoveResponse.error_message+"</span>");
+			}
+			
+		}, error: function(jqXHR, textStatus, errorThrown) {
+			hidePleaseWait();
+			console.log('SubInventoryMove Exception');
+			$('#erpMoveStatusMsg').html("<span style='color:red'>"+textStatus+"</span>");
+		}
+	});
+};
+
+
+function retryMoveToSubInvt(inv_transaction_id,manualresponse, manuallineresponse, erpresponse,bhtype) {
+	console.log('retryMoveToSubInvt::inv_transaction_id='+inv_transaction_id);
+	errorreq = { "current_screen": "GEAD INV BACKHAUL ITEM STATUS", "gead_user": { "sso": "515511228", "user_authority": "AGENT" }, "key": { "inv_transaction_id": inv_transaction_id } };
+	//var errorurl = "https://vo7xp6cwt5.execute-api.us-east-1.amazonaws.com/dev/invMoveRetry";
+	var errorurl = "https://bwmmekso3h.execute-api.us-east-1.amazonaws.com/prd/invMoveRetry";
+	var data1 = JSON.stringify(errorreq);
+	showPleaseWait();
+	$.ajax({
+		type: 'POST',
+		url: errorurl,
+		data: data1,
+		dataType: 'json',
+		contentType: 'application/json; charset=utf-8',
+		success: function(retryResponse) {
+			if(retryResponse.status.toUpperCase() == "SUCCESS"||retryResponse.status.toUpperCase() == "") {
+				hidePleaseWait();
+				console.log('retryMoveToSubInvt status=SUCCESS');
+				$.when(getErpmoveStatus(bhtype,manualresponse,manuallineresponse,erpresponse)).then(function () {
+					$('#erpMoveStatusMsg').html("<span style='color:green'>Retry Request Sent Successfully</span>");
+				 });
+				
+			}else{
+				console.log('subInventoryMove status not success');
+				$('#erpMoveStatusMsg').html("<span style='color:red'>"+retryResponse.error_message+"</span>");
+			}
+						
+		}, error: function(jqXHR, textStatus, errorThrown) {
+			hidePleaseWait();
+			console.log('SubInventoryRetryMove Exception');
+			$('#erpMoveStatusMsg').html("<span style='color:red'>"+textStatus+"</span>");
+			
+		}
+	});
+};
+	
+ function closeModalError(){
+	manual_modal.style.display = "none";
+}; 
+</script>-->
+
+
+
+	<br>
+     <input type="hidden" id="gebackhaulLambdaServiceHost" value="https://k7cn34eq14.execute-api.us-east-1.amazonaws.com/prd">
+	 <input type="hidden" id="gebackhaulExtLambdaServiceHost" value="https://bwmmekso3h.execute-api.us-east-1.amazonaws.com/prd"> 
+	
+			<table id="table_list" class="sortable_stripes dataTable" width="95%" border="0" align="center" cellpadding="1" cellspacing="0">
+				<thead>
+					<tr>
+						<th>Inv&nbsp;Org</th>
+						<th>ISO</th>
+						<th>Start&nbsp;Date</th>
+						<th>End&nbsp;Date</th>
+						<th>Backhaul Status</th>
+						<th>Cancel</th>
+						<th>Total Units</th>
+						<th>Total Points</th>
+						<th>Type</th>
+						<th>Sub Inventory</th>
+						<th>ADC</th>
+						<th>BOL</th>
+					</tr>
+				</thead>
+				<tbody id="backhaul_resp"></tbody>
+			</table>
+		
+			<table align="center" class="isoErrorMessage" width="95%">
+				<tbody><tr>
+					<td id="isoErrorMessage" style="color: red; text-align:center;"></td>
+				</tr>
+			</tbody></table> 
+			
+			<div class="second-section" id="second-section_id">
+				<div class="second-section-header">
+					<p>
+						<span>Carrier Information</span>
+					</p>
+				</div>
+				<div class="second-section-data"></div>
+			</div>
+			<!-- SHIP CONFIRM BUTTON -->
+			<div style="margin-top:3%;">
+			
+				<div class="btn-ctrl ship-confirm-btn" style="margin-left:45%;margin-top:1%;">
+					<button class="button_txt" onclick="if (!window.__cfRLUnblockHandlers) return false; shipConfirm()">SHIP CONFIRM</button>
+				</div>
+			 
+			
+			<div class="pick-list-btn" style="margin-left:76%;margin-top:-3.0%;">
+					<button class="pickup_button_txt" onclick="if (!window.__cfRLUnblockHandlers) return false; exportIsoSpreadSheet()">PICK LIST</button>
+			</div>
+				</div>			
+		<div class="ErpDailogBox"></div>
+			<table class="sortable_stripes dataTable ship_confirm_tble" width="65%" border="0" id="table_list" align="center" cellpadding="1" cellspacing="0" style="margin-top: 10px;">
+				<thead>
+					<tr>
+						<th>ISO<br>Line&nbsp;#</th>
+						<th>Model&nbsp; #</th>
+						<th>Serial&nbsp; #</th>
+						<th>Acc<br>Qty</th>
+						<th>ISO<br>Line Status</th>
+						<th>Cancel</th>
+						<th>Confirm</th>
+						<th>Confirm Status</th>
+					<!-- 	<TH>Confirm Status</TH> -->
+					</tr>
+				</thead>
+				<tbody id="backhaul_lines_iso_resp">
+
+				</tbody>
+			</table>
+	<!--  Model  -->
+	<!--<script type="text/javascript">
+
+window.onload=function(){
+    $("#pickup_date").datepicker();
+  
+    if($('.button_txt').is(":hidden")){
+    	$("#pickup_date").prop('disabled', true);
+      	$("#appointment_note").prop('disabled', true);
+      	$("#vehicle_no").prop('disabled', true);
+      	$("#seal_code").prop('disabled', true);
+    }
+	
+    };		
+	  
+	   
+
+$(document).ready(function(){
+	
+    	$('.ship-confirm-btn').hide();
+    	backhaul_status="";
+    	iso_ship_confirm_id="";
+    	isoDataArray=[];
+    	confirmStatusArray=[];
+    	confirmStatusMsgArray=[];
+		//loadUpperData();
+		//loadLowerData();
+	  showPleaseWait();
+	  $.when(loadUpperData()).then(function () {
+		  
+		var url='https://prd.api01.haieramericas.net/eip-gea-backhaul-xapi/api/v1/shipconfirmStatus?P_GEAD_ISO_BACKHAUL_HDR_ID='+iso_ship_confirm_id;
+		var reqHeaders= {client_id: '6b56eb9a1eef466997d203a30d7956be', client_secret:'8DB6bFA28C6E48FEAa1CFC16036493a8',authorization: 'Bearer'};
+	         
+    	 if(backhaul_status == "SHIP CONFIRMED" || backhaul_status == "IN PROCESS" || backhaul_status == "NEEDS REVIEW") {
+    		$.when(populateERPConfirmStatusArray(url,reqHeaders,'#isoErrorMessage')).then(function () {
+    			loadLowerData();
+    			hidePleaseWait();
+    		  });
+    	 }else{
+    		loadLowerData();
+    		hidePleaseWait();
+    	 }
+    	 
+     });
+		
+});
+
+
+/** date format function */
+
+function formatDate(date) {
+	if(date == undefined || date=='00000000000000' || date.trim() == ""  ){
+		return "";
+	}else{
+		var startDate = date.substring(0,8)
+		var year = startDate.substring(0, 4);
+		var month = startDate.substring(4, 6);
+		var day = startDate.substring(6, 8);
+		var dispDate=month+'/'+day+'/'+year;
+		return dispDate;
+	}
+	
+}
+
+
+function loadUpperData() {
+	   var iso="";
+	   var getadminreq={"current_screen": "GEAD INV BACKHAUL MANUAL","gead_user":{"sso": "515511228","user_authority": "AGENT"},"search_criteria":{"iso_id": "96780268"}}
+	   var data = JSON.stringify(getadminreq);
+	   console.log(data);
+	   var response='';
+	   var responsePageDataCarrierInfo = '';
+	   var url= "https://k7cn34eq14.execute-api.us-east-1.amazonaws.com/prd/get_backhaul";
+	   console.log('url');
+	   console.log(url);
+	   return $.ajax({
+		  type: 'POST',
+		  url:url,
+		  data: data,
+		  dataType: 'json',
+		  contentType: 'application/json; charset=utf-8',
+		  success: function(response) {
+		   response=response;
+		  // displaydata(response);
+		            	var responseTable = "";
+		            	if(response.list != null && response.list.length > 0) {
+		            		for (var j=0; j<response.list.length; j++) {
+		            			 var inv_org  = response.list[j].data.inv_org;
+		            			 var iso = response.list[j].data.iso;
+		            			 if(iso==0){
+		            				 console.log('true');
+		            				 iso ="MANUAL"; 
+		            			}
+		            			
+		            			 var backhaul_start_date = response.list[j].data.backhaul_start_date;
+		            			 var backhaul_end_date  = response.list[j].data.backhaul_end_date;
+		            			 if(backhaul_start_date){
+		            				 backhaul_start_date= formatDate(backhaul_start_date);
+		            			 }
+								 if(backhaul_end_date){
+									 backhaul_end_date = formatDate(backhaul_end_date);
+								 }
+								 iso_ship_confirm_id = response.list[j].data.iso_ship_confirm_id;
+		            			 backhaul_status = response.list[j].data.backhaul_status;
+		            			 
+		            			 if(backhaul_status=='ERROR' || backhaul_status =='NOT STARTED' || backhaul_status == 'PENDING SHIP CONFIRM'){
+		            					$('.ship-confirm-btn').show();
+		            				}else{
+		            					$('.ship-confirm-btn').hide();
+		            				}
+		            			 
+		            			 var backhaul_cancel_units = response.list[j].data.backhaul_cancel_units;
+
+
+								 var backhaul_total_units  = response.list[j].data.backhaul_total_units;
+		            			 var backhaul_total_points = response.list[j].data.backhaul_total_points;
+		            			 if(backhaul_total_points.trim()!=""){
+		            				 backhaul_total_points = Math.round(backhaul_total_points);
+		            			 }
+		            				 
+		            			 var backhaul_type = response.list[j].data.backhaul_type;
+		            			 
+		            			 
+		            			 var backhaul_subinventory  = response.list[j].data.backhaul_subinventory;
+		            			 var backhaul_adc = response.list[j].data.backhaul_adc;
+		            			 var carrier_name = response.list[j].data.carrier_name;
+		            			 
+		            			 
+		            			 var carrier_contact  = response.list[j].data.carrier_contact;
+		            			 var carrier_email = response.list[j].data.carrier_email;
+		            			 var carrier_scac = response.list[j].data.carrier_scac;
+		            			 
+		            			 
+		            			 var carrier_phone  = response.list[j].data.carrier_phone;
+		            			 var manual_error_message = response.list[j].data.manual_error_message;
+		            			 var vehicle_number = response.list[j].data.vehicle_number;
+		            			 
+		            			  var seal_code = response.list[j].data.seal_code;
+		            			  
+		            			  var iso_confirm_error_message = response.list[j].data.iso_confirm_error_message;
+		            			  
+		            			/*   $('.SCAC').html(carrier_scac);
+			            		  $('.Carriercon').html(carrier_contact);
+			            		  $('.carrierphone').html(carrier_phone);
+			            		  $('.carrieremail').html(carrier_email);
+			            		  $('#vehicle_number').val(vehicle_number);
+		            			  $('#seal_number').val(seal_code);
+		            			  $('.CarrierName').html(carrier_name); */ 
+		            			  
+		            			 
+		            			 responseTable += responseTable += "<tr><td 'style=text-align:center;' id='backhaul_inv_org'>"+inv_org+"</td><td style=text-align:center; id='backhaul_iso_id'>"+iso+"</td><td style=text-align:center;>"+backhaul_start_date+"</td><td style=text-align:center;>"+backhaul_end_date+"</td><td id='backhaul_status' style=text-align:center;>"+backhaul_status+"</td><td style=text-align:center;>"+backhaul_cancel_units+"</td><td style=text-align:center;>"+backhaul_total_units+"</td><td style=text-align:center;>"+backhaul_total_points+"</td><td style=text-align:center; >"+backhaul_type+"</td><td style=text-align:center;>"+backhaul_subinventory+"</td><td style=text-align:center;>"+backhaul_adc+"</td>";
+		            			 var authorityList = "AGENT";
+		            			 console.log(authorityList);
+		            			 if(backhaul_status =='COMPLETE' || backhaul_status=='NEEDS REVIEW' || authorityList.includes('DSSO')){
+		            				responseTable += "<td style=text-align:center;  ><a class='backhaul_print' onclick='printBackhaul();return false;' target=_self href style='color:blue;' >Print</a></td>";
+		            			 }else{
+		            				responseTable += "<td></td>";
+		            			 }
+		            			    responseTable +="</tr>";
+		            		}
+		            	}else{
+		            		responseTable += "<tr ><td colspan=4>No Data Available On Given Search fields.</td></tr>";
+		            	}
+		            	printCarrierInfoDiv(response);
+		            	//responsePageDataCarrierInfo += printCarrierInfoDiv(response);
+		            	
+		            	$("#backhaul_resp").html(responseTable);
+		            	//$(".second-section-data").html(responsePageDataCarrierInfo);
+		  },error: function (jqXHR, exception) {
+		  	
+		  }
+		});
+}	
+
+function loadLowerData() {
+	console.log('lower');
+	var iso="";
+	   var getadminreq={"current_screen": "GEAD INV BACKHAUL MANUAL","gead_user":{"sso": "515511228","user_authority": "AGENT"},"search_criteria":{"iso_id": "96780268"}}
+	  var data = JSON.stringify(getadminreq);
+	   var response='';
+	   var url= "https://k7cn34eq14.execute-api.us-east-1.amazonaws.com/prd/get_backhaul_lines_iso";
+	   return  $.ajax({
+		  type: 'POST',
+		  url:url,
+		  data: data,
+		  dataType: 'json',
+		  contentType: 'application/json; charset=utf-8',
+		  success: function(response) {
+		   response=response;
+		  // displaydata(response);
+		            	var responseTable = "";
+		            	if(response.list != null && response.list.length > 0) {
+		            		for (var j=0; j<response.list.length; j++) {
+		            			isoDataArray.push({modified:false});
+		            			var iso_line_id = response.list[j].key.iso_line_id;
+		            			
+		            			var  ship_current_status = "";
+		            			var ship_confirm_status_msg ="";
+		            			if(backhaul_status == "SHIP CONFIRMED" || backhaul_status == "IN PROCESS" || backhaul_status == "NEEDS REVIEW" )   {
+		            			  if (typeof confirmStatusArray[iso_line_id] !== 'undefined'){
+		            				  ship_current_status =  confirmStatusArray[iso_line_id];
+		            				  ship_confirm_status_msg =  confirmStatusMsgArray[iso_line_id];
+		            			  }
+		            				
+		            		    }
+		            			
+		            			var model_no = response.list[j].data.model_no;
+		            			var serial_no = response.list[j].data.serial_no;
+		            			var accessory_qty = response.list[j].data.accessory_qty;
+		            			
+		            			var accessory_qty_disp;
+		            			if(accessory_qty =="0" || accessory_qty==0){
+		            				accessory_qty_disp= "";
+		            			
+		            			}else{
+		            				accessory_qty_disp=accessory_qty;
+		            			}
+		            			
+		            			var iso_line_number = response.list[j].data.iso_line_number;
+		            			var iso_line_status = response.list[j].data.iso_line_status;
+		            			var confirmed_qty = response.list[j].data.confirmed_qty;
+		            			var cancelled_qty = response.list[j].data.cancelled_qty;
+		            			var iso_confirm_status = response.list[j].data.iso_confirm_status;
+		            			var iso_confirm_error_message = response.list[j].data.iso_confirm_error_message;
+		            			//var iso_id=$('#backmanual_iso_id').val();
+		            			 responseTable += "<tr class='iso_index_"+j+"' ><td class='iso_line' style=text-align:center; >"+iso_line_number+"</td><td style=text-align:center; id='model_no'>"+model_no+"</td><td style=text-align:center;>"+serial_no+"</td><td class='acc_qty' id='accessory_qty' style=text-align:center;>"+accessory_qty_disp+"</td><td style=text-align:center;>"+iso_line_status+"</td>";
+		            			 responseTable += "<input type='hidden' class ='org_conf_qty_"+j+"' value='"+confirmed_qty+"' >";
+		            			 responseTable += "<input type='hidden' class ='iso_line_id_"+j+"' value='"+iso_line_id+"' >";
+		            			 if(serial_no.trim()!=""){
+		            				if(cancelled_qty>0){
+		            					responseTable += "<td  class='checktype' style=text-align:center;><input id='checkitem_"+j+"' type=checkbox checked onChange='isoCheckBoxChange("+j+","+iso_line_id+","+confirmed_qty+","+cancelled_qty+")'></input></td>";
+		            					responseTable += "<td   style=text-align:center;  id ='tickconfirmitem_"+j+"' ></td>";
+		            				}else{
+		            					responseTable += "<td class='checktype' style=text-align:center;><input id='checkitem_"+j+"' type=checkbox  onChange='isoCheckBoxChange("+j+","+iso_line_id+","+confirmed_qty+","+cancelled_qty+")'></input></td>";
+		            					if(confirmed_qty>0){
+		            					 responseTable += "<td   style=text-align:center;  id ='tickconfirmitem_"+j+"' id='iso_confirm_item_tick' >&#10004;</td>";
+		            					}else{
+		            						 responseTable += "<td   style=text-align:center;  id ='tickconfirmitem_"+j+"' id='iso_confirm_item_tick' ></td>";
+		            					}
+		            				}
+		            			  
+		            			}else{
+		            				//If SERIAL_NO is blank, display as Input Box. Display the CANCELLED_QTY.  Do not allow values greater than ACCESSORY_QTY
+		            				 responseTable += "<td  class='inputtype' style=text-align:center; ><input class ='inputitem_"+j+"' id='iso_cancel_qty_text_"+j+"' onChange='isoCancelQtyChange("+j+","+iso_line_id+","+cancelled_qty+","+confirmed_qty+","+accessory_qty+")' style=text-align:right; type=text size='1' value ="+cancelled_qty+"></input></td>";
+		            				 if(confirmed_qty>0){
+		            					 responseTable += "<td   style=text-align:center;  id ='inputconfirmitem_"+j+"' >"+confirmed_qty+"</td>";
+		            				 }else{
+		            					 responseTable += "<td   style=text-align:center;  id ='inputconfirmitem_"+j+"' ></td>";
+		            				 }
+		            			}
+		            			 
+		            			 if (ship_current_status=='E'){
+		            				// var link = "<a onclick='isostatusmodal("+96780268+","+iso_line_id+")' style='color:red ;cursor: pointer;'>" ;
+			            				responseTable += "<td style=text-align:center;><a onclick='isostatusmodal("+96780268+","+iso_line_id+")' style='color:red ;cursor: pointer;'>"+ship_confirm_status_msg+"</td></tr>";
+		            			 }else{
+		            				 responseTable += "<td   style=text-align:center;  id ='shipconfirmStatus"+j+"' >"+ship_confirm_status_msg+"</td>"; 
+		            			 }
+		            			 
+		            			//Confirm Column-----------------------------------------------------------------------------------------------------------------------
+		            			/* if(serial_no.trim()!=""){
+		            				
+		            				 responseTable += "<td   style=text-align:center;  class ='tickconfirmitem_"+j+"' id='iso_confirm_item_tick' >&#10004;</td>";
+		            			  
+		            			}else{
+		            				//If SERIAL_NO is blank, display as Input Box. Display the CANCELLED_QTY.  Do not allow values greater than ACCESSORY_QTY
+		            				 responseTable += "<td   style=text-align:center;  class ='isoconfirmitem_"+j+"' id='iso_confirm_qty_text' >"+confirmed_qty+"</td>";
+		            			} */
+		            			
+		            			/* if(iso_confirm_status=="Error"||iso_confirm_status=="ERROR") {
+			         				var link = "<a onclick='isostatusmodal("+iso_id+","+iso_line_number+")' style='color:red ;cursor: pointer;'>" ;
+		            				responseTable += "<td style=text-align:center;>"+link+""+iso_confirm_status+"</td></tr>";
+		            			}else {
+		            					responseTable += "<td style=text-align:center;>"+iso_confirm_status+"</td></tr>";
+		            			} */
+		            		}
+		            	}else{
+		            		responseTable += "<tr><td colspan=4>No Data Available On Given Search fields.</td></tr>";
+		            	}
+		            	$("#backhaul_lines_iso_resp").html(responseTable);
+		  },error: function (jqXHR, exception) {
+		  	
+		  }
+		});
+}	
+	
+
+
+function printBackhaul() {
+	isoId = "96780268";
+	console.log("creating PDF for:" + isoId);
+	$("<form action=/dms/backhaul/printBackhaul?id="+isoId+" method='POST'></form>").appendTo('body').submit().remove();
+}
+
+function exportIsoSpreadSheet(){
+	var isoId = "96780268";
+	var invOrg = $('#backhaul_inv_org').html();
+	var iso = $('#backhaul_iso_id').html()
+	$("<form action=/dms/backhaul/downloadIsoSpreadsheet?id="+isoId+"&invOrg="+invOrg+"&iso="+iso+" method='POST'></form>").appendTo('body').submit().remove();
+}
+
+function shipConfirm(){
+	//debugger;
+	showPleaseWait();
+	var vehicle_no=$('#vehicle_no').val();
+	var seal_no=$('#seal_code').val();
+	var appointment_pickup_date = $('#pickup_date').val();
+	var appointment_note = $('#appointment_note').val();
+	var formattedDate = '';
+	if(appointment_pickup_date!=''){
+		var date_regex = /^(0[1-9]|1[0-2])\/(0[1-9]|1\d|2\d|3[01])\/(19|20)\d{2}$/;
+		if (!(date_regex.test(appointment_pickup_date))) {
+			 $("#carrier-response-message").html("<span style='color:red'>Invalid Date</span>");
+		    return ;
+		}
+		var date = new Date(appointment_pickup_date);
+		formattedDate = date.getFullYear() + ("0" + (date.getMonth() + 1)).slice(-2) + ("0" + date.getDate()).slice(-2) + ("0" + date.getHours() ).slice(-2) + ("0" + date.getMinutes()).slice(-2) + ("0" + date.getSeconds()).slice(-2) ;
+	}
+	
+	var shipconfirmdata={ "current_screen": "GEAD INV BACKHAUL MANUAL", "gead_user":{"sso": "515511228","user_authority": "AGENT"}, "save": { "iso_id": "96780268","vehicle_number":vehicle_no,"seal_code":seal_no,"appointment_pickup_date":formattedDate,"appointment_note": appointment_note,"line_list": [  ] } }
+	
+	for(var i=0;i<isoDataArray.length;i++){
+		if(isoDataArray[i].modified==true){
+			var isodata = {"key": {"iso_line_id": isoDataArray[i].iso_line_id},"data": {"confirmed_qty":  isoDataArray[i].confirmed_qty,"cancelled_qty": isoDataArray[i].cancelled_qty}};
+			shipconfirmdata.save.line_list.push(isodata);
+		}
+	}
+	var data = JSON.stringify(shipconfirmdata);
+	console.log(data);
+	
+		$.ajax({
+				  type: 'POST',
+				  url: "https://k7cn34eq14.execute-api.us-east-1.amazonaws.com/prd/ship_confirm_backhaul",
+				  data: data, 
+				  dataType: 'json',
+				  contentType: 'application/json; charset=utf-8',
+				  success: function(response) {
+				   console.log('response.status=',response.status);
+				   //console.log(JSON.stringify(response));
+					$('#isoErrorMessage').html('')
+						if(response.status == "SAVED") {
+							if(""!= response.error_message){
+								$('#isoErrorMessage').html("Changes have been saved("+response.error_message+")");
+							}else{
+								$('#isoErrorMessage').html("Changes have been saved");
+							}
+							
+							//setInterval(function(){ location.reload();}, 10000);
+						}else if(response.status == "SUBMITTED")
+						{
+							$('#isoErrorMessage').html("Backhaul submitted successfully");
+							$('#backhaul_status').html('SHIP CONFIRMED');
+							
+						}else{
+							$('#isoErrorMessage').html(response.error_message);
+						}
+					 hidePleaseWait();
+				  },error: function (jqXHR, textStatus, errorThrown) {
+						$('#isoErrorMessage').html("<table style='border:1px solid black;border-collapse:collapse;color:red;width:90%;'>Some Error Occured ("+textStatus+") Please try later</table>");
+						 hidePleaseWait();
+				  }
+		});
+	
+}
+
+/** Carrier info div population mechanism */
+function printCarrierInfoDiv(response) {
+	var responsePageData = "";
+	var carrier_name = '';
+	var carrier_contact = '';
+	var carrier_email = '';
+	var carrier_scac = '';
+	var carrier_phone = '';
+	var vehicle_number = '';
+	var seal_code = '';
+	var pickup_date= '';
+	var notes = '';
+
+	//carrier_name = 'VEER';
+	carrier_name = response.list[0].data.carrier_name;
+	
+	//carrier_contact = 'contact';
+	carrier_contact = response.list[0].data.carrier_contact;
+	
+	//carrier_email = 'a@gmail.com';
+	carrier_email = response.list[0].data.carrier_email;
+	
+	//carrier_scac = 'SARC';
+	carrier_scac = response.list[0].data.carrier_scac;
+	
+	//carrier_phone = '898989899';
+	carrier_phone = response.list[0].data.carrier_phone;
+	
+
+	vehicle_number = response.list[0].data.vehicle_number;
+	seal_code = response.list[0].data.seal_code;
+	
+	notes = response.list[0].data.appointment_note;
+	pickup_date = formatDate(response.list[0].data.appointment_pickup_date)
+
+		var responsePageData = "";
+	responsePageData += "<div class='carrier-info-main-cls' id='carrier-info-main-div'>";
+	responsePageData += "<input type='text' style='width: 0; height: 0; top: -100px; position: absolute;'/>";
+	<!-- 1st column carrier info ====================================================-->
+	responsePageData += "<div class='ci-first-column-cls' id='ci-first-column-id'>";
+	<!-- 1st column first row -->
+	responsePageData += "<div class='ci-left-col'>";
+	responsePageData += "<span class= 'carrier-label-cls' id='carrier_name_label'>Name : </span>";
+	responsePageData += "<span class= 'carrier-val-cls' id='carrier_name'>" + carrier_name + "</span>";
+	responsePageData += "</div>";
+	<!-- 2nd row -->
+	responsePageData += "<div class='ci-left-col'>";
+	responsePageData += "<span class= 'carrier-label-cls' id='carrier_contact_label' >Contact : </span>";
+	responsePageData += "<span class= 'carrier-val-cls' id='carrier_contact'>" + carrier_contact + "</span>";
+	responsePageData += "</div>";
+	<!-- 3rd row -->
+	responsePageData += "<div class='ci-left-col'>";
+	responsePageData += "<span class= 'carrier-label-cls' id='carrier_scac_label' >SCAC : </span>";
+	responsePageData += "<span class= 'carrier-val-cls' id='carrier_scac'>" + carrier_scac + "</span>";
+	responsePageData += "</div>";
+ 	<!-- 4th row -->
+ 	responsePageData += "<div class='ci-left-col'>";
+	responsePageData += "<span class= 'carrier-label-cls' id='carrier_phone_label' >Phone : </span>";
+	responsePageData += "<span class= 'carrier-val-cls' id='carrier_phone'>" + carrier_phone + "</span>";
+	responsePageData += "</div>";
+	<!-- 5th row -->	  		
+	responsePageData += "<div class='ci-left-col'>";
+	responsePageData += "<span class= 'carrier-label-cls' id='carrier_email_label' >Email : </span>";
+	responsePageData += "<span class= 'carrier-val-cls' id='carrier_email'>" + carrier_email + "</span>";
+	responsePageData += "</div>";
+	
+	responsePageData += "</div>";
+ 	<!-- carrier 2nd column info ======================================================-->
+	responsePageData += "<div class='ci-second-column-cls' id='ci-carrier-column-id'>";
+	<!-- 1st row -->
+	responsePageData += "<div class='ci-right-col'>";
+	responsePageData += "<span class= 'carrier-label-cls' id='ci-one-col-span-id' >Pickup Date : </span>";
+	responsePageData += "<span class= 'carrier-val-cls' id='ci-sec-col-span-id'><input type='hidden' class='ci-input' id='dummy_pickup_date'><input size='20' class='ci-input' id='pickup_date' value='"+pickup_date+"'></span>";
+	responsePageData += "</div>";
+	<!-- 2nd row -->
+	responsePageData += "<div class='ci-right-col'>";
+	responsePageData += "<span class= 'carrier-label-cls' id='vehicle-number-col' >Vehicle No : </span>";
+	responsePageData += "<span class= 'carrier-val-cls' id='ci-sec-col-span-id'><input size='20' class='ci-input' id='vehicle_no' value='"+vehicle_number+"'></span>";
+	responsePageData += "</div>";
+	<!-- 3rd row -->
+	responsePageData += "<div class='ci-right-col'>";
+	responsePageData += "<span class= 'carrier-label-cls' id='seal-no-col' >Seal No : </span>";
+	responsePageData += "<span class= 'carrier-val-cls' id='ci-sec-col-span-id'><input size='20' class='ci-input' id='seal_code' value='"+seal_code+"'></span>";
+	responsePageData += "</div>";
+	
+	<!-- 4th row -->
+	responsePageData += "<div class='ci-right-col'>";
+	responsePageData += "<span class= 'carrier-label-cls' id='notes-col' >Notes : </span>";
+	responsePageData += "<span class= 'carrier-val-cls' id='ci-sec-col-span-id'><input size='30' style='text-align:left;' maxlength='100' class='ci-input' id='appointment_note' value='"+notes+"'></span>";
+	responsePageData += "</div>";
+		 
+	responsePageData += "</div>";
+	responsePageData += "</div>";
+	$(".second-section-data").html(responsePageData);
+	$("#appointment_note").val(notes);
+	
+	$("#pickup_date").datepicker();
+	/* responsePageData += "<div class='carrier-info-main-cls' id='carrier-info-main-div'>";
+		 <!-- first column carrier info -->
+		responsePageData += "<div class='ci-first-column-cls' id='ci-first-column-id'>";
+			 <!-- first column first row -->
+		responsePageData += "<div class='ci-first-row-inner-cls'>";
+	responsePageData += "<span class= 'carrier-label-cls' id='ci-one-col-span-id' >Name : </span>";
+	responsePageData += "<span class= 'carrier-val-cls' id='ci-sec-col-span-id'>" + carrier_name + "</span>";
+	responsePageData += "</div>";
+			  	<!-- second row -->
+		responsePageData += "<div class='ci-second-row-inner-cls'>";
+	responsePageData += "<span class= 'carrier-label-cls' id='ci-one-col-span-id' >Contact : </span>";
+	responsePageData += "<span class= 'carrier-val-cls' id='ci-sec-col-span-id'>" + carrier_contact + "</span>";
+	responsePageData += "</div>";
+			  	 	<!-- third row -->
+		responsePageData += "<div class='ci-third-row-inner-cls'>";
+	responsePageData += "<span class= 'carrier-label-cls' id='ci-one-col-span-id' >Email : </span>";
+	responsePageData += "<span class= 'carrier-val-cls' id='ci-sec-col-span-id'>" + carrier_email + "</span>";
+	responsePageData += "</div>";
+	responsePageData += "</div>";
+			 
+		 <!-- second column carrier info -->
+		responsePageData += "<div class='ci-second-column-cls' id='ci-second-column-id'>";
+			  	 <!-- first column first row -->
+		responsePageData += "<div class='ci-first-row-inner-cls'>";
+	responsePageData += "<span class= 'carrier-label-cls' id='ci-one-col-span-id' >SCAC : </span>";
+	responsePageData += "<span class= 'carrier-val-cls' id='ci-sec-col-span-id'>" + carrier_scac + "</span>";
+	responsePageData += "</div>";
+			  	<!-- second row -->
+		responsePageData += "<div class='ci-second-row-inner-cls'>";
+	responsePageData += "<span class= 'carrier-label-cls' id='ci-one-col-span-id' >Phone : </span>";
+	responsePageData += "<span class= 'carrier-val-cls' id='ci-sec-col-span-id'>" + carrier_phone + "</span>";
+	responsePageData += "</div>";
+	responsePageData += "</div>";
+		 
+		  <!-- third column carrier info -->
+		responsePageData += "<div class='ci-third-column-cls' id='ci-third-column-id'>";
+			  	 <!-- first column first row -->
+		responsePageData += "<div class='ci-first-row-inner-cls'>";
+	responsePageData += "<span class= 'carrier-label-cls' id='ci-one-col-span-id' >Vehicle No : </span>";
+	responsePageData += "<span class= 'carrier-val-cls' id='ci-sec-col-span-id'><input class='ci-input' id='vehicle_number' value='"+vehicle_number+"'></span>";
+	responsePageData += "</div>";
+			  	<!-- second row -->
+		responsePageData += "<div class='ci-second-row-inner-cls'>";
+	responsePageData += "<span class= 'carrier-label-cls' id='ci-one-col-span-id' >Seal No : </span>";
+	responsePageData += "<span class= 'carrier-val-cls' id='ci-sec-col-span-id'><input class='ci-input ci-seal-input' id='seal_number' value='"+seal_code+"'></span>";
+	responsePageData += "</div>";
+	responsePageData += "</div>";
+	responsePageData += "</div>";
+	return responsePageData; */
+
+}
+// model code starts here
+
+// Get the modal
+var modal = document.getElementById("myModal");
+
+// Get the button that opens the modal
+var btn = document.getElementById("myBtn");
+
+// Get the <span> element that closes the modal
+var span = document.getElementsByClassName("close")[0];
+
+// When the user clicks the button, open the modal 
+/* btn.onclick = function() {
+  modal.style.display = "block";
+} */
+
+// When the user clicks on <span> (x), close the modal
+/* span.onclick = function() {
+  modal.style.display = "none";
+} */
+
+// When the user clicks anywhere outside of the modal, close it
+window.onclick = function(event) {
+  if (event.target == modal) {
+    modal.style.display = "none";
+  }
+}
+
+
+// model code ends here
+ 	
+// search data:
+var search = document.getElementById("search");
+var els = document.querySelectorAll(".el");
+search.addEventListener("keyup", function() {
+  Array.prototype.forEach.call(els, function(el) {
+    if (el.textContent.trim().indexOf(search.value) > -1)
+      el.style.display = 'block';
+    else el.style.display = 'none';
+  }); 
+});
+ 	/*$("#search").on("keyup", function() {
+    var value = $(this).val();
+
+    $("table tr").each(function(index) {
+        if (index !== 0) {
+
+            $row = $(this);
+
+            var id = $row.find("td:first").text();
+
+            if (id.indexOf(value) !== 0) {
+                $row.hide();
+            }
+            else {
+                $row.show();
+            }
+        }
+    });
+});*/
+ 	
+ 	// add manual back haul:
+ 	
+ 	
+/*  function addBackHaulManual() {
+	console.log("addBackHaulManual ");
+	var response = "";
+	var loc = $('#dmsLoc').find(":selected").text();
+	if (loc == '....')
+		loc = "ALL";
+	var getadminreq = { "current_screen": "GEAD INV BACKHAUL MANUAL", "gead_user": { "sso": "515511228", "user_authority": "AGENT" }, "search_criteria": { "inv_org": loc } }
+	var data = JSON.stringify(getadminreq);
+	var response = '';
+	var url = "https://okj295n7q1.execute-api.us-east-1.amazonaws.com/dev/get_backhaul_";
+	$.ajax({
+		type: 'POST',
+		url:  url,
+		data: data,
+		dataType: 'json',
+		contentType: 'application/json; charset=utf-8',
+		success: function(response) {
+			response = response;
+			// displaydata(response);
+			console.log(response);
+			console.log("respnse=" + response);
+			var responseTable = "";
+			if (response.list != null && response.list.length > 0) {
+				console.log("respnse:" + response.list);
+				for (var j = 0; j < response.list.length; j++) {
+
+					var model = response.list[j].data.inv_org;
+					var serial = response.list[j].data.backhaul_start_date;
+					var inv_qty = response.list[j].data.backhaul_end_date;
+					var acc_qty = response.list[j].data.backhaul_status;
+					var new_qty = response.list[j].data.backhaul_cancel_units;
+					var action = response.list[j].data.backhaul_total_units;
+
+					responseTable += "<tr style='background-color:#d2deef;font-size:14px;'>";
+					responseTable += '<td>" + model + "</td>';
+					responseTable += "<td id='serial_id_'+j>" + inv_qty + "</td>";
+					responseTable += "<td id='acc_qty_id_'+i>" + acc_qty + "</td>";
+					responseTable += "<td>" + new_qty + "</td>";
+					responseTable += '<td>" + action + "</td>';
+					responseTable += '</tr>';
+					if (serial ==  ' ') {
+						responseTable += "<td><input></td>";
+						responseTable += "<td>" + action + "</td></tr>";
+					}
+
+				}
+			} else {
+				responseTable += "<tr style='background-color:#d2deef;font-size:14px;font-weight:600;'><td colspan=4>No Data Available On Given Search fields.</td></tr>";
+			}
+			$("#add_manual_backhaaul_resp").html(responseTable);
+		}, error: function(jqXHR, exception) {
+
+		}
+	});
+
+} */
+
+//................ ERROR POP UP STARTS..........................//
+function isostatusmodal(iso_id,iso_li_id){
+		calliso(iso_id,iso_li_id,'PUSH');
+		
+	 };
+	 
+	
+		/* function getErpStatus(isoresponse,isolineresponse){
+			var url="https://bwmmekso3h.execute-api.us-east-1.amazonaws.com/prd/getERPItemStatus";
+			var erpreq={  "current_screen":"GEAD INV BACKHAUL ITEM STATUS",  "gead_user":{"sso": "515511228","user_authority": "AGENT"},  "list":[{ "key": {"inv_org": isoresponse.list[0].data.inv_org, "model_no": isolineresponse.list[0].data.model_no, "serial_no": isolineresponse.list[0].data.serial_no, "accessory_qty": isolineresponse.list[0].data.accessory_qty    } }]   };
+            var data1 = JSON.stringify(erpreq);
+			var erpresponse= {};
+			showPleaseWait();
+			$.ajax({
+				  type: 'POST',
+				  url: url,
+				  data: data1,
+				  dataType: 'json',
+				  contentType: 'application/json; charset=utf-8',
+				  success: function(response) {
+				   erpresponse=response;
+				   console.log('getErpStatusResponse=',JSON.stringify(erpresponse));
+				   getErpmoveStatus(isoresponse,isolineresponse,erpresponse);
+				   hidePleaseWait();
+				  },error: function (jqXHR, exception) {
+					hidePleaseWait();
+				  }
+				});
+		};
+		
+		function getErpmoveStatus(isoresponse,isolineresponse,erpresponse){
+				var movestatusreq={  "current_screen":"GEAD INV SCRAP FORM", "gead_user":{"sso": "515511228","user_authority": "AGENT"}, "search_criteria":{ "inv_org": isoresponse.list[0].data.inv_org, "model_no": isolineresponse.list[0].data.model_no, "serial_no": isolineresponse.list[0].data.serial_no, "accessory_qty": isolineresponse.list[0].data.accessory_qty }} ;
+				var data1 = JSON.stringify(movestatusreq);
+				console.log('getErpmoveStatusReq=',JSON.stringify(data1));
+			//	erpmovestatusresp={ "status": "Pending", "error_message":"" , "list": [ { "key": { "inv_transaction_id": "", }, "data": { "erp_transaction_date": "01/01/1992", "erp_transaction": "success", "erp_transaction_move_from": "FG", "erp_transaction_move_to": "ASIS", "erp_transaction_status": "ERROR", "erp_error_message": "ERROR" } } ]  } ;
+				var erpstatusurl="https://k7cn34eq14.execute-api.us-east-1.amazonaws.com/prd/get_erp_item_subinv_move_status";
+				showPleaseWait();
+				$.ajax({
+					  type: 'POST',
+					  url:erpstatusurl,
+					  data: data1,
+					  dataType: 'json',
+					  contentType: 'application/json; charset=utf-8',
+					  success: function(response) {
+					   erpmovestatusresp=response;
+					   console.log('getErpmoveStatusResp=',JSON.stringify(data1));
+					   
+					   displayData(isoresponse,isolineresponse,erpresponse,erpmovestatusresp);
+					   hidePleaseWait();
+					   console.log(isolineresponse);
+					  },error: function (jqXHR, exception) {
+						hidePleaseWait();
+					  }
+				});
+			}; */
+		
+		
+		
+		
+		
+		// Ends Here//
+ 	
+	 </script>-->
+
+</body></html>

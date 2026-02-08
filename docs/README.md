@@ -23,7 +23,6 @@ Feature-specific implementation documentation.
 - **[ge-scraper.md](./features/ge-scraper.md)** - Product catalog scraper documentation
 - **[map.md](./features/map.md)** - Warehouse map feature documentation
 - **[scanning-sessions.md](./features/scanning-sessions.md)** - Scanner workflow documentation
-- **[tanstack-query-migration.md](./features/tanstack-query-migration.md)** - TanStack Query migration notes
 
 ## Sync Service
 
@@ -34,5 +33,16 @@ GE sync service implementation notes.
 ---
 
 For service-specific documentation, see:
-- **GE Sync Service**: `services/ge-sync/docs/` - Complete GE DMS exploration and sync implementation
-- **Agent Instructions**: `.agent/` - Documentation for AI agents working on this project
+- **GE Sync Service**: `docs/ge-sync/` - GE DMS exploration and sync implementation
+
+## Audience Notes
+
+### For Developers
+- Use this index to navigate architectural and implementation docs.
+- For validated product workflows, see `docs/INDEX.md`.
+
+### For Operators
+- This index is technical; use the Docs UI for operational guidance.
+
+### For Agent
+- Treat these as implementation references; prefer user-facing docs for workflow answers.

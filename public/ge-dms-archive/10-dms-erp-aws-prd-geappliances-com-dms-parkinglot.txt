@@ -1,0 +1,39 @@
+Parking Lot		Having trouble with screen display or response?	Welcome  515511228  AGENT
+
+
+
+PARKING LOT
+		
+ Show Picked Orders before/after Date
+		
+For DMS Location	
+9SU
+	
+ Show Open Orders before/after Date
+		
+within last 1  Days
+within last 15  Days
+within last 30  Days
+within last 45  Days
+within last 90  Days
+within last 120  Days
+
+
+ Show Processed Orders before/after Date
+
+Filter for:       Will Call       Return - Common Carrier       Return - Customer       ASIS - Common Carrier
+CSO: 		Show only rows containing		 
+   
+ Signed by: Name	
+
+
+
+
+    
+
+
+To SORT data, click on the column headings - to Select ALL, click on the Select heading
+Select   	Delivery Date   	Arrival Date   	Status   	CSO   	Delivery ID   	Customer   	Zip   	Group   	Type   	Action   
+
+
+    

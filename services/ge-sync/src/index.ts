@@ -4,9 +4,11 @@ import { getAuthStatus, refreshAuth } from './auth/playwright.js';
 import { syncASIS } from './sync/asis.js';
 import { syncSimpleInventory } from './sync/inventory.js';
 import { syncInboundReceipts } from './sync/inbound.js';
+import { syncBackhaul } from './sync/backhaul.js';
 import { logSyncActivity } from './db/activityLog.js';
 import { getLocationConfig } from './db/supabase.js';
 import type { SyncResult, AuthStatus } from './types/index.js';
+import { handleAgentChat } from './agent/agentChat.js';
 
 const app = express();
 
@@ -73,6 +75,9 @@ app.use(authenticate);
 app.get('/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
+
+// Agent chat
+app.post('/agent/chat', handleAgentChat);
 
 // Check auth status
 app.get('/auth/status', async (_req, res) => {
@@ -256,6 +261,59 @@ app.post('/sync/fg', async (req, res) => {
     }
 
     res.status(500).json(result);
+  }
+});
+
+// Sync Backhaul orders
+app.post('/sync/backhaul', async (req, res) => {
+  const startTime = Date.now();
+
+  try {
+    const { locationId, includeClosed, maxOrders } = req.body;
+
+    if (!locationId) {
+      return res.status(400).json({ error: 'locationId is required' });
+    }
+
+    console.log(`Starting Backhaul sync for location: ${locationId}`);
+    const config = await getLocationConfig(locationId);
+
+    const result = await syncBackhaul(locationId, {
+      includeClosed,
+      maxOrders,
+    });
+
+    await logSyncActivity({
+      locationId: config.locationId,
+      companyId: config.companyId,
+      action: 'backhaul_sync',
+      success: result.success,
+      details: {
+        duration_ms: result.duration ?? Date.now() - startTime,
+        message: result.message,
+      },
+      error: result.error,
+    });
+
+    res.json(result);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    console.error('Backhaul sync failed:', message);
+    res.status(500).json({
+      success: false,
+      error: message,
+      duration: Date.now() - startTime,
+      stats: {
+        totalGEItems: 0,
+        itemsInLoads: 0,
+        unassignedItems: 0,
+        newItems: 0,
+        updatedItems: 0,
+        forSaleLoads: 0,
+        pickedLoads: 0,
+        changesLogged: 0,
+      },
+    });
   }
 });
 

@@ -1,8 +1,6 @@
 import { useMemo, useState, useCallback } from 'react';
 import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Package, TruckIcon, PackageOpen, ScanBarcode, ArrowRight, Check, AlertTriangle } from 'lucide-react';
 import { PieChart, Pie, Cell, Legend } from 'recharts';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
@@ -19,6 +17,7 @@ import { getPathForView } from '@/lib/routes';
 import type { AppView } from '@/lib/routes';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { LoadDisplay } from '@/components/Loads/LoadDisplay';
+import type { LoadMetadata } from '@/types/inventory';
 
 interface DashboardViewProps {
   onViewChange?: (view: AppView) => void;
@@ -105,19 +104,7 @@ const EMPTY_ASIS_ACTION_LOADS = {
   pickupSoonNeedsPrep: [] as AsisActionLoad[],
 };
 
-type AsisActionLoad = {
-  id?: string;
-  sub_inventory_name: string;
-  friendly_name?: string | null;
-  primary_color?: string | null;
-  ge_cso?: string | null;
-  ge_source_status?: string | null;
-  pickup_date?: string | null;
-  prep_tagged?: boolean | null;
-  prep_wrapped?: boolean | null;
-  sanity_check_requested?: boolean | null;
-  conflict_count?: number | null;
-};
+type AsisActionLoad = LoadMetadata;
 
 type ActivityLogEntry = {
   id: string;
@@ -695,7 +682,20 @@ export function DashboardView({ onViewChange, onMenuClick }: DashboardViewProps)
           <>
             {/* Action Items */}
             <div>
-              <h2 className="text-lg font-semibold mb-3">Action Items</h2>
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="text-lg font-semibold">Action Items</h2>
+                {actionItems.length > 0 && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => onViewChange?.('actions')}
+                    className="h-7 text-xs"
+                  >
+                    View all
+                    <ArrowRight className="ml-1 h-3 w-3" />
+                  </Button>
+                )}
+              </div>
               {actionItems.length === 0 ? (
                 <Card className="p-6 text-center">
                   <Check className="h-12 w-12 mx-auto mb-2 text-green-500" />
@@ -703,98 +703,51 @@ export function DashboardView({ onViewChange, onMenuClick }: DashboardViewProps)
                   <p className="text-xs text-muted-foreground mt-1">No action items at this time.</p>
                 </Card>
               ) : (
-                <Tabs defaultValue="all" className="w-full">
-                  <TabsList className="grid w-full grid-cols-2 mb-3">
-                    <TabsTrigger value="all" className="text-xs">
-                      All ({actionItems.length})
-                    </TabsTrigger>
-                    <TabsTrigger value="priority" className="text-xs">
-                      Priority ({actionItems.filter(i => i.priority <= 2).length})
-                    </TabsTrigger>
-                  </TabsList>
-
-                  <TabsContent value="all" className="mt-0">
-                    <div className="space-y-2">
-                      {actionItems.slice(0, 8).map((item) => {
-                        if (item.load) {
-                          return (
-                            <div key={item.id} className="cursor-pointer" onClick={() => navigateToLoad(item.load!.sub_inventory_name)}>
-                              <LoadDisplay
-                                load={item.load}
-                                variant="compact"
-                                showProgress={true}
-                                showActions={false}
-                              />
-                            </div>
-                          );
-                        }
-                        const Icon = item.icon;
-                        return (
-                          <button
-                            key={item.id}
-                            type="button"
-                            onClick={() => {
-                              if (item.type === 'session' && item.sessionId) {
-                                onViewChange?.('sessions');
-                              }
-                            }}
-                            className="flex items-center gap-3 rounded-lg border border-border/60 bg-card px-3 py-3 text-left transition hover:bg-accent w-full"
-                          >
-                            <Icon className={`h-5 w-5 flex-shrink-0 ${item.color}`} />
-                            <div className="flex-1 min-w-0">
-                              <div className="font-medium text-sm truncate">{item.title}</div>
-                              {item.subtitle && (
-                                <div className="text-xs text-muted-foreground truncate">{item.subtitle}</div>
-                              )}
-                            </div>
-                            <ArrowRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </TabsContent>
-
-                  <TabsContent value="priority" className="mt-0">
-                    <div className="space-y-2">
-                      {actionItems.filter(i => i.priority <= 2).slice(0, 8).map((item) => {
-                        if (item.load) {
-                          return (
-                            <div key={item.id} className="cursor-pointer" onClick={() => navigateToLoad(item.load!.sub_inventory_name)}>
-                              <LoadDisplay
-                                load={item.load}
-                                variant="compact"
-                                showProgress={true}
-                                showActions={false}
-                              />
-                            </div>
-                          );
-                        }
-                        const Icon = item.icon;
-                        return (
-                          <button
-                            key={item.id}
-                            type="button"
-                            onClick={() => {
-                              if (item.type === 'session' && item.sessionId) {
-                                onViewChange?.('sessions');
-                              }
-                            }}
-                            className="flex items-center gap-3 rounded-lg border border-border/60 bg-card px-3 py-3 text-left transition hover:bg-accent w-full"
-                          >
-                            <Icon className={`h-5 w-5 flex-shrink-0 ${item.color}`} />
-                            <div className="flex-1 min-w-0">
-                              <div className="font-medium text-sm truncate">{item.title}</div>
-                              {item.subtitle && (
-                                <div className="text-xs text-muted-foreground truncate">{item.subtitle}</div>
-                              )}
-                            </div>
-                            <ArrowRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </TabsContent>
-                </Tabs>
+                <div className="space-y-2">
+                  {actionItems.slice(0, 5).map((item) => {
+                    if (item.load) {
+                      return (
+                        <div key={item.id} className="cursor-pointer" onClick={() => navigateToLoad(item.load!.sub_inventory_name)}>
+                          <LoadDisplay
+                            load={item.load}
+                            variant="compact"
+                            showProgress={true}
+                            showActions={false}
+                          />
+                        </div>
+                      );
+                    }
+                    const Icon = item.icon;
+                    return (
+                      <button
+                        key={item.id}
+                        type="button"
+                        onClick={() => onViewChange?.('actions')}
+                        className="flex items-center gap-3 rounded-lg border border-border/60 bg-card px-3 py-3 text-left transition hover:bg-accent w-full"
+                      >
+                        <Icon className={`h-5 w-5 flex-shrink-0 ${item.color}`} />
+                        <div className="flex-1 min-w-0">
+                          <div className="font-medium text-sm truncate">{item.title}</div>
+                          {item.subtitle && (
+                            <div className="text-xs text-muted-foreground truncate">{item.subtitle}</div>
+                          )}
+                        </div>
+                        <ArrowRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                      </button>
+                    );
+                  })}
+                  {actionItems.length > 5 && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => onViewChange?.('actions')}
+                      className="w-full mt-2"
+                    >
+                      View {actionItems.length - 5} more action{actionItems.length - 5 !== 1 ? 's' : ''}
+                      <ArrowRight className="ml-2 h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
               )}
             </div>
 
@@ -836,10 +789,10 @@ export function DashboardView({ onViewChange, onMenuClick }: DashboardViewProps)
                 <Button
                   variant="outline"
                   className="w-full justify-start whitespace-normal text-left h-auto py-3"
-                  onClick={() => onViewChange?.('sessions')}
+                  onClick={() => onViewChange?.('actions')}
                 >
                   <ScanBarcode className="mr-2 h-4 w-4" />
-                  Manage sessions
+                  View actions
                 </Button>
                 <Button
                   variant="outline"
@@ -1077,7 +1030,20 @@ export function DashboardView({ onViewChange, onMenuClick }: DashboardViewProps)
 
             {/* Center Column: Action Items */}
             <div className="md:col-span-1 lg:col-span-6">
-              <h2 className="text-lg font-semibold mb-4">Action Items</h2>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-semibold">Action Items</h2>
+                {actionItems.length > 0 && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => onViewChange?.('actions')}
+                    className="h-8"
+                  >
+                    View all
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+                )}
+              </div>
               {actionItems.length === 0 ? (
                 <Card className="p-8 text-center">
                   <Check className="h-16 w-16 mx-auto mb-3 text-green-500" />
@@ -1085,25 +1051,8 @@ export function DashboardView({ onViewChange, onMenuClick }: DashboardViewProps)
                   <p className="text-sm text-muted-foreground mt-2">No action items at this time.</p>
                 </Card>
               ) : (
-                <Tabs defaultValue="all" className="w-full">
-                  <TabsList className="grid w-full grid-cols-4 mb-4">
-                    <TabsTrigger value="all">
-                      All <Badge variant="secondary" className="ml-1">{actionItems.length}</Badge>
-                    </TabsTrigger>
-                    <TabsTrigger value="priority">
-                      Priority <Badge variant="secondary" className="ml-1">{actionItems.filter(i => i.priority <= 2).length}</Badge>
-                    </TabsTrigger>
-                    <TabsTrigger value="prep">
-                      Prep <Badge variant="secondary" className="ml-1">{actionItems.filter(i => i.type === 'wrap' || i.type === 'tag').length}</Badge>
-                    </TabsTrigger>
-                    <TabsTrigger value="sessions">
-                      Sessions <Badge variant="secondary" className="ml-1">{actionItems.filter(i => i.type === 'session').length}</Badge>
-                    </TabsTrigger>
-                  </TabsList>
-
-                  <TabsContent value="all" className="mt-0">
-                    <div className="space-y-2">
-                      {actionItems.map((item) => {
+                <div className="space-y-2">
+                  {actionItems.slice(0, 5).map((item) => {
                     if (item.load) {
                       return (
                         <div key={item.id} className="cursor-pointer" onClick={() => navigateToLoad(item.load!.sub_inventory_name)}>
@@ -1121,11 +1070,7 @@ export function DashboardView({ onViewChange, onMenuClick }: DashboardViewProps)
                       <button
                         key={item.id}
                         type="button"
-                        onClick={() => {
-                          if (item.type === 'session' && item.sessionId) {
-                            onViewChange?.('sessions');
-                          }
-                        }}
+                        onClick={() => onViewChange?.('actions')}
                         className="flex items-center gap-4 rounded-lg border border-border/60 bg-card px-4 py-3 text-left transition hover:bg-accent w-full"
                       >
                         <Icon className={`h-5 w-5 flex-shrink-0 ${item.color}`} />
@@ -1139,99 +1084,18 @@ export function DashboardView({ onViewChange, onMenuClick }: DashboardViewProps)
                       </button>
                     );
                   })}
-                    </div>
-                  </TabsContent>
-
-                  <TabsContent value="priority" className="mt-0">
-                    <div className="space-y-2">
-                      {actionItems.filter(i => i.priority <= 2).map((item) => {
-                        if (item.load) {
-                          return (
-                            <div key={item.id} className="cursor-pointer" onClick={() => navigateToLoad(item.load!.sub_inventory_name)}>
-                              <LoadDisplay
-                                load={item.load}
-                                variant="compact"
-                                showProgress={true}
-                                showActions={false}
-                              />
-                            </div>
-                          );
-                        }
-                        const Icon = item.icon;
-                        return (
-                          <button
-                            key={item.id}
-                            type="button"
-                            onClick={() => {
-                              if (item.type === 'session' && item.sessionId) {
-                                onViewChange?.('sessions');
-                              }
-                            }}
-                            className="flex items-center gap-4 rounded-lg border border-border/60 bg-card px-4 py-3 text-left transition hover:bg-accent w-full"
-                          >
-                            <Icon className={`h-5 w-5 flex-shrink-0 ${item.color}`} />
-                            <div className="flex-1 min-w-0">
-                              <div className="font-semibold text-base">{item.title}</div>
-                              {item.subtitle && (
-                                <div className="text-sm text-muted-foreground">{item.subtitle}</div>
-                              )}
-                            </div>
-                            <ArrowRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </TabsContent>
-
-                  <TabsContent value="prep" className="mt-0">
-                    <div className="space-y-2">
-                      {actionItems.filter(i => i.type === 'wrap' || i.type === 'tag').map((item) => {
-                        if (item.load) {
-                          return (
-                            <div key={item.id} className="cursor-pointer" onClick={() => navigateToLoad(item.load!.sub_inventory_name)}>
-                              <LoadDisplay
-                                load={item.load}
-                                variant="compact"
-                                showProgress={true}
-                                showActions={false}
-                              />
-                            </div>
-                          );
-                        }
-                        return null;
-                      })}
-                    </div>
-                  </TabsContent>
-
-                  <TabsContent value="sessions" className="mt-0">
-                    <div className="space-y-2">
-                      {actionItems.filter(i => i.type === 'session').map((item) => {
-                        const Icon = item.icon;
-                        return (
-                          <button
-                            key={item.id}
-                            type="button"
-                            onClick={() => {
-                              if (item.sessionId) {
-                                onViewChange?.('sessions');
-                              }
-                            }}
-                            className="flex items-center gap-4 rounded-lg border border-border/60 bg-card px-4 py-3 text-left transition hover:bg-accent w-full"
-                          >
-                            <Icon className={`h-5 w-5 flex-shrink-0 ${item.color}`} />
-                            <div className="flex-1 min-w-0">
-                              <div className="font-semibold text-base">{item.title}</div>
-                              {item.subtitle && (
-                                <div className="text-sm text-muted-foreground">{item.subtitle}</div>
-                              )}
-                            </div>
-                            <ArrowRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </TabsContent>
-                </Tabs>
+                  {actionItems.length > 5 && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => onViewChange?.('actions')}
+                      className="w-full mt-2"
+                    >
+                      View {actionItems.length - 5} more action{actionItems.length - 5 !== 1 ? 's' : ''}
+                      <ArrowRight className="ml-2 h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
               )}
             </div>
 
@@ -1353,10 +1217,10 @@ export function DashboardView({ onViewChange, onMenuClick }: DashboardViewProps)
                     <Button
                       variant="outline"
                       className="w-full justify-start whitespace-normal text-left h-auto py-3"
-                      onClick={() => onViewChange?.('sessions')}
+                      onClick={() => onViewChange?.('actions')}
                     >
                       <ScanBarcode className="mr-2 h-4 w-4" />
-                      Manage sessions
+                      View actions
                     </Button>
                     <Button
                       variant="outline"

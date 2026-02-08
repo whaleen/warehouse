@@ -1,0 +1,403 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html><head>
+		<script type="text/javascript">
+			history.forward();
+		</script>
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+		<title>Cycle Count PI - Inv Orgs</title>
+		<link rel="stylesheet" type="text/css" href="/dms/resources/style/jquery-ui.css">
+		<link rel="stylesheet" type="text/css" href="/dms/resources/style/style.css">
+		<link rel="stylesheet" type="text/css" href="/dms/resources/style/Dms.css">
+		<link rel="stylesheet" type="text/css" href="/dms/resources/style/CalendarControl.css">
+		<link rel="stylesheet" type="text/css" href="/dms/resources/style/checkin.css">
+		<script type="text/javascript" src="/dms/resources/js/jquery-1.10.2.js"></script>
+		<script type="text/javascript" src="/dms/resources/js/jquery-ui.js"></script> 
+		<script type="text/javascript" src="/dms/resources/js/CalendarControl.js"></script></head>
+	
+	<body link="blue" vlink="purple" alink="red" style=""><iframe style="width:100%;height:100%;background-color:white; display:none; position:absolute" id="iframeOverlay" name="iframeOverlay" onblur="this.focus()">
+</iframe> 
+<div style="width:100%;height:100%;background-color:white; display:none; position:absolute" id="divOverlay" name="divOverlay" onblur="this.focus()"> 
+<center><img src="/dms/resources/images/loading.gif" alt="loading..."></center> 
+</div> 
+<iframe id="CalendarControlIFrame" frameborder="0" scrolling="no"></iframe><div id="CalendarControl"></div>
+		<script type="text/javascript" src="/dms/resources/js/DmsFunction.js"></script>
+		<script type="text/javascript" src="/dms/resources/js/jqueryajaxcommon.js"></script>
+		<script type="text/javascript" src="/dms/resources/js/FormTableSort.js"></script>
+		<script type="text/javascript" src="/dms/resources/js/TableSearch.js"></script>
+		<script type="text/javascript" src="/dms/resources/js/TableSelectAll.js"></script>
+		<script type="text/javascript" src="/dms/resources/js/StripedTable.js"></script>
+		<script type="text/javascript" src="/dms/resources/js/jqueryajaxcommon.js"></script>
+		<script type="text/javascript" src="/dms/resources/js/cycleCountPI.js"></script>
+		
+		<script type="text/javascript">
+		
+			var get_inv_list_url = "https://2upa2i0mv3.execute-api.us-east-1.amazonaws.com/prd/get_list";
+			var get_count_type_url = "https://xre0ihgog2.execute-api.us-east-1.amazonaws.com/prd/get_count_type";
+			var get_count_event_url = "https://xre0ihgog2.execute-api.us-east-1.amazonaws.com/prd/get_count_event";
+			var save_count_event_url = "https://xre0ihgog2.execute-api.us-east-1.amazonaws.com/prd/save_count_event";
+			var get_loc_summary_url = "https://xre0ihgog2.execute-api.us-east-1.amazonaws.com/prd/get_loc_summary";
+			var get_loc_status_url = "https://xre0ihgog2.execute-api.us-east-1.amazonaws.com/prd/get_loc_status";
+			
+			var screen_name = "Cycle Count PI - Inv Orgs"
+			var gead_user = {
+					"sso" : "515511228",
+					"user_authority" : "AGENT"
+			}
+			var selectedInvOrg = "9SU"
+			
+			$( document ).ready(function() {
+			    console.log( "ready!" );
+			    loadInvOrgsTab()
+			});
+		
+		</script>
+		
+		<style type="text/css">
+		.dataTable tr td {
+		    border-color: black;
+		}
+		
+		.th_blue_color {
+		   color: #FFFF;
+		   background-color : #006699;
+		}
+		
+		.ui-dialog .ui-dialog-titlebar {
+		    background-color: #006699;
+		}
+		
+		.regular {
+			color: #000;
+		}
+		
+		#table_list tbody tr td {
+		    text-align: center;
+		}
+		</style>
+	
+		<!-- Header Begins -->
+
+	
+
+<script type="text/javascript">
+jQuery(document).ready(function($) {
+    window.history.pushState('forward', null, null); 
+    $(window).on('popstate', function() {
+       history.pushState(null, null, window.location.pathname);
+    }); 
+    
+});
+
+</script>
+
+<table class="messageHeader" border="0" align="center" width="100%">
+	<tbody><tr>
+		<td width="30%" style="color:#000000;"><b>Inventory - Cycle Count/Physical Inventory</b></td>
+		
+		<td align="center"></td>
+				<td align="center">
+				
+		</td>
+		<td align="right" width="20%" style="color:#000000;">Welcome &nbsp;<b><font color="red" id="usr_login_id">515511228</font></b>
+       		
+       			
+       			
+       				&nbsp;<b>AGENT</b>
+       			
+       		
+		</td>
+		
+			
+			
+			
+			<td align="right" width="5%">&nbsp;<b>|&nbsp;<a target="_BLANK" href="/dms/faqadmin/faqsearch" style="color:blue;">Help</a></b>
+			
+			
+		
+	</td></tr>
+</tbody></table>
+<!-- Header Ends -->   
+
+		<style type="text/css">
+	body {
+		font-family: ge inspira, verdana;
+		font-size: 12px;
+	}
+	
+	a.menuitem:link {
+	    color: #FFF;
+	    text-decoration: none;
+	}
+	
+	a.menuitem:hover {
+	    color: #006699;
+	    text-decoration: none;
+	}
+	
+</style>
+
+<br>
+	
+<br>
+		
+
+
+
+<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<title></title>
+
+
+
+<!--===================================SCORE DIALOG=================================================-->
+<div id="scoreDialog" style="display: none">
+<!-- ------------------------------------------>
+ <table align="center" class="overAllScore">
+   <tbody><tr>
+    <td id="overAllScore" style=" font-size: 15px; color: black; text-align:center; font-weight:bold;"></td>
+   </tr>
+ </tbody></table>  
+<!-- ------------------------------------------>
+ <table id="table_list" class="score_header_table dataTable" width="99%" style="padding-top:5px;" border="0" align="center" cellpadding="1" cellspacing="0">
+    <thead>
+		  <tr id="score_summary_row1"></tr>
+		  <tr id="score_summary_row2"></tr>
+	</thead>
+	<tbody id="score_dialog_resp"></tbody>
+ </table>
+ <!-- ------------------------------------------------------------------------->
+ <br>
+  <table align="center" class="scoreModelRule">
+   <tbody><tr><td id="scoreRule" style=" font-size: 12px; color: black; text-align:center; font-weight:bold;"></td></tr>
+  <tr><td id="scoreRuleValue" style=" font-size: 12px; color: black; text-align:center; font-weight:bold;"></td></tr>
+ </tbody></table>
+
+ <!-- ----------------------------------------------------------------- -->
+  <table id="table_list" class="score_footer_table dataTable" width="50%" border="0" align="center" cellpadding="1" cellspacing="0" style="padding-top: 5px; display: none;">
+	<thead>
+		<tr>
+			<th rowspan="2" <="" th="">
+			</th><th rowspan="2" class="dcount">Discrepancy Count</th>
+			<th colspan="2" class="resolved">Resolved</th>
+		</tr>
+		<tr>
+			<th>Positive</th>
+			<th>Negative</th>
+		</tr>
+	</thead>
+	<tbody id="discrepancyRowsDetails">
+	</tbody>
+ </table>
+</div>	
+<!-- scoreDialog end -->
+
+<script type="text/javascript">
+$(document).ready(function(){
+	$('.score_footer_table').hide();
+});
+	 
+function fetchScoreDetails(inv_org,inv_count_start_date){
+	   console.log('calling fetchScoreDetails');
+	   var getScoreOverAllReq={"current_screen": "GEAD INV COUNT EVENTS","gead_user":{"sso": "515511228","user_authority": "AGENT"},"search_criteria":{"inv_org":inv_org,"inv_count_start_date": inv_count_start_date}};
+	   var data = JSON.stringify(getScoreOverAllReq);
+	  
+	   var response='';
+	   var url= "https://xre0ihgog2.execute-api.us-east-1.amazonaws.com/prd/get_loc_score_overall";
+	   showPleaseWait();
+	   var responseTable ="";
+	   var inv_overall_score ='';
+	    $.ajax({
+	    	  type: 'POST',
+	    	  url:url,
+	    	  data: data,
+	    	  dataType: 'json',
+	    	  contentType: 'application/json; charset=utf-8',
+	    	  success: function(response) {
+	    	  console.log('fetchScore Success inv_overall_score ='+inv_overall_score+', calling openScorePopup..');
+	    	  hidePleaseWait();  
+	    	  score_response = response;
+	             openScorePopup(score_response,inv_org,inv_count_start_date);	
+	           	
+	    	  },error: function (jqXHR, exception) {
+	    		  responseTable += "<table><tr><td colspan=14 style='color: red; text-align:center; font-weight:bold;' >Error while fetching service: get_loc_score_overall("+jqXHR.status+")</td></tr><table>";
+	    			$("#score_dialog_resp").html(responseTable);
+	    		  hidePleaseWait();
+	    	  }
+		});  
+		  
+	}	
+		
+	function openScorePopup(score_response,inv_org,inv_count_start_date){
+		
+		$("#score_table_fixed_columns").html("");
+		$("#score_table_subInv_columns").html("");
+		$("#score_dialog_resp").html("");
+		
+	   console.log('openScorePopup'); 
+	   var getInvSummaryReq={"current_screen": "GEAD INV COUNT EVENTS","gead_user":{"sso": "515511228","user_authority": "AGENT"},"search_criteria":{"inv_org":inv_org,"inv_count_start_date": inv_count_start_date}};
+	   var data = JSON.stringify(getInvSummaryReq);
+	   var response='';
+	   var url= "https://xre0ihgog2.execute-api.us-east-1.amazonaws.com/prd/get_loc_summary";
+	  
+	   let responseTable ="";
+	   let row1_col_names = "";
+	   let row2_col_names = "";
+	   let subInvDataMapArray=[];
+	   let book = [];
+	   let count = [];
+	   let match = [];
+	   let subInvColLength=0;
+	   let subInvColArray =[];
+	   showPleaseWait();
+	    $.ajax({
+	   	  type: 'POST',
+	   	  url:url,
+	   	  data: data,
+	   	  dataType: 'json',
+	   	  contentType: 'application/json; charset=utf-8',
+	   	  success: function(response) {
+	   	  hidePleaseWait();  
+	      row1_col_names += "<th rowspan='2'>Inv Org</th><th rowspan='2'>Date</th><th rowspan='2'>Type</th><th rowspan='2'>Inv&nbsp;Accuracy</th>";
+	      if(response.list != null && response.list.length > 0) {
+	    	  prepareSubInvData(response,subInvColArray,subInvDataMapArray);
+	    	 for (var j=0; j<response.list.length; j++) {
+	   			var inv_org  = response.list[j].key.inv_org;
+	   			var inv_count_start_date = formatDate(response.list[j].key.inv_count_start_date);
+	   			var inv_count_type = response.list[j].data.inv_count_type;
+	   			var inv_event_desc = response.list[j].data.inv_event_desc;
+	   			var type_Display=inv_count_type+"("+inv_event_desc+")";
+	   			var inv_accuracy_status = response.list[j].data.inv_accuracy_status;
+	  			var inv_accuracy_score = response.list[j].data.inv_accuracy_score;
+	   			 var inv_accuracy_display = "";
+	   			 if(inv_accuracy_status=='SCORED' || inv_accuracy_status=='EVENT COMPLETE'){
+	   				 inv_accuracy_display= formatNumber(inv_accuracy_score);
+	   			 }else{
+	   				 inv_accuracy_display=inv_accuracy_status;
+	   			 }
+	   			
+	    		    
+	    	 var overAllScoreValue = 'SCORE='+formatNumber(score_response.data.inv_overall_score);
+	    	 var scoreRule = 'SCORE= Inv Accuracy+((100-Inv Accuracy)*(Resolved Positive Total/Discrepency Total))';
+	    	 var subtractedValue= 100-parseInt(inv_accuracy_score);
+	    	 var scoreRuleValue = 'SCORE='+ inv_accuracy_score+'+('+subtractedValue+'*('+score_response.data.resolved_positive_total_count+'/'+score_response.data.discrepancy_total_count+'))';
+	    	
+	    	 $("#overAllScore").html(overAllScoreValue);
+	    	
+	    	 $("#scoreRule").html(scoreRule);
+	    	 $("#scoreRuleValue").html(scoreRuleValue);
+	    		
+	    	 displayScoreFooterData(score_response);
+	    	 $('.score_footer_table').show();
+	     	 /* subInv colums realted  */
+	     	 let subInvDynHtml="";	
+	    	 subInvColLength = subInvColArray.length;
+			 for (var k=0;k<subInvColLength;k++){
+				 //data
+				  book[k]='';count[k]='';match[k]='';
+				  if(subInvDataMapArray[j]!=undefined && subInvDataMapArray[j].get(subInvColArray[k])!=undefined){
+					  book[k]=  subInvDataMapArray[j].get(subInvColArray[k]).book;
+					  count[k]=  subInvDataMapArray[j].get(subInvColArray[k]).count;
+					  match[k]= subInvDataMapArray[j].get(subInvColArray[k]).match;
+				  }
+				  subInvDynHtml+="<td style='text-align:center; border-left: 1px solid #cdd0d4;'>"+book[k]+"</td><td style=text-align:center;>"+count[k]+"</td><td style=text-align:center;>"+match[k]+"</td>";
+			 }
+			  responseTable += "<tr class='ccData_"+j+"'><td style=text-align:center;>"+inv_org+"</td><td style=text-align:center;>"+inv_count_start_date+"</td><td style=text-align:center;>"+type_Display+"</td><td style=text-align:center;>"+inv_accuracy_display+"</td>";
+			  responseTable+=subInvDynHtml;
+			  responseTable +="</tr>";
+	    			
+	       	}//for loop end
+	       	subInvColArray.forEach(function (subInvType)  { 
+	   			console.log(subInvType)
+	   			row1_col_names += "<th colspan='3'>"+subInvType+"</th>";
+	   			row2_col_names += "<th>Book</th><th>Count</th><th>Match</th>";
+	   			
+	   		});
+	        $("#score_dialog_resp").html(responseTable);
+			$("#score_summary_row1").html(row1_col_names);
+			$("#score_summary_row2").html(row2_col_names);
+				
+	       	}else{
+	          		responseTable += "<tr ><td colspan=14>No Data Available On Given Search Fields.</td></tr>";
+	          		$("#score_dialog_resp").html(responseTable);
+	          	}
+	            	     	
+	   	  },error: function (jqXHR, exception) {
+	   		  responseTable += "<table><tr><td colspan=14 style='color: red; text-align:center; font-weight:bold;' >Error while fetching service: Get Inv Count Loc Summary("+jqXHR.status+")</td></tr><table>";
+	   		  $("#score_dialog_resp").html(responseTable);
+	   		  hidePleaseWait();
+	   	  }
+	});  
+    $(function () {
+    	
+    	  $("#scoreDialog").dialog({
+    	      autoOpen: false,
+    	      modal: true,
+    	      title: "", 
+    	      width: 900,
+    	      height: 420,
+    	      
+    	  });  
+    	  console.log('dialog ready');    
+    	   $("#scoreDialog").closest(".ui-dialog").children(".ui-dialog-titlebar").css("background", "#006699"); 
+    	});   
+	$("#scoreDialog").dialog("open");
+
+	}
+
+	function displayScoreFooterData(score_response){
+		console.log(score_response.data)
+		var sData= score_response.data;
+		
+		
+		$("#discrepancyRowsDetails").html("");
+		
+		if(sData.error_list != undefined && sData.error_list.length) {
+			for(i=0; i<sData.error_list.length;i++) {
+				$("#discrepancyRowsDetails").append("<tr><td class ='th_blue_color' style='text-align:center;color:white;'>"+sData.error_list[i].error_type+"</td><td class='DC_sur' style='text-align:center;'>"+sData.error_list[i].discrepancy_count+"</td><td class='RP_sur' style='text-align:center;'>"+sData.error_list[i].resolved_positive_count+"</td><td class='RN_sur' style='text-align:center;'>"+sData.error_list[i].resolved_negative_count+"</td></tr>")
+			}
+		}
+		
+		$("#discrepancyRowsDetails").append("<tr><td class ='th_blue_color' style='text-align:center;color:white;'>Total</td><td class='DC_total th_blue_color' style='text-align:center;color:white;'>"+sData.discrepancy_total_count+"</td><td class='RP_total th_blue_color ' style='text-align:center;color:white;'>"+sData.resolved_positive_total_count+"</td><td class ='RN_total th_blue_color' style='text-align:center;color:white;'>"+sData.resolved_negative_total_count+"</td></tr>");
+		
+	}
+
+
+
+</script>
+
+		
+		<div id="openaStartCountWindow"></div>
+		
+		<br><br>
+		<table border="0" width="85%" align="center">
+			<tbody><tr>
+				<td id="errorMessage" style="text-align:center; font-weight: bold; color: red"></td>
+			</tr>
+		</tbody></table>
+		
+		<table border="0" width="70%" align="center" class="regular">
+			<tbody><tr>
+				<td width="15%" align="right"><b>INV ORG : </b></td>
+				<td width="10%" align="left">
+					<select name="inv_org" id="inv_org" onchange="if (!window.__cfRLUnblockHandlers) return false; changeInvOrg()">
+						<option value="">--</option>
+						
+							<option value="9SU" selected="">9SU</option>
+						
+					</select>
+				</td>
+				<td width="15%" align="center">
+					<input type="button" value="START COUNT" class="dmsButton" onclick="if (!window.__cfRLUnblockHandlers) return false; startCount()" id="startEventBtn" style="">
+				</td>
+				<td align="center"><b><span id="eventDetails"> </span></b></td>
+			</tr>
+		</tbody></table>
+		
+		<br><br>
+		
+		<div id="locSummary"><table id="table_list" class="inv_org_table dataTable" width="90%" border="0" align="center" cellpadding="1" cellspacing="0"><thead><tr><th rowspan="2">Date</th><th rowspan="2">Type</th><th rowspan="2">Inv&nbsp;Accuracy</th><th colspan="3" class="subInvType1">ASIS</th><th colspan="3" class="subInvType1">FG</th><th colspan="3" class="subInvType1">SCRAP</th><th rowspan="2">Score</th></tr><tr><th>Book</th><th>Count</th><th>Match</th><th>Book</th><th>Count</th><th>Match</th><th>Book</th><th>Count</th><th>Match</th></tr></thead><tbody id="inv_org_resp"><tr><td><a href="/dms/cyclecount/events/invorg?inv_org=9SU&amp;start_date=20260129074758" style="text-decoration:underline; color:blue;" target="_blank">01/29/2026</a></td><td>CYCLE COUNT</td><td>99.5</td><td>778</td><td>774</td><td>774</td><td>64</td><td>64</td><td>64</td><td>0</td><td>0</td><td>0</td><td><a href="javascript:" onclick="fetchScoreDetails('9SU','20260129074758')" style="text-decoration:underline; color:blue;">100</a></td></tr><tr><td><a href="/dms/cyclecount/events/invorg?inv_org=9SU&amp;start_date=20251201064410" style="text-decoration:underline; color:blue;" target="_blank">12/01/2025</a></td><td>CYCLE COUNT (25 Q4 WEST MANDATORY) </td><td>100</td><td>800</td><td>800</td><td>800</td><td>3</td><td>3</td><td>3</td><td>0</td><td>0</td><td>0</td><td><a href="javascript:" onclick="fetchScoreDetails('9SU','20251201064410')" style="text-decoration:underline; color:blue;">100</a></td></tr><tr><td><a href="/dms/cyclecount/events/invorg?inv_org=9SU&amp;start_date=20251113061640" style="text-decoration:underline; color:blue;" target="_blank">11/13/2025</a></td><td>CYCLE COUNT</td><td>99.3</td><td>401</td><td>398</td><td>398</td><td>12</td><td>12</td><td>12</td><td>0</td><td>0</td><td>0</td><td><a href="javascript:" onclick="fetchScoreDetails('9SU','20251113061640')" style="text-decoration:underline; color:blue;">100</a></td></tr></tbody></table></div>
+		
+		
+		<input type="hidden" name="refreshStartCountPopUp" id="refreshStartCountPopUp" value="N">
+		<input type="hidden" name="cyclecountpi_getLocSummary_url_hdn" id="cyclecountpi_getLocSummary_url_hdn" value="https://xre0ihgog2.execute-api.us-east-1.amazonaws.com/prd/get_loc_summary">
+	
+	
+</body></html>

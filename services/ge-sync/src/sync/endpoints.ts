@@ -38,6 +38,12 @@ export const ENDPOINTS = {
 
   // Inbound receiving report PDF
   INBOUND_EXPORT_PDF: `${GE_DMS_BASE}/dms/inbound/exportpdf`,
+
+  // Backhaul list export
+  BACKHAUL_EXPORT: `${GE_DMS_BASE}/dms/backhaul/downloadBackhaulSpreadsheet`,
+
+  // Backhaul ISO pick list export
+  BACKHAUL_PICK_LIST: `${GE_DMS_BASE}/dms/backhaul/downloadIsoSpreadsheet`,
 } as const;
 
 export const HEADERS = {
@@ -55,6 +61,7 @@ export const REFERERS = {
   ASIS_LOAD_DETAIL: `${GE_DMS_BASE}/dms/newasis`,
   ERP_INVENTORY: `${GE_DMS_BASE}/dms/erpCheckInventory`,
   INBOUND: `${GE_DMS_BASE}/dms/inbound`,
+  BACKHAUL: `${GE_DMS_BASE}/dms/backhaul`,
 };
 
 /**

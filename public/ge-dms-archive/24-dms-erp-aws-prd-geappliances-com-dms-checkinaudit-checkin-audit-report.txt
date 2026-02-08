@@ -1,0 +1,113 @@
+Check-In Audit		Having trouble with screen display or response?	Welcome  515511228  AGENT	 | Help
+
+
+
+
+INV ORG:   
+9SU
+
+
+Delivery Agent
+	
+HQ View
+	
+Reporting
+
+
+
+
+
+
+
+CSO   	Check In Date   	Delivery Date   	Deliver ID   	Truck   	Driver   	Check In changes   	PODs   	Photos   	Agent Findings   	Agent Note   
+1065517923	02-06-2026	02-05-2026	19SU00005818	GAT01	GEVORK ARBADJIAN	EQUAL	1	2	
+PASS
+Driver photos did not show connections of the install
+Driver did not take serial tag photos
+Driver did not take photos of reported damage or defect
+Driver did not take any photos or photo quantity/quality was insufficient
+Driver did not report final condition or completed installs correctly
+Driver did not get typed first and last name
+Driver did not add site readiness details
+Driver did not accurately report anti-tip details
+Check in did not catch driver error on condition or services
+Check in added or removed services inappropriately or made an error on product
+	
+1065533179	02-06-2026	02-05-2026	19SU00005874	CAPC04	GAGIK ARSHAKYAN	EQUAL	1	5	
+PASS
+Driver photos did not show connections of the install
+Driver did not take serial tag photos
+Driver did not take photos of reported damage or defect
+Driver did not take any photos or photo quantity/quality was insufficient
+Driver did not report final condition or completed installs correctly
+Driver did not get typed first and last name
+Driver did not add site readiness details
+Driver did not accurately report anti-tip details
+Check in did not catch driver error on condition or services
+Check in added or removed services inappropriately or made an error on product
+	
+1065356902	02-06-2026	02-05-2026	19SU00005393	GRAN07	ISMAEL JIMENEZ	EQUAL	1	7	
+PASS
+Driver photos did not show connections of the install
+Driver did not take serial tag photos
+Driver did not take photos of reported damage or defect
+Driver did not take any photos or photo quantity/quality was insufficient
+Driver did not report final condition or completed installs correctly
+Driver did not get typed first and last name
+Driver did not add site readiness details
+Driver did not accurately report anti-tip details
+Check in did not catch driver error on condition or services
+Check in added or removed services inappropriately or made an error on product
+	
+1064735937	02-06-2026	02-06-2026	19SU00005167	CAPC08	JORGE MARTIN-SANTANA	EQUAL	1	5	
+PASS
+Driver photos did not show connections of the install
+Driver did not take serial tag photos
+Driver did not take photos of reported damage or defect
+Driver did not take any photos or photo quantity/quality was insufficient
+Driver did not report final condition or completed installs correctly
+Driver did not get typed first and last name
+Driver did not add site readiness details
+Driver did not accurately report anti-tip details
+Check in did not catch driver error on condition or services
+Check in added or removed services inappropriately or made an error on product
+	
+1065534662	02-06-2026	02-06-2026	19SU00005876	CAPC04	GAGIK ARSHAKYAN	EQUAL	1	4	
+PASS
+Driver photos did not show connections of the install
+Driver did not take serial tag photos
+Driver did not take photos of reported damage or defect
+Driver did not take any photos or photo quantity/quality was insufficient
+Driver did not report final condition or completed installs correctly
+Driver did not get typed first and last name
+Driver did not add site readiness details
+Driver did not accurately report anti-tip details
+Check in did not catch driver error on condition or services
+Check in added or removed services inappropriately or made an error on product
+	
+1065530241	02-06-2026	02-06-2026	19SU00005866	GAT01	GEVORK ARBADJIAN	EQUAL	0	3	
+PASS
+Driver photos did not show connections of the install
+Driver did not take serial tag photos
+Driver did not take photos of reported damage or defect
+Driver did not take any photos or photo quantity/quality was insufficient
+Driver did not report final condition or completed installs correctly
+Driver did not get typed first and last name
+Driver did not add site readiness details
+Driver did not accurately report anti-tip details
+Check in did not catch driver error on condition or services
+Check in added or removed services inappropriately or made an error on product
+	
+1065502623	02-06-2026	02-06-2026	19SU00005768	GRAN07	ISMAEL JIMENEZ	SERVICE DIFFERENCE	1	6	
+PASS
+Driver photos did not show connections of the install
+Driver did not take serial tag photos
+Driver did not take photos of reported damage or defect
+Driver did not take any photos or photo quantity/quality was insufficient
+Driver did not report final condition or completed installs correctly
+Driver did not get typed first and last name
+Driver did not add site readiness details
+Driver did not accurately report anti-tip details
+Check in did not catch driver error on condition or services
+Check in added or removed services inappropriately or made an error on product
+	

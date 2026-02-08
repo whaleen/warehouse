@@ -1,0 +1,77 @@
+Order Download		Having trouble with screen display or response?	Welcome  515511228  AGENT
+
+
+ 
+Select Order Data Options
+Show	
+ ALL
+	Status	
+ ALL
+	
+INV ORG Location  
+	
+9SU
+	Show only rows containing
+ 	
+ NEXT DAY/HOT SHOT
+	 	
+ SHIPPED
+	
+Orders for Date  
+	
+	
+ 	
+ REVERSE
+	 	
+ SHIPPED/PENDING
+	
+Plus  
+	
+	
+More Days
+
+ 	
+ RETURN
+	 	
+ PICKED
+	
+Order Data - Enhanced  
+	
+V1
+V2
+	 
+ 	
+ MEET TRUCK
+		
+ PICKED/SHIPPED
+			
+ 	
+ WORK ORDERS
+	 	
+ CANCELLED
+	 	 	 
+ 	
+ WILL CALL ORDERS
+	 	
+ PENDING
+	 	 	 
+ 	
+ BODEWELL DELIVERIES
+	 	 	 	 	 
+ 	 	 	 	 	 	 
+ 	
+Additional Options:
+	 	 	 	 	 
+ 	
+Only one option can be used at a time
+	 	 	 	 	 
+ 	 	
+CSO 
+	  TRACKING # 	
+	
+INBOUND SHIPMENT #   
+	
+
+ 	 	 	 	 	 	 
+    
+

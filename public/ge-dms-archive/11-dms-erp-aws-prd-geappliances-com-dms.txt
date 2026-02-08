@@ -1,0 +1,75 @@
+GEA DELIVERS - ERP		Having trouble with screen display or response?	Welcome  515511228  AGENT	 | Help
+
+
+Daily Operations
+Cancellations
+Check In
+Check In POD(s)
+Communication Portal
+Downloads
+Inbound
+Manifesting
+Meet Truck & Multi-Family SDS Orders
+Order Download
+Parking Lot
+Return Request Or Cancel
+Returns Receiving
+Warehouse Exception Report
+PAT
+	
+Op Tools
+Agent Communication
+Damage/Defective Tool
+APP Deployment Tool
+Haulaway Summary
+Payment Correction
+Recycle BOL
+Sedgwick Claim Initiation
+	
+Reports, Tracking & Help
+Anti-Tip Audit Report
+Frequently Asked Questions
+Location Contact Information
+Online POD Search
+National Builder Open Orders by Customer
+Orders in Process
+Reporting
+Track & Trace
+Truck Status - Delivery
+Truck Status - Staging
+Check In - Audit
+	
+Inventory
+ASIS
+Backhaul
+Cycle Count / Physical Inventory
+ERP On Hand Qty
+Inventory Adjustment Forms
+Inventory Report
+Non GEA Backhaul
+SFLS
+Scrap
+Search RA or PSE by Serial
+	
+Links
+Contact IT Support
+Coverage and Capacity
+Driver App - Photos
+E-Ticket Training
+EBS
+ePOD
+GEA Delivers - ERP v1.0
+Delivery Company Audit
+iSupplier
+Develop U
+Local Delivery Learning Portal
+New User Account Request Form
+Quality of Service Surveys
+User List By Location
+Customernet/ Parts Net
+Tableau Payment Dashboard
+TACTICAL DASHBOARD
+INV ORG	RM	CANCELLATIONS	INBOUND NOT REC.
+>4 HRS	BADGE EXP (30 DAYS)	OPEN TRUCKS
+>48 HRS	ERP SDS Aged 11+ Days	ERP Home Delivery Aged 30+ Days	ERP Returns Aged 10+ Days	ePODS	ACT Cases	TTL Open Claims	Pending Meet Trucks	Shipped Not Billed Meet Trucks	Warehouse Capacity %
+9SU	BK	0	1	2	0	4	0	1	0	1	1	0	0	0

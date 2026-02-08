@@ -1,0 +1,258 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html><head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<title>GEA DELIVERS - SUMMARY REPORTS</title>	 	
+			
+	<link rel="stylesheet" href="/dms/resources/style/Dms.css">			
+	<link rel="stylesheet" href="/dms/resources/style/CalendarControl.css">
+	<link rel="stylesheet" href="/dms/resources/style/jquery-ui.css">
+	
+	<script src="/dms/resources/js/jquery-1.10.2.js" type="text/javascript"></script>
+	<script src="/dms/resources/js/jquery-ui.js" type="text/javascript"></script>	
+	<script src="/dms/resources/js/CalendarControl.js" language="javascript" type="text/javascript"></script></head>
+
+<body link="blue" vlink="purple" alink="red" style=""><iframe id="CalendarControlIFrame" frameborder="0" scrolling="no"></iframe><div id="CalendarControl"></div>
+	<script src="/dms/resources/js/jqueryajaxcommon.js" language="javascript" type="text/javascript"></script>
+	<script src="/dms/resources/js/reportsummary.js" language="javascript" type="text/javascript"></script>
+	<script src="/dms/resources/js/StripedTable.js" language="javascript" type="text/javascript"></script>
+	<script src="/dms/resources/js/FormTableSortFoot.js" language="javascript" type="text/javascript"></script>
+	<script src="/dms/resources/js/TableSearch.js" language="javascript" type="text/javascript"></script>
+	<style type="text/css">
+		body {
+			font-family: ge inspira, verdana;
+			font-size: 12px;
+		}
+		
+		dt {
+			font-family: "arial unicode MS", arial, geneva, sans-serif;
+		}
+		.ui-widget {
+			font-size: 12px;
+		}
+		
+		
+		a.nounderline:link  
+		{
+			color: black;
+ 			text-decoration:none;  
+		}  
+						
+	</style>
+<script type="text/javascript">
+	history.forward();
+		$(function() {
+	    if($("#startDate").val()==""){
+	    	var now = new Date();
+	    	var month = now.getMonth() + 1;
+	    	var year = now.getFullYear();
+	    	var date = now.getDate();
+	    	var formatedDate =  month + "-" + date + "-"+ year;
+	    	document.summaryReportFrm.startDate.value = formatedDate;
+	    }	    
+	});
+</script>
+
+
+
+<form name="summaryReportFrm" id="summaryReportFrm">
+<input type="hidden" name="reportLevel" value="SUMMARY">
+<input type="hidden" name="rmCodeDetailRegionManager" value="">
+<input type="hidden" name="hAction" value="">
+<input type="hidden" name="strGeDmsAuthority" id="strGeDmsAuthority" value="AGENT">
+<!-- Header Begins -->
+
+	
+
+<script type="text/javascript">
+jQuery(document).ready(function($) {
+    window.history.pushState('forward', null, null); 
+    $(window).on('popstate', function() {
+       history.pushState(null, null, window.location.pathname);
+    }); 
+    
+});
+
+</script>
+
+<table class="messageHeader" border="0" align="center" width="100%">
+	<tbody><tr>
+		<td width="30%" style="color:#000000;"><b>GEA DELIVERS - SUMMARY REPORTS</b></td>
+		
+		<td align="center"></td>
+				<td align="center">
+			
+				
+					
+					
+						
+							
+						
+						
+					
+					<a href="/dms/messages/messagetitledetail?&amp;type=REPORT_SUMMARY" target="_blank"><b><font style="text-decoration: underline" color="RED">Having trouble with screen display or response?   </font></b></a>
+				
+				
+		</td>
+		<td align="right" width="20%" style="color:#000000;">Welcome &nbsp;<b><font color="red" id="usr_login_id">515511228</font></b>
+       		
+       			
+       			
+       				&nbsp;<b>AGENT</b>
+       			
+       		
+		</td>
+		
+			
+			
+			
+			<td align="right" width="5%">&nbsp;<b>|&nbsp;<a target="_BLANK" href="/dms/faqadmin/faqsearch" style="color:blue;">Help</a></b>
+			
+			
+		
+	</td></tr>
+</tbody></table>
+<!-- Header Ends -->   
+
+<br>
+<table align="center">
+	<tbody><tr>
+		<td align="center"><div class="messageDisplay"></div></td>
+	</tr>
+</tbody></table>
+<table cellpadding="0" cellspacing="0" class="selectionTable" align="center" border="0" style="width:1250px;">
+	<tbody><tr>
+		<td align="right" width="150"></td>
+		<td width="130">&nbsp;</td>
+		<td align="right" style="text-align: right;" width="200"><b><i>Select Report:</i></b>&nbsp;</td>
+		<td width="100"><select id="reportType" name="reportType" style="border: 1px solid #E2E2E2;max-width:250px;" onchange="if (!window.__cfRLUnblockHandlers) return false; loadReportHeaders();" onfocus="if (!window.__cfRLUnblockHandlers) return false; hideCalendarControl();">
+			<option value=" ">-----</option>
+				
+					<option value="tactical_dashboard"> Tactical Dashboard</option>
+				
+					<option value="Expired_Driver">Badge Expirations</option>
+				
+					<option value="eTicket"> eTicket Report </option>
+				
+					<option value="Inbound_Report_Erp">ERP Inbound Report</option>
+				
+					<option value="erp_open_orders">ERP Open Orders/Returns</option>
+				
+					<option value="ivr_usage">IVR Usage Report</option>
+				
+					<option value="Precall_Activity">Precall Activity  Report</option>
+				
+					<option value="Prop_Damage_Claim">Prop. Damage Claim</option>
+				
+			</select>
+		</td>
+		<td align="left" width="150"><input type="button" class="submitButton" name="runReportbtn" value="RUN REPORT" onclick="if (!window.__cfRLUnblockHandlers) return false; runReportSummary();"></td>
+		<td width="120">&nbsp;</td>
+		<td width="150">&nbsp;</td>
+		<td align="right" width="150">&nbsp;</td>
+		<td width="150">&nbsp;</td>
+	</tr>
+
+	<tr>
+		<td align="right" width="100"><b><i>Territory:</i></b>&nbsp;</td>
+		<td width="150">
+		
+		
+			
+			
+				<select id="territory" name="territory" style="border: 1px solid #E2E2E2;max-width:100px;" onfocus="if (!window.__cfRLUnblockHandlers) return false; hideCalendarControl();">
+					<option value=" ">-----</option>
+						<option value="EASTERN">EASTERN</option>
+						<option value="WESTERN">WESTERN</option>
+						<option value="CENTRAL">CENTRAL</option>
+						
+				</select>
+			
+		
+			
+		
+			
+		</td>
+		<td align="right" width="150"><b><i>Region Manager:</i></b>&nbsp;</td>
+		<td width="200">
+			<select id="regionManager" name="regionManager" style="border: 1px solid #E2E2E2;max-width:100px;" onfocus="if (!window.__cfRLUnblockHandlers) return false; hideCalendarControl();">
+			<option value=" ">-----</option>
+				
+					<option value="BC">BC</option>
+				
+					<option value="BK">BK</option>
+				
+					<option value="DB">DB</option>
+				
+					<option value="DC">DC</option>
+				
+					<option value="HQ">HQ</option>
+				
+					<option value="JD">JD</option>
+				
+					<option value="ME">ME</option>
+				
+					<option value="ML">ML</option>
+				
+					<option value="RT">RT</option>
+				
+					<option value="SA">SA</option>
+				
+					<option value="SB">SB</option>
+				
+					<option value="SS">SS</option>
+				
+			</select>
+		</td>
+		<td width="100">&nbsp;</td>
+		<td align="right" width="180"><b><i>INV ORG:</i></b>&nbsp;</td>
+		<td width="130">
+			<select id="dmsLoc" name="dmsLoc" style="border: 1px solid #E2E2E2;width:70px;" onfocus="if (!window.__cfRLUnblockHandlers) return false; hideCalendarControl();">
+				<option value=" ">-----</option>
+					
+						<option value="19SU">9SU</option>
+					
+			</select>
+		</td>
+		<td align="right" width="150"><b><i>Input Start Date:</i></b>&nbsp;</td>
+		<td width="150" align="left"><input type="text" name="startDate" id="startDate" value="" class="textbox" style="width: 100px;" onfocus="if (!window.__cfRLUnblockHandlers) return false; showCalendarControl(this);" readonly=""></td>
+	</tr>
+	<tr>
+		<td align="right" width="150"><b><i>Show only rows containing:</i></b>&nbsp;&nbsp;</td>
+		<td width="200">
+		<input type="text" name="filter" value="" style="width:100px;" onkeyup="if (!window.__cfRLUnblockHandlers) return false; filter2(this, 'table_list'); stripe('table_list');" onfocus="if (!window.__cfRLUnblockHandlers) return false; hideCalendarControl();">
+		</td>
+		
+			
+			
+				<td align="right" width="180">&nbsp;</td>
+				<td width="300">&nbsp;</td>
+			
+		
+		<td width="120">&nbsp;</td>
+		<td align="right" width="130"></td>
+		<td width="130"></td>
+		<td align="right" width="200"><b><i>No of Days before start:</i></b>&nbsp;</td>
+		<td width="150">
+			<select name="noOfDays" id="noOfDays">
+				
+			</select>
+		</td>
+	</tr>
+	<tr style="height: 15px;">
+	<td align="right">&nbsp;</td>
+		<td colspan="7" align="right">
+			<a href="javascript:exportExcelReport('summaryReportFrm');">EXPORT TO SPREADSHEET</a>		
+		</td>
+		
+	</tr>			
+</tbody></table>
+
+<table align="center">
+	<tbody><tr>
+		<td style="font-size:15px;font-family:times new roman;">Select your criteria and click on the RUN REPORT button</td>
+	</tr>
+</tbody></table>
+        
+</form>
+
+
+<div class="ui-dialog ui-widget ui-widget-content ui-corner-all ui-front ui-dialog-buttons ui-draggable ui-resizable" tabindex="-1" role="dialog" aria-describedby="alertDlg" aria-labelledby="ui-id-1" style="display: none; position: absolute;"><div class="ui-dialog-titlebar ui-widget-header ui-corner-all ui-helper-clearfix ui-draggable-handle"><span id="ui-id-1" class="ui-dialog-title">ALERT</span><button type="button" class="ui-button ui-widget ui-state-default ui-corner-all ui-button-icon-only ui-dialog-titlebar-close" role="button" title="Close"><span class="ui-button-icon-primary ui-icon ui-icon-closethick"></span><span class="ui-button-text">Close</span></button></div><div id="alertDlg" class="ui-dialog-content ui-widget-content"></div><div class="ui-dialog-buttonpane ui-widget-content ui-helper-clearfix"><div class="ui-dialog-buttonset"><button type="button" class="ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only" role="button"><span class="ui-button-text">OK</span></button></div></div><div class="ui-resizable-handle ui-resizable-n" style="z-index: 90;"></div><div class="ui-resizable-handle ui-resizable-e" style="z-index: 90;"></div><div class="ui-resizable-handle ui-resizable-s" style="z-index: 90;"></div><div class="ui-resizable-handle ui-resizable-w" style="z-index: 90;"></div><div class="ui-resizable-handle ui-resizable-se ui-icon ui-icon-gripsmall-diagonal-se" style="z-index: 90;"></div><div class="ui-resizable-handle ui-resizable-sw" style="z-index: 90;"></div><div class="ui-resizable-handle ui-resizable-ne" style="z-index: 90;"></div><div class="ui-resizable-handle ui-resizable-nw" style="z-index: 90;"></div></div></body></html>

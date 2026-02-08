@@ -1,0 +1,540 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html><head>
+
+<script type="text/javascript">
+	history.forward();
+</script>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Inbound - Summary</title>
+
+<link rel="stylesheet" href="/dms/resources/style/checkin.css">
+<link rel="stylesheet" href="/dms/resources/style/Dms.css">
+<link rel="stylesheet" href="/dms/resources/style/CalendarControl.css">
+<link rel="stylesheet" href="/dms/resources/style/jquery-ui.css">
+	
+	<script src="/dms/resources/js/jquery-1.10.2.js" type="text/javascript"></script>
+	<script src="/dms/resources/js/jquery-ui.js" type="text/javascript"></script>	
+<script src="/dms/resources/js/CalendarControl.js" language="javascript" type="text/javascript"></script></head>
+<body link="blue" vlink="purple" alink="red" style=""><iframe id="CalendarControlIFrame" frameborder="0" scrolling="no"></iframe><div id="CalendarControl"></div>
+<script src="/dms/resources/js/jqueryajaxcommon.js" language="javascript" type="text/javascript"></script>
+<script src="/dms/resources/js/inbound.js" language="javascript" type="text/javascript"></script>
+<script src="/dms/resources/js/TableSearch.js" language="javascript" type="text/javascript"></script>
+	
+<style type="text/css">
+body {
+	font-family: ge inspira, verdana;
+	font-size: 12px;
+}
+
+dt {
+	font-family: "arial unicode MS", arial, geneva, sans-serif;
+}
+
+.dataTable {
+	width: 1000px;
+	font-family: ge inspira, verdana;
+	font-size: 11px;
+	outline-style: solid;
+	outline-color: #A8A8A8;
+	outline-width: 1px;
+}
+
+.dataTable tr td {
+	border: 0px solid #eee;
+}
+
+.submenuitem {
+    border: 1px solid #006699;
+    text-decoration: none;
+    display: block;
+    text-align: center;
+    color: #FFFFFF;
+    background-color: #006699;
+    font-size: 11px;
+    font-weight: bold;
+    line-height: 20px;
+    padding: 5px;
+}
+
+.subactivemenu {
+    border: 1px solid #006699;
+    text-decoration: none;
+    display: block;
+    text-align: center;
+    color: #006699;
+    background-color: #FFFFFF;
+    font-size: 11px;
+    font-weight: bold;
+    line-height: 20px;
+    padding: 5px;
+}
+</style>
+<script type="text/javascript">
+	$(function() {
+
+		loadInbounSummary();
+		//$("#alertDlg" ).dialog();
+	});
+</script>
+
+	
+
+	<!-- Header Begins -->
+
+	
+
+<script type="text/javascript">
+jQuery(document).ready(function($) {
+    window.history.pushState('forward', null, null); 
+    $(window).on('popstate', function() {
+       history.pushState(null, null, window.location.pathname);
+    }); 
+    
+});
+
+</script>
+
+<table class="messageHeader" border="0" align="center" width="100%">
+	<tbody><tr>
+		<td width="30%" style="color:#000000;"><b>Inbound - Summary</b></td>
+		
+		<td align="center"></td>
+				<td align="center">
+			
+				
+					
+					
+						
+							
+						
+						
+					
+					<a href="/dms/messages/messagetitledetail?&amp;type=INBOUND_SUMMARY" target="_blank"><b><font style="text-decoration: underline" color="RED">Having trouble with screen display or response?   </font></b></a>
+				
+				
+		</td>
+		<td align="right" width="20%" style="color:#000000;">Welcome &nbsp;<b><font color="red" id="usr_login_id">515511228</font></b>
+       		
+       			
+       			
+       				&nbsp;<b>AGENT</b>
+       			
+       		
+		</td>
+			
+		
+	</tr>
+</tbody></table>
+<!-- Header Ends -->   
+
+	<br>
+	<table cellpadding="0" cellspacing="0" align="center" border="0" style="width: 1200px;">
+		<tbody><tr height="10">
+
+		</tr>
+		<tr>
+			<td align="center">
+				<table id="inboundmenu">
+					<tbody><tr>
+						<td><a href="#" class="activemenu">Inbound
+								Summary</a></td>
+								
+							<td><a href="javascript:viewInboundDsso();" class="menuitem">Inbound DSSO Review</a></td>
+						
+								
+							<td><a href="javascript:viewInboundAsn();" class="menuitem">Inbound ASN</a></td>
+						
+						
+					</tr>
+				</tbody></table>
+			</td>
+		</tr>
+		<tr height="10">
+
+		</tr>
+	</tbody></table>
+	<table align="center">
+	    <tbody><tr>
+			<td align="center"><div class="messageDisplay"></div></td>
+	    </tr>
+	</tbody></table>
+	<form name="frmInboundSummary" id="frmInboundSummary" method="post">
+		
+		<div style="">
+			<table border="0" align="center" style="">
+				<tbody><tr>
+					<td width="" align="left" height="0"><b><i>Inv Org:
+								&nbsp;</i></b></td>
+					<td width="" align="left" height="0" style="padding-right:80px">
+						<select name="dmsLoc" id="dmsLoc" style="border: 1px solid #E2E2E2" size="1" onchange="if (!window.__cfRLUnblockHandlers) return false; onChangeOrgCode();" onclick="if (!window.__cfRLUnblockHandlers) return false; clearResultMsg();">
+								
+									<option value="19SU">9SU</option>
+								
+						</select>
+					</td>
+					<td width="" align="left"><b><i>15 days before:</i></b></td>
+					<td width="" align="left" style="padding-right:80px">
+						<input type="text" name="daysBeforeDate" id="daysBeforeDate" onclick="if (!window.__cfRLUnblockHandlers) return false; clearResultMsg();" value="" class="textbox" style="width: 100px;" readonly="" onfocus="if (!window.__cfRLUnblockHandlers) return false; showDaysFilterInbound(this);">
+					</td>
+					<td width="" align="right"><b><i>SHOW ONLY ROWS CONTAINING:</i></b></td>
+					<td width="" align="center">
+						<input name="rowsContaining" id="rowsContaining" onkeyup="if (!window.__cfRLUnblockHandlers) return false; rowsInboundContaining();" onfocus="if (!window.__cfRLUnblockHandlers) return false; hideCalendarControl();">
+					</td>
+				</tr>
+			</tbody></table>
+		</div>
+		
+		<table cellpadding="0" cellspacing="0" align="center" border="0" style="width: 1200px;">
+			<tbody>
+				<tr height="10">
+		
+				</tr>
+				<tr>
+					<td align="center">
+						<table id="inboundmenu">
+							<tbody><tr>
+								<td><a href="javascript:loadInbounSummary();" onclick="if (!window.__cfRLUnblockHandlers) return false; clearResultMsg();" id="subtab1" class="subactivemenu">Inbound Arrival <br> (Required on every Shipment)</a></td>	
+								<td><a href="javascript:loadRecordInbounExceptions();" onclick="if (!window.__cfRLUnblockHandlers) return false; clearResultMsg();" id="subtab2" class="submenuitem">Record Inbound Exception <br>(Record Inbound Exception Only)</a></td>	
+								<td><a href="javascript:loadInboundHistory();" onclick="if (!window.__cfRLUnblockHandlers) return false; clearResultMsg();" id="subtab3" class="submenuitem">Inbound History <br>(Shipments that have been submitted)</a></td>
+							</tr>
+						</tbody></table>
+					</td>
+				</tr>
+				<tr height="10">
+		
+				</tr>
+				<tr>
+					<td align="center">
+						<a id="viewPendInboundLink" href="javascript:viewPendInbound();">View Pending Inbound Replacement </a>
+					</td>
+				</tr>
+				<tr>
+					<td align="center">
+						<br>
+						<a href="javascript:viewPlannedArrivalReport();" id="plannedArrivalReportLink">Planned (not shipped) GEA Inbounds</a>
+					</td>
+				
+				</tr>
+			</tbody>
+		</table>
+		<input type="hidden" name="selectedSubTab" id="selectedSubTab" value="1">
+		<input type="hidden" name="showLateTruckNotify" id="showLateTruckNotify" value="">
+		<input type="hidden" name="hDmsLoc" value="">
+			<input type="hidden" name="hDmsLocVal" value="">
+		<table cellpadding="0" cellspacing="0" class="selectionTable" align="center" border="0" style="width: 1200px;">
+			<tbody><tr height="10"></tr>
+			<tr style="height: 30px;" id="topMessageRow">
+				<td width="100%" colspan="5" align="center" class="message">
+					<div id="inboundResult"></div>
+				</td>
+			</tr>
+			<tr>
+				<td width="100%" height="15" colspan="6"></td>
+			</tr>
+			<tr style="height: 100px;">
+				<td colspan="5">
+					<div id="summaryResult">
+
+
+
+
+
+
+
+
+
+<input type="hidden" name="reportType" id="dmsAuth" value="AGENT">
+<input type="hidden" name="userType" id="userType" value="AGENT">
+<input type="hidden" name="rowRecNo" id="rowRecNo" value="0">
+<input type="hidden" name="rowInsideRecNo" id="rowInsideRecNo" value="0">
+<input type="hidden" name="dmsLoc" id="dmsLoc" value="19SU">
+
+<input type="hidden" name="selMpOrgCodeVal" id="selMpOrgCodeVal" value="">
+<input type="hidden" name="selVendorIdVal" id="selVendorIdVal" value="">
+<input type="hidden" name="selShipmentNumVal" id="selShipmentNumVal" value="">
+<input type="hidden" name="selWtsStopSeqnoVal" id="selWtsStopSeqnoVal" value="">
+<input type="hidden" name="selSchdArrivalDateVal" id="selSchdArrivalDateVal" value="">
+<input type="hidden" name="selSchdArrivalTimeVal" id="selSchdArrivalTimeVal" value="">
+<input type="hidden" name="selTruckNumberVal" id="selTruckNumberVal" value="">
+<input type="hidden" name="selScacVal" id="selScacVal" value="">
+<input type="hidden" name="hEachRowShipmentList" id="hEachRowShipmentList" value="">
+<input type="hidden" name="hShipmentNumVal" id="hShipmentNumVal" value="">
+
+<input type="hidden" name="hshipmentNumL" id="hshipmentNumL" value="">
+<input type="hidden" name="hstopNumL" id="hstopNumL" value="">
+<input type="hidden" name="hsdsWillCallL" id="hsdsWillCallL" value="">
+
+
+<table style="width: 1200px;" class="dataTable" align="center" cellspacing="0" cellpadding="0" border="0" id="tb_list_inboundSummary">
+	<thead>
+		<tr>
+			<th width="4%" align="center">Vendor</th>			
+			<th width="4%" align="center">SCAC</th>
+			<th width="10%" align="center">Actual Gate Date <br>MM-DD-YYYY</th>
+			<th width="5%" align="center">Actual Gate Time</th>
+			<th width="7%" align="center">Truck Number</th>
+			<th width="8%" align="center">Scheduled Arrival Date</th>
+			<th width="10%" align="center">Arrival Date <br>MM-DD-YYYY</th>
+			<th width="8%" align="center">Scheduled Arrival Time</th>
+			<th width="10%" align="center">Arrival Time<br>HH:MM</th>
+			<th width="7%" align="center">Labels/BOL/RCVD</th>
+			<th width="10%" align="center">Inbound Shipment Number</th>
+			<th width="8%" align="center">Units</th>
+			<th width="9%" align="center">Points</th>
+			<th width="10%" align="center">Late Truck Notify</th>
+			<th width="6%" align="center">Receiving Report</th>
+			<th width="4%" align="center">Submit Shipment Arrival</th>
+			<th width="4%" align="center">Seal Status</th>
+			<th width="4%" align="center">Admin</th>
+		</tr>
+	</thead>
+	<tbody id="summaryResult">
+		
+			
+			
+			
+			
+			
+
+			
+
+			
+			<input type="hidden" name="scac_0" id="scac_0" value="GECL">
+			<input type="hidden" name="truckNumber_0" id="truckNumber_0" value="Vehicle_ID">
+			<input type="hidden" name="schdArrivalDate_0" id="schdArrivalDate_0" value="02-05-2026">
+			<input type="hidden" name="schdArrivalTime_0" id="schdArrivalTime_0" value="06:00:00">
+			<input type="hidden" name="vendorId_0" id="vendorId_0" value="E">
+			<input type="hidden" name="wtsStopSeqno_0" id="wtsStopSeqno_0" value="1">
+			 <input type="hidden" name="shipmentNum_0" id="shipmentNum_0" value="E0230146">  
+			<input type="hidden" name="mpOrgCode_0" id="mpOrgCode_0" value="9SU">
+			<input type="hidden" name="exceptionType_0" id="exceptionType_0" value=" ">
+			<input type="hidden" name="hshipmentNum_0" id="hshipmentNum_0" value="">
+			<input type="hidden" name="hstopNum_0" id="hstopNum_0" value="">
+
+			<tr style="background-color: #9FCFFF;border:0px;">
+				<td>ELX</td>
+				<td style="background-color: #9fcfff;">
+				
+				
+					
+					
+						GECL
+					
+				
+				
+				</td>
+				<td></td>
+				<td></td>
+				<td>Vehicle_ID
+				
+				</td>
+				<td>02-05-2026</td>
+				<td><input type="text" name="arrivalDate_0" id="arrivalDate_0" value="" maxlength="10" style="width: 80px; text-align: center;" onfocus="showArrivalDateInboundSummary(this);" readonly="readonly"></td>
+
+				<td>06:00</td>
+				<td><input type="text" name="arrivalTime_0" id="arrivalTime_0" value="00:00" maxlength="5" style="width: 40px; text-align: center;"></td>
+				<td align="center">
+					<select name="labelBolRecvd_0">
+							
+								<option value="B">BOL</option>
+							
+								<option value="L">LABELS</option>
+							
+								<option value="N">NONE</option>
+							
+								<option value="O" selected="">BOTH</option>
+							
+					</select>
+				</td>
+				<td>
+					
+					     
+						<input type="hidden" name="shipmentNum_0_0" id="shipmentNum_0_0" value="E0230146"> 
+						<input type="hidden" name="labelBolRecvd_0_0" id="labelBolRecvd_0_0" value=" "> 
+						E0230146 - 1	
+						
+					
+					
+						
+				    
+				    <br>
+				    <a href="javascript:displayInboundPOD('E0230146','1', '0','NO');">PODs</a>
+				<br>
+				    <a href="javascript:displayInboundPOD('E0230146','1', '0','YES');">Will Call PODs</a>						
+				</td>
+				<td align="right">
+					
+						1  <br>
+					
+				</td>
+				<td align="center">
+					
+						0 <br>
+					
+				</td>
+				
+				<td align="center">
+						
+							<a href="javascript:viewLateTruckNotify('0')">Mail Sent</a>
+						
+						
+					</td>
+				<td>
+						
+							<a href="javascript:viewReport('0', '');">Receiving
+								Report</a>
+						
+						
+					</td>
+				<td align="center"><input type="checkbox" name="confShipArrived_0" value="Y"></td>
+				<td align="center"> </td>
+				<td></td>
+			</tr>
+			<tr style="background-color: #CFE6FF;">
+				<td colspan="19" align="center"><input type="text" name="arrivalNoteTxt_0" value="" maxlength="200" style="width: 1000px;"></td>
+			</tr>
+			
+			<input type="hidden" name="eachRowShipmentList_0" id="eachRowShipmentList_0" value="0">
+		
+			
+			
+			
+			
+			
+
+			
+
+			
+			<input type="hidden" name="scac_1" id="scac_1" value="DLGK">
+			<input type="hidden" name="truckNumber_1" id="truckNumber_1" value="7028">
+			<input type="hidden" name="schdArrivalDate_1" id="schdArrivalDate_1" value="02-09-2026">
+			<input type="hidden" name="schdArrivalTime_1" id="schdArrivalTime_1" value="08:00:00">
+			<input type="hidden" name="vendorId_1" id="vendorId_1" value="G">
+			<input type="hidden" name="wtsStopSeqno_1" id="wtsStopSeqno_1" value="2">
+			 <input type="hidden" name="shipmentNum_1" id="shipmentNum_1" value="S0387188">  
+			<input type="hidden" name="mpOrgCode_1" id="mpOrgCode_1" value="9SU">
+			<input type="hidden" name="exceptionType_1" id="exceptionType_1" value=" ">
+			<input type="hidden" name="hshipmentNum_1" id="hshipmentNum_1" value="">
+			<input type="hidden" name="hstopNum_1" id="hstopNum_1" value="">
+
+			<tr style="background-color: #9FCFFF;border:0px;">
+				<td>GEA</td>
+				<td style="background-color: #9fcfff;">
+				
+				
+					
+						<a href="javascript:scacDetails('1');">DLGK</a>
+					
+					
+				
+				
+				</td>
+				<td>02-06-2026</td>
+				<td>23:45</td>
+				<td>7028
+				
+				</td>
+				<td>02-09-2026</td>
+				<td><input type="text" name="arrivalDate_1" id="arrivalDate_1" value="" maxlength="10" style="width: 80px; text-align: center;" onfocus="showArrivalDateInboundSummary(this);" readonly="readonly"></td>
+
+				<td>08:00</td>
+				<td><input type="text" name="arrivalTime_1" id="arrivalTime_1" value="00:00" maxlength="5" style="width: 40px; text-align: center;"></td>
+				<td align="center">
+					<select name="labelBolRecvd_1">
+							
+								<option value="B">BOL</option>
+							
+								<option value="L">LABELS</option>
+							
+								<option value="N">NONE</option>
+							
+								<option value="O" selected="">BOTH</option>
+							
+					</select>
+				</td>
+				<td>
+					
+					     
+						<input type="hidden" name="shipmentNum_1_0" id="shipmentNum_1_0" value="S0387188"> 
+						<input type="hidden" name="labelBolRecvd_1_0" id="labelBolRecvd_1_0" value=" "> 
+						S0387188 - 2	
+						
+					
+					
+						
+							<br>
+							
+								<a href="javascript:displayInboundLabel('S0387188','2', '1');">Labels</a>				
+												
+				      
+				    
+				    <br>
+				    <a href="javascript:displayInboundPOD('S0387188','2', '1','NO');">PODs</a>
+				<br>
+				    <a href="javascript:displayInboundPOD('S0387188','2', '1','YES');">Will Call PODs</a>						
+				</td>
+				<td align="right">
+					
+						230  <br>
+					
+				</td>
+				<td align="center">
+					
+						110 <br>
+					
+				</td>
+				
+				<td align="center">
+						
+						
+							<a href="javascript:viewLateTruckNotify('1')"><img src="/dms/resources/images/email_icon.gif" height="20" width="20" border="0"></a>
+						
+					</td>
+				<td>
+						
+							<a href="javascript:viewReport('1', '');">Receiving
+								Report</a>
+						
+						
+					</td>
+				<td align="center"><input type="checkbox" name="confShipArrived_1" value="Y"></td>
+				<td align="center"> </td>
+				<td></td>
+			</tr>
+			<tr style="background-color: #CFE6FF;">
+				<td colspan="19" align="center"><input type="text" name="arrivalNoteTxt_1" value="" maxlength="200" style="width: 1000px;"></td>
+			</tr>
+			
+			<input type="hidden" name="eachRowShipmentList_1" id="eachRowShipmentList_1" value="0">
+		
+	</tbody>
+</table>
+<table border="0" width="80%" align="center">
+	
+		<tbody><tr>
+			<td height="15"></td>
+		</tr>
+		<tr>
+			<td align="center" colspan="19">&nbsp; <input type="hidden" name="totRowRec" id="totRowRec" value="2"> 
+				<input type="button" align="centre" class="submitButton" value="SAVE" onclick="saveInboundPage()" enabled=""> &nbsp;&nbsp; <input type="button" class="submitButton" value="SUBMIT" onclick="saveAndSubmitSummary()" enabled="">
+			</td>
+		</tr>
+	
+</tbody></table>
+</div>
+				</td>
+			</tr>
+			<tr style="height: 20PX;">
+				<td colspan="5"></td>
+			</tr>
+		</tbody></table>
+	</form>
+<script type="text/javascript">
+$(function() {
+   setTodayDate('daysBeforeDate');
+});
+
+</script>
+
+
+
+<div class="ui-dialog ui-widget ui-widget-content ui-corner-all ui-front ui-dialog-buttons ui-draggable ui-resizable" tabindex="-1" role="dialog" aria-describedby="alertDlg" aria-labelledby="ui-id-1" style="display: none; position: absolute;"><div class="ui-dialog-titlebar ui-widget-header ui-corner-all ui-helper-clearfix ui-draggable-handle"><span id="ui-id-1" class="ui-dialog-title">ALERT</span><button type="button" class="ui-button ui-widget ui-state-default ui-corner-all ui-button-icon-only ui-dialog-titlebar-close" role="button" title="Close"><span class="ui-button-icon-primary ui-icon ui-icon-closethick"></span><span class="ui-button-text">Close</span></button></div><div id="alertDlg" class="ui-dialog-content ui-widget-content"></div><div class="ui-dialog-buttonpane ui-widget-content ui-helper-clearfix"><div class="ui-dialog-buttonset"><button type="button" class="ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only" role="button"><span class="ui-button-text">OK</span></button></div></div><div class="ui-resizable-handle ui-resizable-n" style="z-index: 90;"></div><div class="ui-resizable-handle ui-resizable-e" style="z-index: 90;"></div><div class="ui-resizable-handle ui-resizable-s" style="z-index: 90;"></div><div class="ui-resizable-handle ui-resizable-w" style="z-index: 90;"></div><div class="ui-resizable-handle ui-resizable-se ui-icon ui-icon-gripsmall-diagonal-se" style="z-index: 90;"></div><div class="ui-resizable-handle ui-resizable-sw" style="z-index: 90;"></div><div class="ui-resizable-handle ui-resizable-ne" style="z-index: 90;"></div><div class="ui-resizable-handle ui-resizable-nw" style="z-index: 90;"></div></div></body></html>

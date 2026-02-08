@@ -5,7 +5,7 @@ Map visualization for warehouse product positioning using raw GPS coordinates.
 ## Components
 
 ### `MapView.tsx`
-Main view component with stats, refresh, and legend. Wraps the map visualization.
+Main view component that loads the map and passes data into the renderer.
 
 ### `WarehouseMapNew.tsx`
 MapLibre-based map on a blank canvas. Renders:
@@ -49,3 +49,18 @@ Schema supports beacon-based positioning (v2):
 2. Implement heat map layer
 3. Add beacon management UI
 4. Add beacon positioning when hardware arrives
+
+## Related Docs
+- Map data flow: `/docs?doc=docs%2Ffeatures%2Fmap.md`
+- Warehouse Map guide: `/docs?doc=agent%2Fwarehouse-map.md`
+
+## Audience Notes
+
+### For Developers
+- This is a component-level overview; see `docs/features/map.md` for data flow.
+
+### For Operators
+- Use the Warehouse Map guide for UI steps.
+
+### For Agent
+- Use this only for technical component references.

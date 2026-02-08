@@ -1,0 +1,442 @@
+<html><head>
+<title>Anti-Tip Report Audit</title>
+<script type="text/javascript" src="/dms/resources/js/jquery-1.10.2.js"></script>
+<script type="text/javascript" src="/dms/resources/js/jquery-ui.js"></script>
+<script type="text/javascript" src="/dms/resources/js/jqueryajaxcommon.js"></script>
+<script type="text/javascript" src="/dms/resources/js/CalendarControl.js"></script></head>
+
+
+
+<body link="blue" vlink="purple" alink="red" style=""><iframe id="CalendarControlIFrame" frameborder="0" scrolling="no"></iframe><div id="CalendarControl"></div>
+<link href="/dms/resources/style/Dms.css" rel="stylesheet" type="text/css">
+<link rel="stylesheet" type="text/css" href="/dms/resources/style/CalendarControl.css">
+<style type="text/css">
+.dataTable {
+	font-family: ge inspira, verdana;
+	font-size: 12px;
+	outline-style: solid;
+	outline-color: #A8A8A8;
+	outline-width: 1px;
+}
+
+.dataTable tr td {
+	font-size: 12px;
+	border: 0px solid #eee;
+}
+
+.dataTable td, th {
+	border: 1px solid #eee;
+}
+
+.dataTable th {
+	color: white;
+	background-color: #006699;
+}
+
+.firstDiv {
+	height: 10px;
+	background-color: #006699;
+}
+
+.secondDiv {
+	height: 10px;
+	background-color: #006699;
+}
+
+.ThirdDiv {
+	height: 10px;
+	background-color: #006699;
+}
+
+.dataTable tr.even {
+	background: #eeeeee;
+	height: 35px;
+}
+
+.dataTable tr.odd {
+	background: #FFF;
+	height: 35px;
+}
+
+.hyp {
+	height: 10px;
+	font-size: 20px;
+}
+
+.metrics {
+	font-size: 20px;
+	margin: 2px;
+	margin-left: 184px;
+	font-family: bold;
+}
+
+.dataTable2 {
+	font-family: ge inspira, verdana;
+	font-size: 12px;
+	outline-style: solid;
+	outline-color: #A8A8A8;
+	outline-width: 1px;
+}
+
+.dataTable2 tr td {
+	font-size: 12px;
+	border: 0px solid #eee;
+}
+
+.dataTable2 td, th {
+	border: 1px solid #eee;
+}
+
+.dataTable2 th {
+	color: white;
+	background-color: #006699;
+}
+.clickHerePDF {
+    background-color: white;
+    border: none;   
+    display: inline-block;    
+    margin: 4px 2px;
+    cursor: pointer;
+    text-decoration:underline;
+}
+
+.clickHerePDF:active {
+    color:black;
+    background: red;
+}
+	
+.clickHerePDF:focus {
+     color:black;
+    background: red;
+}
+
+</style>
+
+	<!-- Header Begins -->
+
+	
+
+<script type="text/javascript">
+jQuery(document).ready(function($) {
+    window.history.pushState('forward', null, null); 
+    $(window).on('popstate', function() {
+       history.pushState(null, null, window.location.pathname);
+    }); 
+    
+});
+
+</script>
+
+<table class="messageHeader" border="0" align="center" width="100%">
+	<tbody><tr>
+		<td width="30%" style="color:#000000;"><b>Anti-Tip Audit Report</b></td>
+		
+		<td align="center"></td>
+				<td align="center">
+			
+				
+					
+					
+						
+							
+						
+						
+					
+					<a href="/dms/messages/messagetitledetail?&amp;type=Anti-Tip Audit Report" target="_blank"><b><font style="text-decoration: underline" color="RED">Having trouble with screen display or response?   </font></b></a>
+				
+				
+		</td>
+		<td align="right" width="20%" style="color:#000000;">Welcome &nbsp;<b><font color="red" id="usr_login_id">515511228</font></b>
+       		
+       			
+       			
+       				&nbsp;<b>AGENT</b>
+       			
+       		
+		</td>
+		
+			
+			
+			
+			<td align="right" width="5%">&nbsp;<b>|&nbsp;<a target="_BLANK" href="/dms/faqadmin/faqsearch" style="color:blue;">Help</a></b>
+			
+			
+		
+	</td></tr>
+</tbody></table>
+<!-- Header Ends -->   
+
+	<br>
+	<table align="center">
+		<tbody><tr>
+			<td align="center"><div class="messageDisplay"></div></td>
+		</tr>
+	</tbody></table>
+	<form name="antiTipRrporAuditForm">
+
+
+		
+
+		<div class="firstDiv" width="100%"></div>
+		<table width="100%" align="center">
+			<tbody><tr>
+				<td align="right" height="35"><b>DATE :</b> <input style="margin: 2%; padding: 5px; width: 35%; text-align: center;" id="DELIVERY_DATE" type="text" name="deliveryDate" value="02-07-2026" onfocus="if (!window.__cfRLUnblockHandlers) return false; showAntiTipAuditReport(this)" autocomplete="off" readonly="readonly"></td>
+
+
+				<td align="right" height="35"><b>TRUCK:</b> <select name="truckNumber" style="margin: 2%; width: 35%; padding: 5px;" size="1" onchange="if (!window.__cfRLUnblockHandlers) return false; onChangeTruckLocation();" onfocus="if (!window.__cfRLUnblockHandlers) return false; hideCalendarControl();">
+					   
+                       
+                       
+						
+						
+						
+						
+						
+							<option style="text-align-last:center;" value="ALL" selected="">ALL</option>
+					   
+                       
+						
+						
+						
+						
+						
+							<option style="text-align-last:center;" value="19SU">19SU</option>
+					   
+                       
+						
+						
+						
+						
+						
+							<option style="text-align-last:center;" value="CAPC04">CAPC04</option>
+					   
+                       
+						
+						
+						
+						
+						
+							<option style="text-align-last:center;" value="CAPC08">CAPC08</option>
+					   
+                       
+						
+						
+						
+						
+						
+							<option style="text-align-last:center;" value="GAT01">GAT01</option>
+					   
+                       
+						
+						
+						
+						
+						
+							<option style="text-align-last:center;" value="GRAN07">GRAN07</option>
+					   
+                       
+						
+						
+						
+						
+						
+							<option style="text-align-last:center;" value="GRAN08">GRAN08</option>
+					   
+                       
+						
+						
+						
+						
+						
+							<option style="text-align-last:center;" value="GRAN11">GRAN11</option>
+					   
+                       
+						
+						
+						
+						
+						
+							<option style="text-align-last:center;" value="GRAN15">GRAN15</option>
+					   
+                       
+						
+						
+						
+						
+						
+							<option style="text-align-last:center;" value="RRTR01">RRTR01</option>
+					   
+                       
+						
+						
+						
+						
+						
+							<option style="text-align-last:center;" value=""></option>
+					   
+						
+				</select></td>
+
+				
+				<td align="right" height="35"><b>Show only rows containing:<b>
+							<input style="margin: 2%; padding: 5px; width: 35%;" text"="" class="search"></b></b></td>
+
+
+			</tr>
+			<tr>
+				<td align="right" height="35"><b> INV ORG:</b> <input type="hidden" value="" name="invOrg"> <select name="dmsLoc" style="margin: 2%; width: 35%; padding: 5px;" size="1" onchange="if (!window.__cfRLUnblockHandlers) return false; onChangeDmsLoc();" onfocus="if (!window.__cfRLUnblockHandlers) return false; hideCalendarControl();">
+													
+							<option value="19SU">9SU
+                            </option>
+						
+				</select></td>
+			</tr>
+				
+
+			<!-- <tr>
+		<td colspan='2'  align="center" height="35"><input style='margin-left:5%;cursor:pointer;' type="button" value="Click Here Report" onclick="getAntTipReportForm()"></td>
+	</tr> -->
+		</tbody></table>
+	</form>
+	<div class="secondDiv" width="100%"></div>
+	<br>
+	<div>
+		<p class="metrics">
+			<b>METRICS:</b>
+		</p>
+		<table width="50%" class="dataTable2" align="center">
+			<thead>
+				<tr class="header-row">
+					<th></th>
+					<th>AT&nbsp;Installed&nbsp;%</th>
+					<th>AT&nbsp;Photos&nbsp;%</th>
+
+
+				</tr>
+			</thead>
+
+			<tbody>
+				<tr>
+					<td>YES</td>
+					<td width="10px">%</td>
+					<td>%</td>
+				</tr>
+
+
+				<tr bgcolor="#eeeeee">
+					<td>NO - Removed from Kitchen</td>
+					<td width="10px">%</td>
+					<td>%</td>
+				</tr>
+
+
+				<tr>
+					<td>NO - Sealed in Carton</td>
+					<td width="10px">%</td>
+					<td>%</td>
+				</tr>
+
+
+			</tbody>
+
+		</table>
+	</div>
+	<br>
+	<br>
+	<div class="ThirdDiv" width="100%"></div>
+	<br>
+	<br>
+
+
+	<div class="hello">
+		<table width="100%" class="dataTable" align="center">
+			<thead>
+				<tr class="header-row">
+					
+					<th>CSO/ORDER</th>
+					<th>TRACKING&nbsp;#</th>
+					<th>DELIVERY ID</th>
+					<th>TRUCK</th>
+					<th>DRIVER NAME</th>
+					<th>Product&nbsp;Type</th>
+				<!-- <th>Services<br />Removed<br />(Yes/No)	</th> -->
+					<th>Model</th>
+					<th>Serial</th>
+					<th>AT&nbsp;Flag</th>
+					<th>AT&nbsp;Installed?</th>
+					<th>AT&nbsp;Photos</th>
+					<th>POD</th>
+
+				</tr>
+			</thead>
+			<tbody>
+				
+		
+
+			</tbody>
+		</table>
+	</div>
+
+	<div align="center">
+		<p class="hyp">
+			Click <a href="#" onclick="if (!window.__cfRLUnblockHandlers) return false; getAntTipReportForm()">HERE</a> to export
+			the report
+		</p>
+
+	</div>
+	
+	
+	
+
+	<input class="photoSearchurl" type="hidden" value="https://xke8tsvop4.execute-api.us-east-1.amazonaws.com/dev/PhotoCaptureImageSearch?">
+	<script type="text/javascript">
+		
+
+		function onChangeDmsLoc() {
+			showPleaseWait();		
+			var baseURL = "/dms/antitippaudit/getAntTipAuditReportWithOutTruck";
+			document.antiTipRrporAuditForm.action = baseURL;
+			document.antiTipRrporAuditForm.method = 'POST';
+			document.antiTipRrporAuditForm.target = '_self';
+			document.antiTipRrporAuditForm.truckNumber= '';
+			document.antiTipRrporAuditForm.submit();
+		}
+		
+		function onChangeTruckLocation(){
+			showPleaseWait();		
+			var baseURL = "/dms/antitippaudit/getAntTipAuditReportWithTruck";
+			document.antiTipRrporAuditForm.action = baseURL;
+			document.antiTipRrporAuditForm.method = 'POST';
+			document.antiTipRrporAuditForm.target = '_self';
+			document.antiTipRrporAuditForm.submit();
+		}
+		
+		function getAntTipReportForm(){						
+			var baseURL = "/dms/antitippaudit/downloadAntiTipAuditReport";
+			document.antiTipRrporAuditForm.action = baseURL;
+			document.antiTipRrporAuditForm.method = 'POST';
+			document.antiTipRrporAuditForm.target = '_self';			
+			document.antiTipRrporAuditForm.submit();
+		}
+		
+		
+		
+		
+
+   	 $(".search").on("propertychange input", function() {  		
+	    	    var value = $(this).val();	    	   
+	    	    $('.dataTable tbody tr').each(function(index){
+	    	    	if($(this).text().toLowerCase().indexOf(value.toLowerCase()) != -1){
+	    	    		 $(this).show();
+	    	    	}else{
+	    	    		$(this).hide(); 
+	    	    	}
+	    	    });
+	    });
+   
+   	
+  
+	</script>
+
+
+</body></html>

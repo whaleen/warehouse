@@ -1,0 +1,374 @@
+<html><head>
+	
+	<script type="text/javascript">
+		history.forward();
+	</script>
+	<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+	<title>Order Data Download</title>
+	<!-- <link rel="stylesheet" type="text/css" href="https://code.jquery.com/ui/1.11.1/themes/smoothness/jquery-ui.css" /> -->
+	<link rel="stylesheet" type="text/css" href="/dms/resources/style/jquery-ui.css">
+	<link rel="stylesheet" type="text/css" href="/dms/resources/style/style.css">
+	<link rel="stylesheet" type="text/css" href="/dms/resources/style/Dms.css">
+	<link rel="stylesheet" type="text/css" href="/dms/resources/style/CalendarControl.css">
+	<!-- <script type="text/javascript" src="https://code.jquery.com/jquery-1.10.2.js"></script> -->
+	<script type="text/javascript" src="/dms/resources/js/jquery-1.10.2.js"></script>
+	<!-- <script type="text/javascript" src="https://code.jquery.com/ui/1.11.1/jquery-ui.js"></script> -->
+	<script type="text/javascript" src="/dms/resources/js/jquery-ui.js"></script>
+	<script type="text/javascript" src="/dms/resources/js/CalendarControl.js"></script></head>
+<body link="blue" vlink="purple" alink="red" onload="stripe('table_list');" style=""><iframe id="CalendarControlIFrame" frameborder="0" scrolling="no"></iframe><div id="CalendarControl"></div>
+	<script type="text/javascript" src="/dms/resources/js/DmsFunction.js"></script>
+	<script type="text/javascript" src="/dms/resources/js/FormTableSort.js"></script>
+	<script type="text/javascript" src="/dms/resources/js/TableSearch.js"></script>
+	<script type="text/javascript" src="/dms/resources/js/TableSelectAll.js"></script>
+	<script type="text/javascript" src="/dms/resources/js/StripedTable.js"></script>
+	<script type="text/javascript" src="/dms/resources/js/DmsOrderData.js"></script>
+
+
+<!-- Header Begins -->
+
+	
+
+<script type="text/javascript">
+jQuery(document).ready(function($) {
+    window.history.pushState('forward', null, null); 
+    $(window).on('popstate', function() {
+       history.pushState(null, null, window.location.pathname);
+    }); 
+    
+});
+
+</script>
+
+<table class="messageHeader" border="0" align="center" width="100%">
+	<tbody><tr>
+		<td width="30%" style="color:#000000;"><b>Order Download</b></td>
+		
+		<td align="center"></td>
+				<td align="center">
+			
+				
+					
+					
+						
+							
+						
+						
+					
+					<a href="/dms/messages/messagetitledetail?&amp;type=ORDER_DATA" target="_blank"><b><font style="text-decoration: underline" color="RED">Having trouble with screen display or response?   </font></b></a>
+				
+				
+		</td>
+		<td align="right" width="20%" style="color:#000000;">Welcome &nbsp;<b><font color="red" id="usr_login_id">515511228</font></b>
+       		
+       			
+       			
+       				&nbsp;<b>AGENT</b>
+       			
+       		
+		</td>
+			
+		
+	</tr>
+</tbody></table>
+<!-- Header Ends -->   
+
+<br>
+<form name="frmOrderData" method="post">
+<input type="hidden" name="request" value="ORDER_DATA">
+<input type="hidden" name="hAction" id="hAction" value="">
+<input type="hidden" name="hDmsLoc" id="hDmsLoc" value="">
+<input type="hidden" name="hShowOrders" id="hShowOrders" value="">
+<input type="hidden" name="hShowStatus" id="hShowStatus" value="">
+<input type="hidden" name="hDeliveryDate" id="hDeliveryDate" value="">
+<input type="hidden" name="hNumberOfDays" id="hNumberOfDays" value="">
+<input type="hidden" name="hChangedOrderDate" id="hChangedOrderDate" value="">
+<input type="hidden" name="hChangedOrderTime" id="hChangedOrderTime" value="">
+<input type="hidden" name="hChangedOrdersClicked" id="hChangedOrdersClicked" value="">
+<input type="hidden" name="hCso" id="hCso" value="">
+<input type="hidden" name="hShipment" id="hShipment" value="">
+<input type="hidden" name="htrackingNumber" id="htrackingNumber" value="">
+<input type="hidden" name="hExportType" value=""> 
+<input type="hidden" name="orderNumber" id="orderNumber" value="">
+<input type="hidden" name="deliveryNumber" id="deliveryNumber" value="">
+<input type="hidden" name="deliveryDate" id="deliveryDate" value="">
+<input type="hidden" name="hCsvView" id="hCsvView" value="">
+<input type="hidden" name="userAuthVal" id="userAuthVal" value="AGENT">
+&nbsp;
+<table align="center">
+    <tbody><tr>
+		<td align="center"><div class="messageDisplay"></div></td>
+    </tr>
+</tbody></table>
+<table border="0" id="table_header" align="center" cellpadding="0" cellspacing="0">
+	<thead>
+		<tr>
+			<td colspan="7" height="20">Select Order Data Options</td>
+		</tr>
+	</thead>
+	<tbody>
+		<tr>
+			<td width="50">Show</td>
+			<td width="100">
+				<div align="left">
+					<input type="radio" name="radShowOrders" value="ALL" onclick="if (!window.__cfRLUnblockHandlers) return false; ClickShowOrders(&quot;a&quot;);" onfocus="if (!window.__cfRLUnblockHandlers) return false; hideCalendarControl();" checked="">
+					ALL
+				</div>
+			</td>
+			<td width="75">Status</td>
+			<td width="200">
+				<div align="left">
+					<input type="radio" name="radShowStatus" value="ALL" onclick="if (!window.__cfRLUnblockHandlers) return false; ClickShowStatus(&quot;a&quot;);" onfocus="if (!window.__cfRLUnblockHandlers) return false; hideCalendarControl();" checked="">
+					ALL
+				</div>
+			</td>
+			<td width="130">
+				<div align="right">INV ORG Location &nbsp;</div>
+			</td>
+			<td width="100">
+				<div align="left">
+					<select id="cbDmsLoc" name="cbDmsLoc" style="width: 100px" onfocus="if (!window.__cfRLUnblockHandlers) return false; hideCalendarControl();">
+						
+						
+							<option value="19SU" selected="">9SU</option>
+						
+							
+		        	   
+					</select>
+				</div>
+			</td>
+			<td width="250">Show only rows containing</td>
+		</tr>
+		<tr>
+			<td>&nbsp;</td>
+			<td>
+				<div align="left">
+					<input type="radio" name="radShowOrders" value="NEXTDAY" onclick="if (!window.__cfRLUnblockHandlers) return false; ClickShowOrders(&quot;N&quot;);" onfocus="if (!window.__cfRLUnblockHandlers) return false; hideCalendarControl();">
+					NEXT DAY/HOT SHOT
+				</div>
+			</td>
+			<td>&nbsp;</td>
+			<td>
+				<div align="left">
+					<input type="radio" name="radShowStatus" value="SHIPPED" onclick="if (!window.__cfRLUnblockHandlers) return false; ClickShowStatus(&quot;S&quot;);" onfocus="if (!window.__cfRLUnblockHandlers) return false; hideCalendarControl();">
+					SHIPPED
+				</div>
+			</td>
+			<td>
+				<div align="right">Orders for Date &nbsp;</div>
+			</td>
+			<td>
+				<div align="left">				
+					<input type="text" id="orderDate" name="txtOrderDate" value="02-08-2026" style="width: 100px" onfocus="if (!window.__cfRLUnblockHandlers) return false; showCalendarControl(this);">
+				</div>
+			</td>
+			<td>
+				<input name="filter" onkeyup="if (!window.__cfRLUnblockHandlers) return false; filter2(this, 'table_list'); stripe('table_list');" onfocus="if (!window.__cfRLUnblockHandlers) return false; hideCalendarControl();" type="text">
+			</td>
+		</tr>
+		<tr>
+			<td>&nbsp;</td>
+			<td>
+				<div align="left">
+					<input type="radio" name="radShowOrders" value="REVERSE" onclick="if (!window.__cfRLUnblockHandlers) return false; ClickShowOrders(&quot;R&quot;);" onfocus="if (!window.__cfRLUnblockHandlers) return false; hideCalendarControl();">
+					REVERSE
+				</div>
+			</td>
+			<td>&nbsp;</td>
+			<td>
+				<div align="left">
+					<input type="radio" name="radShowStatus" value="SHIPPEDPENDING" onclick="if (!window.__cfRLUnblockHandlers) return false; ClickShowStatus(&quot;P&quot;);" onfocus="if (!window.__cfRLUnblockHandlers) return false; hideCalendarControl();">
+					SHIPPED/PENDING
+				</div>
+			</td>
+			<td>
+				<div align="right">Plus &nbsp;</div>
+			</td>
+			<td>
+				<div align="left">
+					<input type="text" id="numberOfDays" name="txtNumberOfDays" value="1" style="width: 100px" onchange="if (!window.__cfRLUnblockHandlers) return false; this.value=validateNumberOfDays(this.value)" onfocus="if (!window.__cfRLUnblockHandlers) return false; hideCalendarControl();">
+				</div>
+			</td>
+			<td>
+				<div align="left">More Days</div>
+			</td>
+		</tr>
+		<tr>
+			<td>&nbsp;</td>
+			<td>
+				<div align="left">
+					<input type="radio" name="radShowOrders" value="RETURN" onclick="if (!window.__cfRLUnblockHandlers) return false; ClickShowOrders(&quot;U&quot;);" onfocus="if (!window.__cfRLUnblockHandlers) return false; hideCalendarControl();">
+					RETURN
+				</div>
+			</td>
+			<td>&nbsp;</td>
+			<td>
+				<div align="left">
+					<input type="radio" name="radShowStatus" value="PICKED" onclick="if (!window.__cfRLUnblockHandlers) return false; ClickShowStatus(&quot;Y&quot;);" onfocus="if (!window.__cfRLUnblockHandlers) return false; hideCalendarControl();">
+					PICKED
+				</div>
+			</td>
+			<td width="162">
+				<div align="right">Order Data - Enhanced &nbsp;</div>
+			</td>
+			<td width="100">
+				<div align="left">
+					<select id="jsonDataVersion" name="jsonDataVersion" style="width: 100px">
+						<option value="V1" selected="">V1</option>
+						<option value="V2">V2</option>
+					</select>
+				</div>
+			</td>
+			<td>&nbsp;</td>
+		</tr>
+		<tr>
+			<td>&nbsp;</td>
+			<td>
+				<div align="left">
+					<input type="radio" name="radShowOrders" value="MEETTRUCK" onclick="if (!window.__cfRLUnblockHandlers) return false; ClickShowOrders(&quot;M&quot;);" onfocus="if (!window.__cfRLUnblockHandlers) return false; hideCalendarControl();">
+					MEET TRUCK
+				</div>
+			</td>
+			<td></td>
+			<td>
+				<div align="left">
+					<input type="radio" name="radShowStatus" value="PICKEDSHIPPED" onclick="if (!window.__cfRLUnblockHandlers) return false; ClickShowStatus(&quot;YS&quot;);" onfocus="if (!window.__cfRLUnblockHandlers) return false; hideCalendarControl();">
+					PICKED/SHIPPED
+				</div>
+			</td>
+			
+			
+			
+			<td>
+				
+			</td>
+			<td>
+				
+			</td>
+			<td>
+				
+			</td>
+			
+			
+		</tr>
+		<tr>
+			<td>&nbsp;</td>
+			<td>
+				<div align="left">
+					<input type="radio" name="radShowOrders" value="WORKORDERS" onclick="if (!window.__cfRLUnblockHandlers) return false; ClickShowOrders(&quot;W&quot;);" onfocus="if (!window.__cfRLUnblockHandlers) return false; hideCalendarControl();">
+					WORK ORDERS
+				</div>
+			</td>
+			<td>&nbsp;</td>
+			<td>
+				<div align="left">
+					<input type="radio" name="radShowStatus" value="CANCELLED" onclick="if (!window.__cfRLUnblockHandlers) return false; ClickShowStatus(&quot;C&quot;);" onfocus="if (!window.__cfRLUnblockHandlers) return false; hideCalendarControl();">
+					CANCELLED
+				</div>
+			</td>
+			<td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+		</tr>
+		<tr>
+			<td>&nbsp;</td>
+			<td>
+				<div align="left">
+					<input type="radio" name="radShowOrders" value="WILLCALL" onclick="if (!window.__cfRLUnblockHandlers) return false; ClickShowOrders(&quot;L&quot;);" onfocus="if (!window.__cfRLUnblockHandlers) return false; hideCalendarControl();">
+					WILL CALL ORDERS
+				</div>			
+			</td>
+			<td>&nbsp;</td>
+			<td>
+				<div align="left">
+					<input type="radio" name="radShowStatus" value="PENDING" onclick="if (!window.__cfRLUnblockHandlers) return false; ClickShowStatus(&quot;P&quot;);" onfocus="if (!window.__cfRLUnblockHandlers) return false; hideCalendarControl();">
+					PENDING
+				</div>
+			</td>
+			<td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+		</tr>
+		<tr>
+			<td>&nbsp;</td>
+			<td>
+				<div align="left">
+					<input type="radio" name="radShowOrders" value="BODEWELL" onclick="if (!window.__cfRLUnblockHandlers) return false; ClickShowOrders(&quot;B&quot;);" onfocus="if (!window.__cfRLUnblockHandlers) return false; hideCalendarControl();">
+						BODEWELL DELIVERIES
+				</div>			
+			</td>
+			<td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+		</tr>
+		<tr>
+			<td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+		</tr>
+		<tr>
+			<td>&nbsp;</td>
+			<td>
+				<div align="left">
+					Additional Options:
+				</div>
+			</td>
+			<td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+		</tr>
+		<tr>
+			<td>&nbsp;</td>
+			<td>
+				<div align="left">
+					Only one option can be used at a time
+				</div>
+			</td>
+			<td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+		</tr>
+		<tr>
+			<td>&nbsp;</td><td>&nbsp;</td>
+			<td>
+				<div align="right">CSO&nbsp;</div>
+			</td>
+			<td>
+				<!-- <div align="left"> -->
+					<input type="text" id="orderCSO" name="txtOrderCSO" value="" style="width: 100px" onfocus="if (!window.__cfRLUnblockHandlers) return false; hideCalendarControl();">
+				<!-- </div> -->
+				&nbsp;TRACKING #&nbsp;
+			</td>
+			<!-- <td>
+				
+			</td> -->
+			<td>
+				<div align="left">
+					<input type="text" name="trackingNumber" id="trackingNumber" value="" style="width: 100px;" onfocus="if (!window.__cfRLUnblockHandlers) return false; hideCalendarControl();">
+				</div>
+			</td>
+			<td>
+				<div align="left">INBOUND SHIPMENT # &nbsp;&nbsp;</div>
+			</td>
+			<td>
+				<div align="left">
+					<input type="text" id="ordrShipment" name="txtOrdrShipment" value="" style="width: 100px" onfocus="if (!window.__cfRLUnblockHandlers) return false; hideCalendarControl();">
+				</div>
+			</td>
+		</tr>
+		<tr>
+			<td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+		</tr>
+	</tbody>
+	<tbody>
+	</tbody>
+	<tfoot>
+		<tr>
+			<td colspan="7" height="30">
+				<input type="button" id="dms_search_button" onclick="if (!window.__cfRLUnblockHandlers) return false; PostShowOrderData();" value="Show Data">
+				<input type="button" id="dms_csv_button" onclick="if (!window.__cfRLUnblockHandlers) return false; PostExportCsvSpreadSheet();" value="CSV Spreadsheet">
+				<input type="button" id="dms_spreadsheet_button" onclick="if (!window.__cfRLUnblockHandlers) return false; PostExportSpreadSheet();" value="Excel Spreadsheet">  
+				<input type="button" id="dms_cust_order_details_button" onclick="if (!window.__cfRLUnblockHandlers) return false; PostExportCsvCustOrderDetails();" value="Customer Order Details">  
+				<input type="button" id="dms_xml_button" onclick="if (!window.__cfRLUnblockHandlers) return false; PostExportJSON();" value="Order Data - Enhanced">
+			</td>
+		</tr>
+	</tfoot>
+</table>
+<br>
+
+
+
+	 
+
+
+</form>
+
+
+</body></html>

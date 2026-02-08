@@ -1,0 +1,25 @@
+INV ORG:
+....
+9SU
+DELIVERY DATE:
+Time : 02-7-2026 11:56:26 PM Eastern DLT
+ Refresh
+
+
+
+0 TOTAL TRUCKS   
+
+
+0
+Scanned
+No Issues
+	
+
+0
+Scanned
+With Issues
+	
+
+0
+   Scan
+Pending

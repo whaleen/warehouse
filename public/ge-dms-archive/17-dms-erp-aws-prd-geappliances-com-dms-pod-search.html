@@ -1,0 +1,397 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd"><html><head>
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<title>POD Photo Search</title>
+	<style>
+		body{font-family: ge inspira, verdana, arial;}
+		.ge_background_color{
+			background-color : #1a63a2;
+			text-align:center;
+			font-weight: 600;
+        	font-size: 14px;
+		}
+		.search-screen tr, .search-screen td{
+		  border:1.5px solid gray;
+		}
+		.action-buttons{
+			cursor:pointer;
+			font-size: 12px;
+			padding:1%;
+		}
+		.messageHeader{
+			font-size:12px;
+			height:30px;
+		}
+		.search-screen{
+			font-weight:600;
+			font-size:14px;
+		}
+		input, select{
+		    padding: 4px 30px 4px 2px;
+		    text-align:center;
+		}
+		select{
+		  text-align-last:center;
+		}
+		.search-result{
+			margin:2% 10% 5% 10%;
+			text-align:center;
+		}
+		.search-result tr{
+		    height :30px;
+		}
+		.mobile{
+			margin:2% 10% 5% 10%;
+			text-align:center;
+		}
+		/* The Modal (background) */
+		.modal {
+		  display: none; /* Hidden by default */
+		  position: fixed; /* Stay in place */
+		  z-index: 1; /* Sit on top */
+		  padding-top: 100px; /* Location of the box */
+		  left: 0;
+		  top: 0;
+		  width: 100%; /* Full width */
+		  height: 100%; /* Full height */
+		  overflow: auto; /* Enable scroll if needed */
+		  background-color: rgb(0,0,0); /* Fallback color */
+		  background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+		}
+		
+		/* Modal Content */
+		.modal-content {
+		  background-color: #fefefe;
+		  margin: auto;
+		  padding: 20px;
+		  border: 1px solid #888;
+		  width: 40%;
+		}
+		
+		.modal-content p{
+		    width: 80%;
+		    margin: 2%;
+		    text-align: center;
+		}
+		
+		/* The Close Button */
+		.close {
+		  color: #aaaaaa;
+		  float: right;
+		  font-size: 28px;
+		  font-weight: bold;
+		}
+		.podButton {
+		 	border: 2px solid #cccccc !important;
+		   	background-color: #ffffff !important;
+		    font-family: arial, serif !important;
+		    font-size: 13px !important;
+		    font-weight: bold !important;
+		    color: #006699 !important;
+    	}
+		.close:hover,
+		.close:focus {
+		  color: #000;
+		  text-decoration: none;
+		  cursor: pointer;
+		}
+		.emailresp {
+			display: none;
+			color: red;
+			text-aligin: center;
+		}
+		
+		#email {
+		    width: 80%;
+		    margin: 0% 2% 0% 2%;
+		    padding: 2% 4%;
+		    text-align: left;
+		}
+		#mobileNo {
+		   width: 40%;
+		   font-size: 21px;
+		   margin: 0% 2% 0% 12%;
+		   padding: 2% 8%;
+		   text-align: left;
+		}
+		
+		#smssubmit, #submitEmail{
+		  margin-left: 30%;
+		}
+		
+		#mobileResp{
+		  text-align: center;
+		}
+	</style>
+	<script type="text/javascript" src="/dms/resources/js/jquery-1.10.2.js"></script>
+	<script type="text/javascript" src="/dms/resources/js/jquery-ui.js"></script>
+	<script type="text/javascript" src="/dms/resources/js/jqueryajaxcommon.js"></script>
+	<script type="text/javascript" src="/dms/resources/js/CalendarControl.js"></script></head>
+<body style=""><iframe id="CalendarControlIFrame" frameborder="0" scrolling="no"></iframe><div id="CalendarControl"></div>
+	
+	<link rel="stylesheet" type="text/css" href="/dms/resources/style/CalendarControl.css">
+	<link href="/dms/resources/style/Dms.css" rel="stylesheet" type="text/css">
+	
+
+	<!-- Header Begins -->
+
+	
+
+<script type="text/javascript">
+jQuery(document).ready(function($) {
+    window.history.pushState('forward', null, null); 
+    $(window).on('popstate', function() {
+       history.pushState(null, null, window.location.pathname);
+    }); 
+    
+});
+
+</script>
+
+<table class="messageHeader" border="0" align="center" width="100%">
+	<tbody><tr>
+		<td width="30%" style="color:#000000;"><b>Online POD Search</b></td>
+		
+		<td align="center"></td>
+				<td align="center">
+			
+				
+					
+					
+						
+							
+						
+						
+					
+					<a href="/dms/messages/messagetitledetail?&amp;type=ALL" target="_blank"><b><font style="text-decoration: underline" color="RED">Having trouble with screen display or response?   </font></b></a>
+				
+				
+		</td>
+		<td align="right" width="20%" style="color:#000000;">Welcome &nbsp;<b><font color="red" id="usr_login_id">515511228</font></b>
+       		
+       			
+       			
+       				&nbsp;<b>AGENT</b>
+       			
+       		
+		</td>
+		
+			
+			
+			
+			<td align="right" width="5%">&nbsp;<b>|&nbsp;<a target="_BLANK" href="/dms/faqadmin/faqsearch" style="color:blue;">Help</a></b>
+			
+			
+		
+	</td></tr>
+</tbody></table>
+<!-- Header Ends -->   
+
+	<br>
+    <div class="search-screen">
+	    <table style="" align="center" width="60%">
+		    <tbody><tr style="height:30px;"><td style="color:#FFF" class="ge_background_color" colspan="4">SEARCH CRITERIA</td></tr>
+				<tr class="row1" style="height:30px;">
+					<td align="center"><input type="text" class="cso" maxlength="10" placeholder="CSO"></td> 
+					<td align="center"><input type="text" class="tracking_number" maxlength="10" placeholder="Tracking #"></td> 
+					<td align="center"><input type="text" class="customer_po" maxlength="15" placeholder="Customer Po"></td> 
+					<td align="center"><input type="text" class="phone" maxlength="10" placeholder="Phone"></td>
+				</tr>
+				<tr class="row2" style="height:30px;">
+					<td align="center">
+						<select style="width: 100%;" class="inv_org">
+						   <option value="">Inv Org</option>
+							
+		   	 				    <option data-invorg="9SU" value="19SU">9SU</option>
+   	 						
+						</select>
+					</td> 
+					<td align="center"><input placeholder="Start Date for Search" type="text" class="selected_date" onfocus="if (!window.__cfRLUnblockHandlers) return false; showCalendarControl(this)" autocomplete="off" readonly="readonly"></td> 
+					<td align="center">
+						<select style="width: 100%;" class="no_of_days">
+							<option value="">Days to search</option>
+							<option value="5">5</option>
+							<option value="10">10</option>
+							<option value="15">15</option>
+							<option value="30">30</option>
+						</select>
+					</td> 
+					<td align="center"><input type="text" class="account_number" maxlength="15" placeholder="Account #"></td>
+				</tr>
+				<tr style="height:30px;text-align:center;"><td style="color:#FFF" class="ge_background_color" colspan="4" align="center">Additional Options</td></tr>
+				<tr class="row3" style="height:30px;text-align:center;"> <td align="center"><input type="text" placeholder="Driver ID" class="driverId" maxlength="8"></td>  <td colspan="3"></td></tr>
+			<tr style="height:30px;">
+				<td align="center" class="ge_background_color" colspan="2"><div class="action-buttons search" style="margin-left:35%;background-color:#FFF;width:30%;color:#006699;">Search</div></td>
+				<td align="center" class="ge_background_color" colspan="2"><div class="action-buttons reset" style="margin-left:35%;background-color:#FFF;width:30%;color:#006699;">Reset</div></td>
+			</tr>
+		</tbody></table>
+	 </div>
+	 <div class="search-result">
+	 
+	 </div>
+	 <div class="emailDailogBox">
+	 
+	 </div>
+	  <div class="smsDailogBox">
+	 
+	 </div>
+	 <input class="photoSearchurl" type="hidden" value="https://xke8tsvop4.execute-api.us-east-1.amazonaws.com/dev/podsearch?">
+	 <input class="notificationResendUrl" type="hidden" value="https://5bfqg6tzg3.execute-api.us-east-1.amazonaws.com/prd/sendUrl">
+	 <script type="text/javascript">
+	 $("input[type=text]").on('input',function(e){
+		 if($(this).hasClass("cso") || $(this).hasClass("tracking_number") || $(this).hasClass("customer_po") || $(this).hasClass("phone")){
+			 $(".row2 input[type=text]").val("");
+			 $(".row2 select").val("");
+			 $("input[type=text]").not(this).val("");
+		 }else if($(this).hasClass("driverId")){
+			 $(".row1 input[type=text]").val("");
+			 $(".row2 input[type=text]").val("");
+			 $(".row2 select").val("");
+		 }else{
+			 $(".row1 input[type=text]").val("");
+			 $(".row3 input[type=text]").val("");
+		 }
+	 });
+	 $("select").change(function(){
+		 $(".row1 input[type=text]").val("");
+		 $(".row3 input[type=text]").val("");
+	 });
+	 $(".reset").click(function(){
+		 $(".search-result").html("");
+		 $("input[type=text]").val("");
+		 $("select").val("");
+	 });
+	 var resp;
+	 $(".search").click(function(){
+	 		   var cso= $.trim($(".cso").val());
+	 		   var tracking_number = $.trim($(".tracking_number").val());
+	 		   var customer_po = $.trim($(".customer_po").val());
+	 		  var format = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]+/;
+		 		 if(format.test(customer_po)){		 			 
+		 		   customer_po =btoa($.trim($(".customer_po").val()));		 		 
+		 		       var format2= /[+=\/]/;
+		                if(format2.test(customer_po)){
+		                	//customer_po=customer_po.replace();
+		                	customer_po=customer_po.split('=').join("");
+		                	customer_po=customer_po.split('/').join("_");
+		                	customer_po=customer_po.split('+').join("-");
+		                	customer_po=customer_po.split('\n').join("");
+		                }
+		                
+		 		   
+		 		 } else {
+		 			customer_po =$.trim($(".customer_po").val());
+		 		 }
+	 		   var phone =$.trim( $(".phone").val());
+	 		  
+	 		   var selected_date = $.trim( $(".selected_date").val());
+	 		   var inv_org = $.trim( $(".inv_org").val());
+	 		   var no_of_days = $.trim( $(".no_of_days").val());
+	 		   var account_number = $.trim( $(".account_number").val());
+	 		   var driver_id = $.trim( $(".driverId").val());
+	 		   
+	 		   var case1 = (cso == "" && tracking_number == "" && customer_po == "" && phone == "");
+	 		   var case2 = account_number == "";
+	 		   var case3 = (selected_date == "" ||  inv_org == "" || no_of_days == "");
+	 		   var case4 = driver_id == "";
+	 		   console.log(case1);
+	 		   console.log(case2);
+	 		   console.log(case3);
+	 		   console.log(case4);
+	 		   
+	 		   if(case1 && case2 && case3 && case4){
+	 			   alert("Please provide required inputs for Search");
+	 			   return;
+	 		   }
+	 		   if(case1 && !case2 && case3){
+	 			  alert("When Account# selected, Inv Org, Start Date for Search, Days to Search are mandatory")
+				  return;
+	 		   }
+	 		   
+	 		   var queryParams = "";
+	 		   if(!case1){
+	 			  if(cso != ""){
+		 			  queryParams = "CSO="+cso;
+		 		   }
+		 		   if(tracking_number != ""){
+		 			  queryParams = "TRACKING_NUMBER="+tracking_number;
+		 		   }
+		 		   if(customer_po != ""){
+		 			  queryParams = "CUSTOMER_PO="+customer_po;
+		 		   }
+		 		   if(phone != ""){
+		 			  queryParams = "PHONE="+phone;
+		 		   }
+	 		   }else if(!case2){
+	 			  queryParams = "ACCOUNT_NUMBER="+account_number;
+	 			  queryParams += "&DMS_LOC="+inv_org;
+	 			  var dtFmt = new Date(selected_date);
+	 			  var fullYear = dtFmt .getFullYear();
+	 			  var month = ""+(dtFmt .getMonth()+1).length == 2 ?(dtFmt .getMonth()+1) : "0"+(dtFmt .getMonth()+1)
+	 			  var dateStr = dtFmt .getDate();
+	 			  dtFmt = fullYear +"-"+month+"-"+dateStr;
+	 			  queryParams += "&START_DATE="+dtFmt;
+	 			  queryParams += "&DAYS_SEARCH="+no_of_days;
+	 		   }else if(!case3){
+	 			  queryParams = "DMS_LOC="+inv_org;
+	 			  var dtFmt = new Date(selected_date);
+	 			  var fullYear = dtFmt .getFullYear();
+	 			  var month = ""+(dtFmt .getMonth()+1).length == 2 ?(dtFmt .getMonth()+1) : "0"+(dtFmt .getMonth()+1)
+	 			  var dateStr = dtFmt .getDate();
+	 			  dtFmt = fullYear +"-"+month+"-"+dateStr;
+	 			  queryParams += "&START_DATE="+dtFmt;
+	 			  queryParams += "&DAYS_SEARCH="+no_of_days;
+	 		   }else if(!case4){
+	 			  queryParams = "DRIVER_ID="+driver_id;
+	 		   }
+	 		   
+	 		   var AWS_photoSearchurl = $(".photoSearchurl").val();
+	 		   var requestType = "requestType=POD";
+	 		   var queryString = requestType;
+	 		   queryString +="&"+ queryParams;
+	 		   showPleaseWait();
+		 		$.ajax({
+		            type: 'GET',
+		            //url: 'https://xke8tsvop4.execute-api.us-east-1.amazonaws.com/dev/PhotoCaptureImageSearch?'+str,
+		            url:AWS_photoSearchurl+queryString,
+		            dataType: 'json',
+		            contentType: 'application/json; charset=utf-8',
+		            success: function(response) {
+		            	hidePleaseWait();
+		            	console.log(response);
+		            	resp= response;
+		            	
+		            	var responseTable = "<table width='100%' align='center'><tr style='background-color:#5b9bd5;color:#FFF;font-size:14px;font-weight:600;'><th>CSO</th><th>DELIVERY ID</th><th>TRACKING #</th><th># OF POD IMAGES</th><th>Resend POD</th></tr>";
+		            	if(response.responseObject != null && response.responseObject.length > 0) {
+		            		for (var j=0; j<response.responseObject.length; j++) {
+		            			 var cso  = response.responseObject[j].cso;
+		            			 var deliveryNumber = response.responseObject[j].deliveryNumber;
+		            			 var orderNumber = response.responseObject[j].orderNumber;
+		            			 var param={"cso":cso,"deliveryNumber":deliveryNumber,"orderNumber":orderNumber};
+		            			 var typeofReq = "'POD1'";
+		            			 var photoLink = "<a href='/dms/driverAppPhotos?deliveryNumber="+deliveryNumber+"&ordernumber="+orderNumber+"&photoType=POD' target='_blank' style='color: #0000CC;'>" ;
+		            			 responseTable += "<tr style='background-color:#d2deef;font-size:14px;'><td class='cso-value'>"+response.responseObject[j].cso+"</td><td class='delivery-id'>"+deliveryNumber+"</td><td>"+orderNumber+"</td><td>"+photoLink+" "+response.responseObject[j].photoCount+"</a></td>";
+		            			 responseTable += "<td><input class='podButton sendEmail' type='button' value='Send POD to Email' onClick='sendEmailClick("+JSON.stringify(param)+")'/> <input class='podButton sendSms' type='button' id='mobile' value='Send POD to Mobile' onClick='sendSmsClick("+JSON.stringify(param)+")'/></td></tr>";
+		            			} 
+		            	}else{
+		            		responseTable += "<tr style='background-color:#d2deef;font-size:14px;font-weight:600;'><td colspan=4>No Data Available On Given Search fields.</td></tr>";
+		            	}
+		            	responseTable += "</table>";
+		            	
+		            	$(".search-result").html(responseTable);
+		            }
+		 		});
+	 	});
+	 	
+	 	function postGotoTab(strRequest) {
+			document.getElementById("REQUEST").value = strRequest;
+			document.frmGeDelivers.action = "/dms/";
+			document.frmGeDelivers.method = "POST";
+			document.frmGeDelivers.setAttribute("target", "_self");
+			document.frmGeDelivers.submit();
+		}
+		
+	 </script>
+	 <script type="text/javascript" src="/dms/resources/js/send_photos_pod.js"></script>
+
+</body></html>

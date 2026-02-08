@@ -1,0 +1,916 @@
+<html><!-- Head Starts ----><head>
+<title>Checkin Audit Report</title>
+<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<title>Inventory-Backhaul</title>
+<!-- <link rel="stylesheet" type="text/css" href="https://code.jquery.com/ui/1.11.1/themes/smoothness/jquery-ui.css" /> -->
+
+<!-- <script type="text/javascript" src="https://code.jquery.com/jquery-1.10.2.js"></script> -->
+<script type="text/javascript" src="/dms/resources/js/jquery-1.10.2.js"></script>
+<!-- <script type="text/javascript" src="https://code.jquery.com/ui/1.11.1/jquery-ui.js"></script> -->
+<script type="text/javascript" src="/dms/resources/js/jquery-ui.js"></script> 
+<script type="text/javascript" src="/dms/resources/js/CalendarControl.js"></script></head>
+
+<!-- Head Ends ---->
+
+<!-- Body Starts ---->
+
+<body link="blue" vlink="purple" alink="red" style=""><iframe id="CalendarControlIFrame" frameborder="0" scrolling="no"></iframe><div id="CalendarControl"></div>
+<script type="text/javascript" src="/dms/resources/js/DmsFunction.js"></script>
+<script type="text/javascript" src="/dms/resources/js/jqueryajaxcommon.js"></script>
+<script type="text/javascript" src="/dms/resources/js/FormTableSort.js"></script>
+<script type="text/javascript" src="/dms/resources/js/TableSearch.js"></script>
+<script type="text/javascript" src="/dms/resources/js/TableSelectAll.js"></script>
+<script type="text/javascript" src="/dms/resources/js/StripedTable.js"></script>
+<script type="text/javascript" src="/dms/resources/js/jqueryajaxcommon.js"></script>
+<script type="text/javascript" src="/dms/resources/js/checkInAudit.js"></script>
+
+<!-- CSS -->
+<link rel="stylesheet" type="text/css" href="/dms/resources/style/jquery-ui.css">
+<link rel="stylesheet" type="text/css" href="/dms/resources/style/style.css">
+<link rel="stylesheet" type="text/css" href="/dms/resources/style/Dms.css">
+<link rel="stylesheet" type="text/css" href="/dms/resources/style/CalendarControl.css">
+<link rel="stylesheet" type="text/css" href="/dms/resources/style/checkin.css">
+
+<style type="text/css">
+.dataTable {
+	font-family: ge inspira, verdana;
+	font-size: 12px;
+	outline-style: solid;
+	outline-color: #A8A8A8;
+	outline-width: 1px;
+}
+
+.dataTable tr td {
+	font-size: 12px;
+	border: 0px solid #eee;
+}
+
+.dataTable td, th {
+	border: 1px solid #eee;
+}
+
+.dataTable th {
+	color: white;
+	background-color: #006699;
+}
+
+.firstDiv {
+	height: 10px;
+	background-color: #006699;
+}
+
+.secondDiv {
+	height: 10px;
+	background-color: #006699;
+}
+
+.ThirdDiv {
+	height: 10px;
+	background-color: #006699;
+}
+
+.dataTable tr.even {
+	background: #eeeeee;
+	height: 35px;
+}
+
+.dataTable tr.odd {
+	background: #FFF;
+	height: 35px;
+}
+
+.hyp {
+	height: 10px;
+	font-size: 20px;
+}
+
+.metrics {
+	font-size: 20px;
+	margin: 2px;
+	margin-left: 184px;
+	font-family: bold;
+}
+
+.dataTable2 {
+	font-family: ge inspira, verdana;
+	font-size: 12px;
+	outline-style: solid;
+	outline-color: #A8A8A8;
+	outline-width: 1px;
+}
+
+.dataTable2 tr td {
+	font-size: 12px;
+	border: 0px solid #eee;
+}
+
+.dataTable2 td, th {
+	border: 1px solid #eee;
+}
+
+.dataTable2 th {
+	color: white;
+	background-color: #006699;
+}
+.clickHerePDF {
+    background-color: white;
+    border: none;   
+    display: inline-block;    
+    margin: 4px 2px;
+    cursor: pointer;
+    text-decoration:underline;
+}
+
+.clickHerePDF:active {
+    color:black;
+    background: red;
+}
+	
+.clickHerePDF:focus {
+     color:black;
+    background: red;
+}
+
+</style>
+
+    
+	<form name="frmcheckinAudit" id="frmcheckinAudit">
+		<input type="hidden" name="request" value="CHECKIN_AUDIT">
+		<input type="hidden" id="invorg" name="invorg" value="">
+		<input type="hidden" id="submitType" name="submitType" value="">
+		<input type="hidden" id="authType" name="authType" value="AGENT">
+		<!-- Header Begins -->
+
+	
+
+<script type="text/javascript">
+jQuery(document).ready(function($) {
+    window.history.pushState('forward', null, null); 
+    $(window).on('popstate', function() {
+       history.pushState(null, null, window.location.pathname);
+    }); 
+    
+});
+
+</script>
+
+<table class="messageHeader" border="0" align="center" width="100%">
+	<tbody><tr>
+		<td width="30%" style="color:#000000;"><b>Check-In Audit</b></td>
+		
+		<td align="center"></td>
+				<td align="center">
+			
+				
+					
+					
+						
+							
+						
+						
+					
+					<a href="/dms/messages/messagetitledetail?&amp;type=Check-In Audit" target="_blank"><b><font style="text-decoration: underline" color="RED">Having trouble with screen display or response?   </font></b></a>
+				
+				
+		</td>
+		<td align="right" width="20%" style="color:#000000;">Welcome &nbsp;<b><font color="red" id="usr_login_id">515511228</font></b>
+       		
+       			
+       			
+       				&nbsp;<b>AGENT</b>
+       			
+       		
+		</td>
+		
+			
+			
+			
+			<td align="right" width="5%">&nbsp;<b>|&nbsp;<a target="_BLANK" href="/dms/faqadmin/faqsearch" style="color:blue;">Help</a></b>
+			
+			
+		
+	</td></tr>
+</tbody></table>
+<!-- Header Ends -->   
+<br>
+	
+<!-- sec1-------------------------------------------------------------------------------------------------------------- -->
+
+<table id="" border="0" width="100%" align="center">
+<tbody><tr><td colspan="7"><br>
+<center>
+	<b><i style="color:#000000">INV ORG: &nbsp;</i></b> 
+	<select name="dmsLoc" style="width: 60px" id="dmsLoc" onchange="if (!window.__cfRLUnblockHandlers) return false; reLoadCheckInAuditOnChange('AGENT','main');">
+			
+			
+				<option value="9SU" selected="">9SU
+				</option>
+			
+	</select>
+</center>
+<br></td></tr>
+</tbody></table>
+<!-- sec1 end-------------------------------------------------------------------------------------------------------------- -->
+
+	<table width="50%" align="center" cellspacing="2">
+		<tbody><tr style="height: 25">
+		
+			
+			
+				<td class="form_tab_selected headerLinkActive" width="35%" style="border: 1px solid #3b73b9;" id="deliveryAgent" title="DELIVERY AGENT">
+					<a onclick="if (!window.__cfRLUnblockHandlers) return false; redirectToDeliveryAgent();" style="text-decoration: none;cursor: pointer;"><div class="linkable">Delivery Agent</div></a>
+				</td>
+			
+		
+		
+			
+			
+				<td class="form_tab headerLink" width="30%" style="border: 1px solid #3b73b9;" id="hqView" title="HQ VIEW">
+					<a onclick="if (!window.__cfRLUnblockHandlers) return false; redirectToHQView();" style="text-decoration: none;cursor: pointer;"><div class="linkable">HQ View</div></a>
+				</td>
+			
+		
+			<td class="form_tab headerLink" width="30%" style="border: 1px solid #3b73b9;" id="reporting" title="REPORTING">
+				<a onclick="if (!window.__cfRLUnblockHandlers) return false; redirectToReporting();" style="text-decoration: none;cursor: pointer;"><div class="linkable">Reporting</div></a>
+			</td>
+		</tr>
+	</tbody></table>
+	<br>
+	<table align="center" class="backhaulMessage">
+		<tbody><tr>
+			<td id="backhaulMessage" style="color: red;"></td>
+		</tr>
+	</tbody></table>
+	<br> 
+	
+	   
+		
+			<center>
+					<input id="submitFindings" class="" type="button" value="Submit Findings" onclick="if (!window.__cfRLUnblockHandlers) return false; javascript:submitData();">
+			</center>
+	 	
+	 	
+ 	   
+ 	 
+ 	<br>
+ 	<br>
+<!-- sec2 end---------------------------------------------------------------------------------------------------------------->
+
+<!-- sec3 start---------------------------------------------------------------------------------------------------------------->	
+ 
+	 
+	
+		
+	<table style="width:90%" id="table_list" class="sortable_stripes dataTable" border="0" align="center" cellpadding="1" cellspacing="0">
+		<thead>
+			<tr>
+				<th width="8%"><a href="#" style="color: #FFFFFF; text-decoration: None;" class="sortheader" onclick="ts_resort_stripe_table(this, 0);return false;">CSO<span class="sortarrow">&nbsp;&nbsp;&nbsp;</span></a></th>
+				<th width="8%"><a href="#" style="color: #FFFFFF; text-decoration: None;" class="sortheader" onclick="ts_resort_stripe_table(this, 1);return false;">Check In Date<span class="sortarrow">&nbsp;&nbsp;&nbsp;</span></a></th>
+				<th style="width:8%; align:center;"><a href="#" style="color: #FFFFFF; text-decoration: None;" class="sortheader" onclick="ts_resort_stripe_table(this, 2);return false;">Delivery Date<span class="sortarrow">&nbsp;&nbsp;&nbsp;</span></a></th>
+				<th width="8%"><a href="#" style="color: #FFFFFF; text-decoration: None;" class="sortheader" onclick="ts_resort_stripe_table(this, 3);return false;">Deliver ID<span class="sortarrow">&nbsp;&nbsp;&nbsp;</span></a></th>
+				<th width="5%"><a href="#" style="color: #FFFFFF; text-decoration: None;" class="sortheader" onclick="ts_resort_stripe_table(this, 4);return false;">Truck<span class="sortarrow">&nbsp;&nbsp;&nbsp;</span></a></th>
+				<th width="10%"><a href="#" style="color: #FFFFFF; text-decoration: None;" class="sortheader" onclick="ts_resort_stripe_table(this, 5);return false;">Driver<span class="sortarrow">&nbsp;&nbsp;&nbsp;</span></a></th>
+				<th width="10%"><a href="#" style="color: #FFFFFF; text-decoration: None;" class="sortheader" onclick="ts_resort_stripe_table(this, 6);return false;">Check In changes<span class="sortarrow">&nbsp;&nbsp;&nbsp;</span></a></th>
+				<th width="5%"><a href="#" style="color: #FFFFFF; text-decoration: None;" class="sortheader" onclick="ts_resort_stripe_table(this, 7);return false;">PODs<span class="sortarrow">&nbsp;&nbsp;&nbsp;</span></a></th>
+				<th width="5%"><a href="#" style="color: #FFFFFF; text-decoration: None;" class="sortheader" onclick="ts_resort_stripe_table(this, 8);return false;">Photos<span class="sortarrow">&nbsp;&nbsp;&nbsp;</span></a></th>
+				
+				<th width="10%"><a href="#" style="color: #FFFFFF; text-decoration: None;" class="sortheader" onclick="ts_resort_stripe_table(this, 9);return false;">Agent Findings<span class="sortarrow">&nbsp;&nbsp;&nbsp;</span></a></th>
+				
+				
+					<th width="10%"><a href="#" style="color: #FFFFFF; text-decoration: None;" class="sortheader" onclick="ts_resort_stripe_table(this, 10);return false;">Agent Note<span class="sortarrow">&nbsp;&nbsp;&nbsp;</span></a></th>
+				
+			</tr>
+		</thead>
+		
+		<tbody>
+		      
+				<tr>
+			    	<td style="text-align: center; background-color: rgb(238, 238, 238);">
+			    		<a href="javascript:redirecttandt('19SU','02-05-2026','19SU00005818','1065517923');" style="text-decoration:underline; color:blue;">
+			    		1065517923
+			    		</a>
+			    		<input type="hidden" id="hcso_1" name="hcso_1" value="1065517923">
+			    	</td>
+			    	<td style="text-align: center; background-color: rgb(238, 238, 238);">
+			    		02-06-2026
+			    		<input type="hidden" id="hcheckin_Date_1" name="hcheckin_Date_1" value="02-06-2026">
+			    	</td>
+			    	<td style="text-align: center; background-color: rgb(238, 238, 238);">
+			    		02-05-2026
+			    		<input type="hidden" id="hdeliveryDate_1" name="hdeliveryDate_1" value="02-05-2026">
+			    	</td>
+			    	<td style="text-align: center; background-color: rgb(238, 238, 238);">
+			    		19SU00005818
+			    		<input type="hidden" id="hdelivery_Number_1" name="hdelivery_Number_1" value="19SU00005818">
+			    	</td>
+			    	<td style="text-align: center; background-color: rgb(238, 238, 238);">
+			    		GAT01 
+			    		<input type="hidden" id="htruck_1" name="htruck_1" value="GAT01 ">
+			    	</td>
+			    	<td style="text-align: center; background-color: rgb(238, 238, 238);">
+			    		GEVORK ARBADJIAN
+			    		<input type="hidden" id="hdriver_1" name="hdriver_1" value="GEVORK ARBADJIAN">
+			    	</td>
+			    	<td style="text-align: center; background-color: rgb(238, 238, 238);">
+			    		EQUAL               
+			    		<input type="hidden" id="hcheckin_Changes_1" name="hcheckin_Changes_1" value="EQUAL               ">
+			    	</td>
+			    	<td style="text-align: center; background-color: rgb(238, 238, 238);">
+			    		<a href="javascript:redirectToPODs(1,'515511228','02-05-2026','19SU00005818','AGENT','main');" style="text-decoration:underline; color:blue;">
+			    			1
+			    		</a>
+			    		<input type="hidden" id="hPODS_1" name="hPODS_1" value="1">
+			    	</td>
+			    	<td style="text-align: center; background-color: rgb(238, 238, 238);">
+			    		<a href="javascript:redirectToPhotos(1,'515511228','02-05-2026','19SU00005818','AGENT','main');" style="text-decoration:underline; color:blue;">
+			    			2
+			    		</a>
+			    		<input type="hidden" id="hPhotos_1" name="hPhotos_1" value="2">
+			    	</td>
+			    	
+					
+					
+						<td style="text-align: center; background-color: rgb(238, 238, 238);">
+			    		<select name="hagentFindings_1" style="width: 100%" id="hagentFindings_1" onchange="if (!window.__cfRLUnblockHandlers) return false; updateChangeInd(1);">				    		
+								
+									<option value="PASS"> PASS</option>
+								
+									<option value="Driver photos did not show connections of the install "> Driver photos did not show connections of the install </option>
+								
+									<option value="Driver did not take serial tag photos "> Driver did not take serial tag photos </option>
+								
+									<option value="Driver did not take photos of reported damage or defect "> Driver did not take photos of reported damage or defect </option>
+								
+									<option value="Driver did not take any photos or photo quantity/quality was insufficient"> Driver did not take any photos or photo quantity/quality was insufficient</option>
+								
+									<option value="Driver did not report final condition or completed installs correctly "> Driver did not report final condition or completed installs correctly </option>
+								
+									<option value="Driver did not get typed first and last name"> Driver did not get typed first and last name</option>
+								
+									<option value="Driver did not add site readiness details "> Driver did not add site readiness details </option>
+								
+									<option value="Driver did not accurately report anti-tip details"> Driver did not accurately report anti-tip details</option>
+								
+									<option value="Check in did not catch driver error on condition or services "> Check in did not catch driver error on condition or services </option>
+								
+									<option value="Check in added or removed services inappropriately or made an error on product"> Check in added or removed services inappropriately or made an error on product</option>
+								
+									<option value=" " selected="">  </option>
+								
+						</select>
+			    		</td>
+					
+					
+			    	
+					
+						<td style="text-align: center; background-color: rgb(238, 238, 238);">
+							<input id="hagentNotes_1" name="hagentNotes_1" value=" " onblur="if (!window.__cfRLUnblockHandlers) return false; updateChangeInd(1);">
+						</td>
+					
+		    	</tr>
+		    	<input type="hidden" name="changeInd_1" id="changeInd_1" value="N">
+		    	
+		     
+				<tr>
+			    	<td style="text-align: center; background-color: rgb(255, 255, 255);">
+			    		<a href="javascript:redirecttandt('19SU','02-05-2026','19SU00005874','1065533179');" style="text-decoration:underline; color:blue;">
+			    		1065533179
+			    		</a>
+			    		<input type="hidden" id="hcso_2" name="hcso_2" value="1065533179">
+			    	</td>
+			    	<td style="text-align: center; background-color: rgb(255, 255, 255);">
+			    		02-06-2026
+			    		<input type="hidden" id="hcheckin_Date_2" name="hcheckin_Date_2" value="02-06-2026">
+			    	</td>
+			    	<td style="text-align: center; background-color: rgb(255, 255, 255);">
+			    		02-05-2026
+			    		<input type="hidden" id="hdeliveryDate_2" name="hdeliveryDate_2" value="02-05-2026">
+			    	</td>
+			    	<td style="text-align: center; background-color: rgb(255, 255, 255);">
+			    		19SU00005874
+			    		<input type="hidden" id="hdelivery_Number_2" name="hdelivery_Number_2" value="19SU00005874">
+			    	</td>
+			    	<td style="text-align: center; background-color: rgb(255, 255, 255);">
+			    		CAPC04
+			    		<input type="hidden" id="htruck_2" name="htruck_2" value="CAPC04">
+			    	</td>
+			    	<td style="text-align: center; background-color: rgb(255, 255, 255);">
+			    		GAGIK ARSHAKYAN
+			    		<input type="hidden" id="hdriver_2" name="hdriver_2" value="GAGIK ARSHAKYAN">
+			    	</td>
+			    	<td style="text-align: center; background-color: rgb(255, 255, 255);">
+			    		EQUAL               
+			    		<input type="hidden" id="hcheckin_Changes_2" name="hcheckin_Changes_2" value="EQUAL               ">
+			    	</td>
+			    	<td style="text-align: center; background-color: rgb(255, 255, 255);">
+			    		<a href="javascript:redirectToPODs(2,'515511228','02-05-2026','19SU00005874','AGENT','main');" style="text-decoration:underline; color:blue;">
+			    			1
+			    		</a>
+			    		<input type="hidden" id="hPODS_2" name="hPODS_2" value="1">
+			    	</td>
+			    	<td style="text-align: center; background-color: rgb(255, 255, 255);">
+			    		<a href="javascript:redirectToPhotos(2,'515511228','02-05-2026','19SU00005874','AGENT','main');" style="text-decoration:underline; color:blue;">
+			    			5
+			    		</a>
+			    		<input type="hidden" id="hPhotos_2" name="hPhotos_2" value="5">
+			    	</td>
+			    	
+					
+					
+						<td style="text-align: center; background-color: rgb(255, 255, 255);">
+			    		<select name="hagentFindings_2" style="width: 100%" id="hagentFindings_2" onchange="if (!window.__cfRLUnblockHandlers) return false; updateChangeInd(2);">				    		
+								
+									<option value="PASS"> PASS</option>
+								
+									<option value="Driver photos did not show connections of the install "> Driver photos did not show connections of the install </option>
+								
+									<option value="Driver did not take serial tag photos "> Driver did not take serial tag photos </option>
+								
+									<option value="Driver did not take photos of reported damage or defect "> Driver did not take photos of reported damage or defect </option>
+								
+									<option value="Driver did not take any photos or photo quantity/quality was insufficient"> Driver did not take any photos or photo quantity/quality was insufficient</option>
+								
+									<option value="Driver did not report final condition or completed installs correctly "> Driver did not report final condition or completed installs correctly </option>
+								
+									<option value="Driver did not get typed first and last name"> Driver did not get typed first and last name</option>
+								
+									<option value="Driver did not add site readiness details "> Driver did not add site readiness details </option>
+								
+									<option value="Driver did not accurately report anti-tip details"> Driver did not accurately report anti-tip details</option>
+								
+									<option value="Check in did not catch driver error on condition or services "> Check in did not catch driver error on condition or services </option>
+								
+									<option value="Check in added or removed services inappropriately or made an error on product"> Check in added or removed services inappropriately or made an error on product</option>
+								
+									<option value=" " selected="">  </option>
+								
+						</select>
+			    		</td>
+					
+					
+			    	
+					
+						<td style="text-align: center; background-color: rgb(255, 255, 255);">
+							<input id="hagentNotes_2" name="hagentNotes_2" value=" " onblur="if (!window.__cfRLUnblockHandlers) return false; updateChangeInd(2);">
+						</td>
+					
+		    	</tr>
+		    	<input type="hidden" name="changeInd_2" id="changeInd_2" value="N">
+		    	
+		     
+				<tr>
+			    	<td style="text-align: center; background-color: rgb(238, 238, 238);">
+			    		<a href="javascript:redirecttandt('19SU','02-05-2026','19SU00005393','1065356902');" style="text-decoration:underline; color:blue;">
+			    		1065356902
+			    		</a>
+			    		<input type="hidden" id="hcso_3" name="hcso_3" value="1065356902">
+			    	</td>
+			    	<td style="text-align: center; background-color: rgb(238, 238, 238);">
+			    		02-06-2026
+			    		<input type="hidden" id="hcheckin_Date_3" name="hcheckin_Date_3" value="02-06-2026">
+			    	</td>
+			    	<td style="text-align: center; background-color: rgb(238, 238, 238);">
+			    		02-05-2026
+			    		<input type="hidden" id="hdeliveryDate_3" name="hdeliveryDate_3" value="02-05-2026">
+			    	</td>
+			    	<td style="text-align: center; background-color: rgb(238, 238, 238);">
+			    		19SU00005393
+			    		<input type="hidden" id="hdelivery_Number_3" name="hdelivery_Number_3" value="19SU00005393">
+			    	</td>
+			    	<td style="text-align: center; background-color: rgb(238, 238, 238);">
+			    		GRAN07
+			    		<input type="hidden" id="htruck_3" name="htruck_3" value="GRAN07">
+			    	</td>
+			    	<td style="text-align: center; background-color: rgb(238, 238, 238);">
+			    		ISMAEL JIMENEZ
+			    		<input type="hidden" id="hdriver_3" name="hdriver_3" value="ISMAEL JIMENEZ">
+			    	</td>
+			    	<td style="text-align: center; background-color: rgb(238, 238, 238);">
+			    		EQUAL               
+			    		<input type="hidden" id="hcheckin_Changes_3" name="hcheckin_Changes_3" value="EQUAL               ">
+			    	</td>
+			    	<td style="text-align: center; background-color: rgb(238, 238, 238);">
+			    		<a href="javascript:redirectToPODs(3,'515511228','02-05-2026','19SU00005393','AGENT','main');" style="text-decoration:underline; color:blue;">
+			    			1
+			    		</a>
+			    		<input type="hidden" id="hPODS_3" name="hPODS_3" value="1">
+			    	</td>
+			    	<td style="text-align: center; background-color: rgb(238, 238, 238);">
+			    		<a href="javascript:redirectToPhotos(3,'515511228','02-05-2026','19SU00005393','AGENT','main');" style="text-decoration:underline; color:blue;">
+			    			7
+			    		</a>
+			    		<input type="hidden" id="hPhotos_3" name="hPhotos_3" value="7">
+			    	</td>
+			    	
+					
+					
+						<td style="text-align: center; background-color: rgb(238, 238, 238);">
+			    		<select name="hagentFindings_3" style="width: 100%" id="hagentFindings_3" onchange="if (!window.__cfRLUnblockHandlers) return false; updateChangeInd(3);">				    		
+								
+									<option value="PASS"> PASS</option>
+								
+									<option value="Driver photos did not show connections of the install "> Driver photos did not show connections of the install </option>
+								
+									<option value="Driver did not take serial tag photos "> Driver did not take serial tag photos </option>
+								
+									<option value="Driver did not take photos of reported damage or defect "> Driver did not take photos of reported damage or defect </option>
+								
+									<option value="Driver did not take any photos or photo quantity/quality was insufficient"> Driver did not take any photos or photo quantity/quality was insufficient</option>
+								
+									<option value="Driver did not report final condition or completed installs correctly "> Driver did not report final condition or completed installs correctly </option>
+								
+									<option value="Driver did not get typed first and last name"> Driver did not get typed first and last name</option>
+								
+									<option value="Driver did not add site readiness details "> Driver did not add site readiness details </option>
+								
+									<option value="Driver did not accurately report anti-tip details"> Driver did not accurately report anti-tip details</option>
+								
+									<option value="Check in did not catch driver error on condition or services "> Check in did not catch driver error on condition or services </option>
+								
+									<option value="Check in added or removed services inappropriately or made an error on product"> Check in added or removed services inappropriately or made an error on product</option>
+								
+									<option value=" " selected="">  </option>
+								
+						</select>
+			    		</td>
+					
+					
+			    	
+					
+						<td style="text-align: center; background-color: rgb(238, 238, 238);">
+							<input id="hagentNotes_3" name="hagentNotes_3" value=" " onblur="if (!window.__cfRLUnblockHandlers) return false; updateChangeInd(3);">
+						</td>
+					
+		    	</tr>
+		    	<input type="hidden" name="changeInd_3" id="changeInd_3" value="N">
+		    	
+		     
+				<tr>
+			    	<td style="text-align: center; background-color: rgb(255, 255, 255);">
+			    		<a href="javascript:redirecttandt('19SU','02-06-2026','19SU00005167','1064735937');" style="text-decoration:underline; color:blue;">
+			    		1064735937
+			    		</a>
+			    		<input type="hidden" id="hcso_4" name="hcso_4" value="1064735937">
+			    	</td>
+			    	<td style="text-align: center; background-color: rgb(255, 255, 255);">
+			    		02-06-2026
+			    		<input type="hidden" id="hcheckin_Date_4" name="hcheckin_Date_4" value="02-06-2026">
+			    	</td>
+			    	<td style="text-align: center; background-color: rgb(255, 255, 255);">
+			    		02-06-2026
+			    		<input type="hidden" id="hdeliveryDate_4" name="hdeliveryDate_4" value="02-06-2026">
+			    	</td>
+			    	<td style="text-align: center; background-color: rgb(255, 255, 255);">
+			    		19SU00005167
+			    		<input type="hidden" id="hdelivery_Number_4" name="hdelivery_Number_4" value="19SU00005167">
+			    	</td>
+			    	<td style="text-align: center; background-color: rgb(255, 255, 255);">
+			    		CAPC08
+			    		<input type="hidden" id="htruck_4" name="htruck_4" value="CAPC08">
+			    	</td>
+			    	<td style="text-align: center; background-color: rgb(255, 255, 255);">
+			    		JORGE MARTIN-SANTANA
+			    		<input type="hidden" id="hdriver_4" name="hdriver_4" value="JORGE MARTIN-SANTANA">
+			    	</td>
+			    	<td style="text-align: center; background-color: rgb(255, 255, 255);">
+			    		EQUAL               
+			    		<input type="hidden" id="hcheckin_Changes_4" name="hcheckin_Changes_4" value="EQUAL               ">
+			    	</td>
+			    	<td style="text-align: center; background-color: rgb(255, 255, 255);">
+			    		<a href="javascript:redirectToPODs(4,'515511228','02-06-2026','19SU00005167','AGENT','main');" style="text-decoration:underline; color:blue;">
+			    			1
+			    		</a>
+			    		<input type="hidden" id="hPODS_4" name="hPODS_4" value="1">
+			    	</td>
+			    	<td style="text-align: center; background-color: rgb(255, 255, 255);">
+			    		<a href="javascript:redirectToPhotos(4,'515511228','02-06-2026','19SU00005167','AGENT','main');" style="text-decoration:underline; color:blue;">
+			    			5
+			    		</a>
+			    		<input type="hidden" id="hPhotos_4" name="hPhotos_4" value="5">
+			    	</td>
+			    	
+					
+					
+						<td style="text-align: center; background-color: rgb(255, 255, 255);">
+			    		<select name="hagentFindings_4" style="width: 100%" id="hagentFindings_4" onchange="if (!window.__cfRLUnblockHandlers) return false; updateChangeInd(4);">				    		
+								
+									<option value="PASS"> PASS</option>
+								
+									<option value="Driver photos did not show connections of the install "> Driver photos did not show connections of the install </option>
+								
+									<option value="Driver did not take serial tag photos "> Driver did not take serial tag photos </option>
+								
+									<option value="Driver did not take photos of reported damage or defect "> Driver did not take photos of reported damage or defect </option>
+								
+									<option value="Driver did not take any photos or photo quantity/quality was insufficient"> Driver did not take any photos or photo quantity/quality was insufficient</option>
+								
+									<option value="Driver did not report final condition or completed installs correctly "> Driver did not report final condition or completed installs correctly </option>
+								
+									<option value="Driver did not get typed first and last name"> Driver did not get typed first and last name</option>
+								
+									<option value="Driver did not add site readiness details "> Driver did not add site readiness details </option>
+								
+									<option value="Driver did not accurately report anti-tip details"> Driver did not accurately report anti-tip details</option>
+								
+									<option value="Check in did not catch driver error on condition or services "> Check in did not catch driver error on condition or services </option>
+								
+									<option value="Check in added or removed services inappropriately or made an error on product"> Check in added or removed services inappropriately or made an error on product</option>
+								
+									<option value=" " selected="">  </option>
+								
+						</select>
+			    		</td>
+					
+					
+			    	
+					
+						<td style="text-align: center; background-color: rgb(255, 255, 255);">
+							<input id="hagentNotes_4" name="hagentNotes_4" value=" " onblur="if (!window.__cfRLUnblockHandlers) return false; updateChangeInd(4);">
+						</td>
+					
+		    	</tr>
+		    	<input type="hidden" name="changeInd_4" id="changeInd_4" value="N">
+		    	
+		     
+				<tr>
+			    	<td style="text-align: center; background-color: rgb(238, 238, 238);">
+			    		<a href="javascript:redirecttandt('19SU','02-06-2026','19SU00005876','1065534662');" style="text-decoration:underline; color:blue;">
+			    		1065534662
+			    		</a>
+			    		<input type="hidden" id="hcso_5" name="hcso_5" value="1065534662">
+			    	</td>
+			    	<td style="text-align: center; background-color: rgb(238, 238, 238);">
+			    		02-06-2026
+			    		<input type="hidden" id="hcheckin_Date_5" name="hcheckin_Date_5" value="02-06-2026">
+			    	</td>
+			    	<td style="text-align: center; background-color: rgb(238, 238, 238);">
+			    		02-06-2026
+			    		<input type="hidden" id="hdeliveryDate_5" name="hdeliveryDate_5" value="02-06-2026">
+			    	</td>
+			    	<td style="text-align: center; background-color: rgb(238, 238, 238);">
+			    		19SU00005876
+			    		<input type="hidden" id="hdelivery_Number_5" name="hdelivery_Number_5" value="19SU00005876">
+			    	</td>
+			    	<td style="text-align: center; background-color: rgb(238, 238, 238);">
+			    		CAPC04
+			    		<input type="hidden" id="htruck_5" name="htruck_5" value="CAPC04">
+			    	</td>
+			    	<td style="text-align: center; background-color: rgb(238, 238, 238);">
+			    		GAGIK ARSHAKYAN
+			    		<input type="hidden" id="hdriver_5" name="hdriver_5" value="GAGIK ARSHAKYAN">
+			    	</td>
+			    	<td style="text-align: center; background-color: rgb(238, 238, 238);">
+			    		EQUAL               
+			    		<input type="hidden" id="hcheckin_Changes_5" name="hcheckin_Changes_5" value="EQUAL               ">
+			    	</td>
+			    	<td style="text-align: center; background-color: rgb(238, 238, 238);">
+			    		<a href="javascript:redirectToPODs(5,'515511228','02-06-2026','19SU00005876','AGENT','main');" style="text-decoration:underline; color:blue;">
+			    			1
+			    		</a>
+			    		<input type="hidden" id="hPODS_5" name="hPODS_5" value="1">
+			    	</td>
+			    	<td style="text-align: center; background-color: rgb(238, 238, 238);">
+			    		<a href="javascript:redirectToPhotos(5,'515511228','02-06-2026','19SU00005876','AGENT','main');" style="text-decoration:underline; color:blue;">
+			    			4
+			    		</a>
+			    		<input type="hidden" id="hPhotos_5" name="hPhotos_5" value="4">
+			    	</td>
+			    	
+					
+					
+						<td style="text-align: center; background-color: rgb(238, 238, 238);">
+			    		<select name="hagentFindings_5" style="width: 100%" id="hagentFindings_5" onchange="if (!window.__cfRLUnblockHandlers) return false; updateChangeInd(5);">				    		
+								
+									<option value="PASS"> PASS</option>
+								
+									<option value="Driver photos did not show connections of the install "> Driver photos did not show connections of the install </option>
+								
+									<option value="Driver did not take serial tag photos "> Driver did not take serial tag photos </option>
+								
+									<option value="Driver did not take photos of reported damage or defect "> Driver did not take photos of reported damage or defect </option>
+								
+									<option value="Driver did not take any photos or photo quantity/quality was insufficient"> Driver did not take any photos or photo quantity/quality was insufficient</option>
+								
+									<option value="Driver did not report final condition or completed installs correctly "> Driver did not report final condition or completed installs correctly </option>
+								
+									<option value="Driver did not get typed first and last name"> Driver did not get typed first and last name</option>
+								
+									<option value="Driver did not add site readiness details "> Driver did not add site readiness details </option>
+								
+									<option value="Driver did not accurately report anti-tip details"> Driver did not accurately report anti-tip details</option>
+								
+									<option value="Check in did not catch driver error on condition or services "> Check in did not catch driver error on condition or services </option>
+								
+									<option value="Check in added or removed services inappropriately or made an error on product"> Check in added or removed services inappropriately or made an error on product</option>
+								
+									<option value=" " selected="">  </option>
+								
+						</select>
+			    		</td>
+					
+					
+			    	
+					
+						<td style="text-align: center; background-color: rgb(238, 238, 238);">
+							<input id="hagentNotes_5" name="hagentNotes_5" value=" " onblur="if (!window.__cfRLUnblockHandlers) return false; updateChangeInd(5);">
+						</td>
+					
+		    	</tr>
+		    	<input type="hidden" name="changeInd_5" id="changeInd_5" value="N">
+		    	
+		     
+				<tr>
+			    	<td style="text-align: center; background-color: rgb(255, 255, 255);">
+			    		<a href="javascript:redirecttandt('19SU','02-06-2026','19SU00005866','1065530241');" style="text-decoration:underline; color:blue;">
+			    		1065530241
+			    		</a>
+			    		<input type="hidden" id="hcso_6" name="hcso_6" value="1065530241">
+			    	</td>
+			    	<td style="text-align: center; background-color: rgb(255, 255, 255);">
+			    		02-06-2026
+			    		<input type="hidden" id="hcheckin_Date_6" name="hcheckin_Date_6" value="02-06-2026">
+			    	</td>
+			    	<td style="text-align: center; background-color: rgb(255, 255, 255);">
+			    		02-06-2026
+			    		<input type="hidden" id="hdeliveryDate_6" name="hdeliveryDate_6" value="02-06-2026">
+			    	</td>
+			    	<td style="text-align: center; background-color: rgb(255, 255, 255);">
+			    		19SU00005866
+			    		<input type="hidden" id="hdelivery_Number_6" name="hdelivery_Number_6" value="19SU00005866">
+			    	</td>
+			    	<td style="text-align: center; background-color: rgb(255, 255, 255);">
+			    		GAT01 
+			    		<input type="hidden" id="htruck_6" name="htruck_6" value="GAT01 ">
+			    	</td>
+			    	<td style="text-align: center; background-color: rgb(255, 255, 255);">
+			    		GEVORK ARBADJIAN
+			    		<input type="hidden" id="hdriver_6" name="hdriver_6" value="GEVORK ARBADJIAN">
+			    	</td>
+			    	<td style="text-align: center; background-color: rgb(255, 255, 255);">
+			    		EQUAL               
+			    		<input type="hidden" id="hcheckin_Changes_6" name="hcheckin_Changes_6" value="EQUAL               ">
+			    	</td>
+			    	<td style="text-align: center; background-color: rgb(255, 255, 255);">
+			    		<a href="javascript:redirectToPODs(6,'515511228','02-06-2026','19SU00005866','AGENT','main');" style="text-decoration:underline; color:blue;">
+			    			0
+			    		</a>
+			    		<input type="hidden" id="hPODS_6" name="hPODS_6" value="0">
+			    	</td>
+			    	<td style="text-align: center; background-color: rgb(255, 255, 255);">
+			    		<a href="javascript:redirectToPhotos(6,'515511228','02-06-2026','19SU00005866','AGENT','main');" style="text-decoration:underline; color:blue;">
+			    			3
+			    		</a>
+			    		<input type="hidden" id="hPhotos_6" name="hPhotos_6" value="3">
+			    	</td>
+			    	
+					
+					
+						<td style="text-align: center; background-color: rgb(255, 255, 255);">
+			    		<select name="hagentFindings_6" style="width: 100%" id="hagentFindings_6" onchange="if (!window.__cfRLUnblockHandlers) return false; updateChangeInd(6);">				    		
+								
+									<option value="PASS"> PASS</option>
+								
+									<option value="Driver photos did not show connections of the install "> Driver photos did not show connections of the install </option>
+								
+									<option value="Driver did not take serial tag photos "> Driver did not take serial tag photos </option>
+								
+									<option value="Driver did not take photos of reported damage or defect "> Driver did not take photos of reported damage or defect </option>
+								
+									<option value="Driver did not take any photos or photo quantity/quality was insufficient"> Driver did not take any photos or photo quantity/quality was insufficient</option>
+								
+									<option value="Driver did not report final condition or completed installs correctly "> Driver did not report final condition or completed installs correctly </option>
+								
+									<option value="Driver did not get typed first and last name"> Driver did not get typed first and last name</option>
+								
+									<option value="Driver did not add site readiness details "> Driver did not add site readiness details </option>
+								
+									<option value="Driver did not accurately report anti-tip details"> Driver did not accurately report anti-tip details</option>
+								
+									<option value="Check in did not catch driver error on condition or services "> Check in did not catch driver error on condition or services </option>
+								
+									<option value="Check in added or removed services inappropriately or made an error on product"> Check in added or removed services inappropriately or made an error on product</option>
+								
+									<option value=" " selected="">  </option>
+								
+						</select>
+			    		</td>
+					
+					
+			    	
+					
+						<td style="text-align: center; background-color: rgb(255, 255, 255);">
+							<input id="hagentNotes_6" name="hagentNotes_6" value=" " onblur="if (!window.__cfRLUnblockHandlers) return false; updateChangeInd(6);">
+						</td>
+					
+		    	</tr>
+		    	<input type="hidden" name="changeInd_6" id="changeInd_6" value="N">
+		    	
+		     
+				<tr>
+			    	<td style="text-align: center; background-color: rgb(238, 238, 238);">
+			    		<a href="javascript:redirecttandt('19SU','02-06-2026','19SU00005768','1065502623');" style="text-decoration:underline; color:blue;">
+			    		1065502623
+			    		</a>
+			    		<input type="hidden" id="hcso_7" name="hcso_7" value="1065502623">
+			    	</td>
+			    	<td style="text-align: center; background-color: rgb(238, 238, 238);">
+			    		02-06-2026
+			    		<input type="hidden" id="hcheckin_Date_7" name="hcheckin_Date_7" value="02-06-2026">
+			    	</td>
+			    	<td style="text-align: center; background-color: rgb(238, 238, 238);">
+			    		02-06-2026
+			    		<input type="hidden" id="hdeliveryDate_7" name="hdeliveryDate_7" value="02-06-2026">
+			    	</td>
+			    	<td style="text-align: center; background-color: rgb(238, 238, 238);">
+			    		19SU00005768
+			    		<input type="hidden" id="hdelivery_Number_7" name="hdelivery_Number_7" value="19SU00005768">
+			    	</td>
+			    	<td style="text-align: center; background-color: rgb(238, 238, 238);">
+			    		GRAN07
+			    		<input type="hidden" id="htruck_7" name="htruck_7" value="GRAN07">
+			    	</td>
+			    	<td style="text-align: center; background-color: rgb(238, 238, 238);">
+			    		ISMAEL JIMENEZ
+			    		<input type="hidden" id="hdriver_7" name="hdriver_7" value="ISMAEL JIMENEZ">
+			    	</td>
+			    	<td style="text-align: center; background-color: rgb(238, 238, 238);">
+			    		SERVICE DIFFERENCE  
+			    		<input type="hidden" id="hcheckin_Changes_7" name="hcheckin_Changes_7" value="SERVICE DIFFERENCE  ">
+			    	</td>
+			    	<td style="text-align: center; background-color: rgb(238, 238, 238);">
+			    		<a href="javascript:redirectToPODs(7,'515511228','02-06-2026','19SU00005768','AGENT','main');" style="text-decoration:underline; color:blue;">
+			    			1
+			    		</a>
+			    		<input type="hidden" id="hPODS_7" name="hPODS_7" value="1">
+			    	</td>
+			    	<td style="text-align: center; background-color: rgb(238, 238, 238);">
+			    		<a href="javascript:redirectToPhotos(7,'515511228','02-06-2026','19SU00005768','AGENT','main');" style="text-decoration:underline; color:blue;">
+			    			6
+			    		</a>
+			    		<input type="hidden" id="hPhotos_7" name="hPhotos_7" value="6">
+			    	</td>
+			    	
+					
+					
+						<td style="text-align: center; background-color: rgb(238, 238, 238);">
+			    		<select name="hagentFindings_7" style="width: 100%" id="hagentFindings_7" onchange="if (!window.__cfRLUnblockHandlers) return false; updateChangeInd(7);">				    		
+								
+									<option value="PASS"> PASS</option>
+								
+									<option value="Driver photos did not show connections of the install "> Driver photos did not show connections of the install </option>
+								
+									<option value="Driver did not take serial tag photos "> Driver did not take serial tag photos </option>
+								
+									<option value="Driver did not take photos of reported damage or defect "> Driver did not take photos of reported damage or defect </option>
+								
+									<option value="Driver did not take any photos or photo quantity/quality was insufficient"> Driver did not take any photos or photo quantity/quality was insufficient</option>
+								
+									<option value="Driver did not report final condition or completed installs correctly "> Driver did not report final condition or completed installs correctly </option>
+								
+									<option value="Driver did not get typed first and last name"> Driver did not get typed first and last name</option>
+								
+									<option value="Driver did not add site readiness details "> Driver did not add site readiness details </option>
+								
+									<option value="Driver did not accurately report anti-tip details"> Driver did not accurately report anti-tip details</option>
+								
+									<option value="Check in did not catch driver error on condition or services "> Check in did not catch driver error on condition or services </option>
+								
+									<option value="Check in added or removed services inappropriately or made an error on product"> Check in added or removed services inappropriately or made an error on product</option>
+								
+									<option value=" " selected="">  </option>
+								
+						</select>
+			    		</td>
+					
+					
+			    	
+					
+						<td style="text-align: center; background-color: rgb(238, 238, 238);">
+							<input id="hagentNotes_7" name="hagentNotes_7" value=" " onblur="if (!window.__cfRLUnblockHandlers) return false; updateChangeInd(7);">
+						</td>
+					
+		    	</tr>
+		    	<input type="hidden" name="changeInd_7" id="changeInd_7" value="N">
+		    	
+		     
+		 <input type="hidden" id="totalRecCount" name="totalRecCount" value="8">
+		</tbody>
+	</table>
+ 	
+	
+  
+</form>
+<!-- sec3 end---------------------------------------------------------------------------------------------------------------->
+
+<form method="GET" target="_blank" action="https://dms-erp-aws-prd.geappliances.com/dms/tracktrace/trackDetailMain" id="trackTraceFrm" name="trackTraceFrm">
+			<input type="hidden" name="deliveryNumber" id="deliveryNumber" value="">
+			<input type="hidden" name="orderNumber" id="orderNumber" value="">
+			<input type="hidden" name="deliveryDate" id="deliveryDate" value="">
+			<input type="hidden" name="hDmsLoc" id="hDmsLoc" value="">
+			<input type="hidden" name="htrackingNumber" id="htrackingNumber" value="">
+			<input type="hidden" name="startDate" id="startDate" value="">
+			<input type="hidden" name="endDate" id="endDate" value="">		
+</form>
+
+
+<div class="ui-dialog ui-widget ui-widget-content ui-corner-all ui-front ui-dialog-buttons ui-draggable ui-resizable" tabindex="-1" role="dialog" aria-describedby="alertDlg" aria-labelledby="ui-id-1" style="position: absolute; height: auto; width: 400px; top: 360px; left: 496px; display: none;"><div class="ui-dialog-titlebar ui-widget-header ui-corner-all ui-helper-clearfix ui-draggable-handle"><span id="ui-id-1" class="ui-dialog-title">ALERT</span><button type="button" class="ui-button ui-widget ui-state-default ui-corner-all ui-button-icon-only ui-dialog-titlebar-close" role="button" title="Close"><span class="ui-button-icon-primary ui-icon ui-icon-closethick"></span><span class="ui-button-text">Close</span></button></div><div id="alertDlg" class="ui-dialog-content ui-widget-content" style="width: auto; min-height: 0px; max-height: none; height: 49px;"></div><div class="ui-resizable-handle ui-resizable-n" style="z-index: 90;"></div><div class="ui-resizable-handle ui-resizable-e" style="z-index: 90;"></div><div class="ui-resizable-handle ui-resizable-s" style="z-index: 90;"></div><div class="ui-resizable-handle ui-resizable-w" style="z-index: 90;"></div><div class="ui-resizable-handle ui-resizable-se ui-icon ui-icon-gripsmall-diagonal-se" style="z-index: 90;"></div><div class="ui-resizable-handle ui-resizable-sw" style="z-index: 90;"></div><div class="ui-resizable-handle ui-resizable-ne" style="z-index: 90;"></div><div class="ui-resizable-handle ui-resizable-nw" style="z-index: 90;"></div><div class="ui-dialog-buttonpane ui-widget-content ui-helper-clearfix"><div class="ui-dialog-buttonset"><button type="button" class="ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only" role="button"><span class="ui-button-text">OK</span></button></div></div></div></body></html>

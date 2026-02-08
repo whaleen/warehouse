@@ -1,0 +1,31 @@
+Check In - Summary		Having trouble with screen display or response?	Welcome  515511228  AGENT
+
+
+
+
+
+
+Inv Org:  	
+9SU
+	Truck Id:  	
+19SU
+CAPC04
+CAPC08
+GAT01
+GRAN07
+GRAN08
+GRAN11
+GRAN15
+RRTR01
+	Deliveries/Returns Scheduled for:	
+
+ViewTrucks not Checked In		
+
+
+
+You have no Driver assigned to this truck. Click on the button REMOVE STOPS and choose a valid Truck/Driver and Date combination in Manifesting to complete Check In.
+
+
+
+Stop#	CSO	Delivery Id	Tracking #	Delivery Complete	Attempt Trip	Refused Units	Service Changes	Signed By	Signature	Depart Time	Order Type	Check In Complete
+

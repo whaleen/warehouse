@@ -36,6 +36,7 @@ const ActionsView = lazy(() => import("@/components/Actions/ActionsView").then(m
 const MapView = lazy(() => import("@/components/Map/MapView").then(m => ({ default: m.MapView })));
 const AgentView = lazy(() => import("@/components/Agent/AgentView").then(m => ({ default: m.AgentView })));
 const DataQualityDashboard = lazy(() => import("@/components/Dashboard/DataQualityDashboard").then(m => ({ default: m.DataQualityDashboard })));
+const DocsView = lazy(() => import("@/components/Docs/DocsView").then(m => ({ default: m.DocsView })));
 
 function App() {
   const { user, loading, logout } = useAuth();
@@ -306,6 +307,9 @@ function App() {
                     {currentView === "data-quality" && (
                       <DataQualityDashboard />
                     )}
+                    {currentView === "docs" && (
+                      <DocsView />
+                    )}
                     {currentView === "settings-locations" && (
                       <SettingsView section="locations" />
                     )}
@@ -380,6 +384,9 @@ function App() {
                     )}
                     {currentView === "data-quality" && (
                       <DataQualityDashboard />
+                    )}
+                    {currentView === "docs" && (
+                      <DocsView />
                     )}
                     {currentView === "settings-locations" && (
                       <SettingsView section="locations" />

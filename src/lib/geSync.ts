@@ -35,3 +35,26 @@ export async function syncGeInventory(type: GeSyncType, locationId: string) {
     log: (payload.log ?? []) as GeSyncLog,
   };
 }
+
+export async function syncBackhaul(locationId: string, options?: { includeClosed?: boolean; maxOrders?: number }) {
+  const response = await fetch(`${GE_SYNC_URL}/sync/backhaul`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(GE_SYNC_API_KEY ? { 'X-API-Key': GE_SYNC_API_KEY } : {}),
+    },
+    body: JSON.stringify({ locationId, ...options }),
+  });
+
+  const payload = await response.json().catch(() => null);
+  if (!response.ok || !payload?.success) {
+    const message = payload?.error || payload?.message || response.statusText || 'Sync failed';
+    throw new Error(message);
+  }
+
+  return {
+    stats: (payload.stats ?? {}) as GeSyncStats,
+    log: (payload.log ?? []) as GeSyncLog,
+    message: payload.message as string | undefined,
+  };
+}

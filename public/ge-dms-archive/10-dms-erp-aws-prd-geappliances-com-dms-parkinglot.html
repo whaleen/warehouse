@@ -1,0 +1,701 @@
+<html><head>
+<title>PARKING LOT</title>
+
+<style>
+.headerLink a:visited {
+	color: #FFFFFF;
+}
+
+.headerLink a:link {
+	color: #FFFFFF;
+}
+
+.headerLink a:hover {
+	color: #FFFFFF;
+}
+
+.headerLink a:focus {
+	color: #FFFFFF;
+}
+
+.headerLink a:active {
+	color: #FFFFFF;
+}
+
+.headerLinkActive a:visited {
+	color: #006699;
+}
+</style>
+
+<link href="/dms/resources/style/CalendarControl.css" rel="stylesheet" type="text/css">
+<link href="/dms/resources/style/Dms.css" rel="stylesheet" type="text/css">
+<link href="/dms/resources/style/meettruck.css" rel="stylesheet" type="text/css">
+
+<script type="text/javascript">
+	history.forward();
+	
+	
+	function TrackDetailMain(lineNo) {
+		console.log(lineNo)
+		
+		document.frmParkingLot.deliveryDate.value = document.getElementById("deliveryDate_"+lineNo).value;//"01-11-2015";//
+		document.frmParkingLot.orderNumber.value = document.getElementById("orderNumber_"+lineNo).value;//"6000000491";//
+		document.frmParkingLot.deliveryNumber.value = document.getElementById("deliveryNumber_"+lineNo).value;//"104H00236145";//    	 
+		document.frmParkingLot.dmsLoc.value = $("#cbDmsLoc").val();	 
+  	 
+		
+		document.frmParkingLot.action = "/dms/tracktrace/trackDetailMain";
+		document.frmParkingLot.target = "_blank";
+		document.frmParkingLot.method = "POST";
+		document.frmParkingLot.submit();
+	}
+</script>
+
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<style type="text/css">
+body {
+			font-family: ge inspira, verdana;
+			font-size: 12px;
+		}
+</style>
+
+<link rel="stylesheet" href="/dms/resources/style/jquery-ui.css">
+<script src="/dms/resources/js/jquery-1.10.2.js" type="text/javascript"></script>
+<script src="/dms/resources/js/jquery-ui.js" type="text/javascript"></script>	
+<script src="/dms/resources/js/CalendarControl.js" language="javascript" type="text/javascript"></script></head>
+<body link="blue" vlink="purple" alink="red" onload="stripe('table_list');" style=""><iframe id="CalendarControlIFrame" frameborder="0" scrolling="no"></iframe><div id="CalendarControl"></div>
+<script src="/dms/resources/js/jqueryajaxcommon.js" language="javascript" type="text/javascript"></script>	
+<script type="text/javascript" src="/dms/resources/js/DmsFunction.js"></script>
+<script type="text/javascript" src="/dms/resources/js/FormTableSort.js"></script>
+<script type="text/javascript" src="/dms/resources/js/TableSearch.js"></script>
+<script type="text/javascript" src="/dms/resources/js/TableSelectAll.js"></script>
+<script type="text/javascript" src="/dms/resources/js/StripedTable.js"></script>
+<script type="text/javascript" src="/dms/resources/js/parkingLot.js"></script>
+
+
+	
+	<input type="hidden" name="hDmsLoc" id="hDmsLoc" value="">
+	<form name="frmParkingLot" id="parkinglot">
+		<input type="hidden" name="hDmsLoc" id="hDmsLoc" value="">
+		<input type="hidden" name="hShowOrders" value="O"> <input type="hidden" name="hDeliveryDate" value="02-08-2026"> <input type="hidden" name="hShowWillCall" value="CHECKED">
+		<input type="hidden" name="hShowCommonCarrier" value="CHECKED">
+		<input type="hidden" name="hShowReturnCustomer" value="CHECKED">
+		<input type="hidden" name="hDays" value="120">
+
+
+		<!-- Params for Checkin  -->
+		<input type="hidden" name="readOnly" value="false"> <input type="hidden" name="orderNumber" value=""> <!-- <input
+			type="hidden" name="trackingNumber" value="" /> --> <input type="hidden" name="deliveryNumber" value=""> <input type="hidden" name="deliveryDate" value="02-08-2026"> <input type="hidden" name="checkinMode" value=""> <input type="hidden" id="reqFrom" name="reqFrom" value="PL"> <input type="hidden" name="checkinReqFrm" value="PL"> 
+			<input type="hidden" id="dmsLoc" name="dmsLoc" value="">
+			<input type="hidden" id="ciWithException" name="ciWithException" value="">
+			<input type="hidden" id="hResMsg" name="hResMsg" value="">
+			<input type="hidden" id="truckNumber" name="truckNumber" value=" ">
+			<input type="hidden" id="hCso" name="Cso" value=" ">
+			
+		<!-- END:for checkin details  -->
+
+			<!-- Header Begins -->
+
+	
+
+<script type="text/javascript">
+jQuery(document).ready(function($) {
+    window.history.pushState('forward', null, null); 
+    $(window).on('popstate', function() {
+       history.pushState(null, null, window.location.pathname);
+    }); 
+    
+});
+
+</script>
+
+<table class="messageHeader" border="0" align="center" width="100%">
+	<tbody><tr>
+		<td width="30%" style="color:#000000;"><b>Parking Lot</b></td>
+		
+		<td align="center"></td>
+				<td align="center">
+			
+				
+					
+					
+						
+							
+						
+						
+					
+					<a href="/dms/messages/messagetitledetail?&amp;type=PARKING_LOT" target="_blank"><b><font style="text-decoration: underline" color="RED">Having trouble with screen display or response?   </font></b></a>
+				
+				
+		</td>
+		<td align="right" width="20%" style="color:#000000;">Welcome &nbsp;<b><font color="red" id="usr_login_id">515511228</font></b>
+       		
+       			
+       			
+       				&nbsp;<b>AGENT</b>
+       			
+       		
+		</td>
+			
+		
+	</tr>
+</tbody></table>
+<!-- Header Ends -->   
+<br>
+			
+
+
+
+
+<title>Carrier</title>
+<link rel="stylesheet" type="text/css" href="/dms/resources/style/jquery-ui.css">
+<link rel="stylesheet" type="text/css" href="/dms/resources/style/style.css">
+<link rel="stylesheet" type="text/css" href="/dms/resources/style/Dms.css">
+<style>
+/*  Carrier Information*/
+.ci-first-column-cls{
+margin-left:2px;
+display: inline-block;
+float:left;
+padding:2px;
+width:45%;
+}
+.ci-second-column-cls{
+display: inline-block;
+vertical-align: top;
+margin-right: 2px;
+float:left;
+padding:5px;
+width:50%;
+}
+
+
+   .carrier-label-cls{
+	    padding: 4px;
+	    font-size: 9pt;
+	    font-family: Verdana, sans-serif;
+	    font-weight: 800;
+	   color: #3c3939;
+    }
+    .carrier-val-cls {
+	    padding: 4px;
+	    font-size: 9pt;
+	    font-family: Verdana, sans-serif;
+	    color:#3c3939;
+    }
+    .ci-input{
+    	padding: 0px 0px 0px 0px;
+    }
+    .ci-seal-input{
+   		 margin-left: 20px;
+    }
+    .ci-left-col{
+    	padding: 5px;
+    	text-allign:left;
+    }
+    
+     .ci-right-col{
+    	padding: 5px;
+    	text-allign:right;
+    }
+    
+.button_txt {
+	font-size: 8.5pt;
+	font-family: Verdana, sans-serif;
+	font-weight: 600;
+	color: #006699;
+}
+
+#carrier_name_label{
+margin-left: 12px;
+}
+/* #carrier_contact_label{
+margin-left: 3px;
+} */
+#carrier_scac_label{
+margin-left: 16px;
+}
+#carrier_phone_label{
+margin-left: 10px;
+}
+#carrier_email_label{
+margin-left: 15px;
+}
+
+#vehicle-number-col{
+margin-left: 9px;
+}
+#seal-no-col{
+margin-left: 30px;
+}
+#notes-col{
+margin-left: 41px;
+}
+</style>
+
+<script type="text/javascript">
+var carrierShipmentPrefix;
+var carrierShipment;
+function openDmsCarrierDialog(shipmentPrefix,shipment,additionalParam){
+   $("#carrier-response-message").html('');
+   carrierShipmentPrefix = shipmentPrefix;
+   carrierShipment = shipment;
+   console.log('Open openDmsCarrierDialog',shipmentPrefix,shipment);
+   var getDmsCarrierReq={"current_screen": "GEAD ASIS","gead_user":{"sso": "515511228","user_authority": "AGENT"},"search_criteria":[{"shipment_prefix":shipmentPrefix,"shipment": shipment}]};
+   var data = JSON.stringify(getDmsCarrierReq);
+   console.log(data);
+   var response='';
+   var url= "";
+   console.log(url);
+   showPleaseWait();
+   var responseTable ="";
+   var inv_overall_score ='';
+    $.ajax({
+    	  type: 'POST',
+    	  url:url,
+    	  data: data,
+    	  dataType: 'json',
+    	  contentType: 'application/json; charset=utf-8',
+    	  success: function(response) {
+    	  console.log('success');
+    	  hidePleaseWait();  
+             populateDmsCarrierDialog(response,shipmentPrefix,shipment,additionalParam);	
+    	  },error: function (jqXHR, exception) {
+    		  $("#carrier-response-message").html("<span style='color:red'>Error for service: dms_get_carrier("+jqXHR.status+")</span>");
+    		  hidePleaseWait();
+    	  }
+	});  
+		  
+	}	
+	
+function populateDmsCarrierDialog(response,shipmentPrefix,shipment,additionalParam){
+	var csiTitle ="";
+	if('BCK'==shipmentPrefix){
+		csiTitle = "Carrier Information | ISO="+additionalParam;
+	}else{
+		 csiTitle = "Carrier Information | CSO="+shipment;
+	}
+	
+	printCarrierInfoDiv(response);
+	 $(function () {
+   	  $("#dmsCarrierDialog").dialog({
+   	      autoOpen: false,
+   	      modal: true,
+   	      title: csiTitle, 
+   	      width: 830,
+   	      height: 250,
+   	      autoResize:true,
+   	      open : carrierDialogFunction
+   	      
+   	  });
+   	  console.log('dialog ready');    
+   	   $("#dmsCarrierDialog").closest(".ui-dialog").children(".ui-dialog-titlebar").css("background", "#006699"); 
+   	   $("#dmsCarrierDialog").closest(".ui-dialog").children(".ui-widget-header").css("color", "white"); 
+   	});   
+	$("#dmsCarrierDialog").dialog("open");
+	
+}
+
+function carrierDialogFunction(){
+	console.log('dialog open');
+	
+}
+
+/** Carrier info div population mechanism */
+function printCarrierInfoDiv(response) {
+console.log('printCarrierInfoDiv');
+	var carrier_name = '';
+	var carrier_contact = '';
+	var carrier_scac = '';
+	var carrier_phone = '';
+	var carrier_email = '';
+	
+    var pickup_date= '';
+    var vehicle_number = '';
+	var seal_code = '';
+	var notes = '';
+ if (!jQuery.isEmptyObject(response.list[0].data )){
+	//carrier_name = 'VEER';
+	carrier_name = response.list[0].data.carrier_name;
+	//carrier_contact = 'contact';
+	carrier_contact = response.list[0].data.carrier_contact;
+	//carrier_scac = 'SARC';
+	carrier_scac = response.list[0].data.carrier_scac;
+	//carrier_phone = '898989899';
+	carrier_phone = response.list[0].data.carrier_phone;
+	//carrier_email = 'a@gmail.com';
+	carrier_email = response.list[0].data.carrier_email;
+	
+	pickup_date = formatDate(response.list[0].data.appointment_pickup_date);
+	vehicle_number = response.list[0].data.vehicle_number;
+	seal_code = response.list[0].data.seal_code;
+	notes = response.list[0].data.appointment_note;
+
+	
+ }
+	var responsePageData = "";
+	responsePageData += "<div class='carrier-info-main-cls' id='carrier-info-main-div'>";
+	responsePageData += "<input type='text' style='width: 0; height: 0; top: -100px; position: absolute;'/>";
+	<!-- 1st column carrier info ====================================================-->
+	responsePageData += "<div class='ci-first-column-cls' id='ci-first-column-id'>";
+	<!-- 1st column first row -->
+	responsePageData += "<div class='ci-left-col'>";
+	responsePageData += "<span class= 'carrier-label-cls' id='carrier_name_label'>Name : </span>";
+	responsePageData += "<span class= 'carrier-val-cls' id='carrier_name'>" + carrier_name + "</span>";
+	responsePageData += "</div>";
+	<!-- 2nd row -->
+	responsePageData += "<div class='ci-left-col'>";
+	responsePageData += "<span class= 'carrier-label-cls' id='carrier_contact_label' >Contact : </span>";
+	responsePageData += "<span class= 'carrier-val-cls' id='carrier_contact'>" + carrier_contact + "</span>";
+	responsePageData += "</div>";
+	<!-- 3rd row -->
+	responsePageData += "<div class='ci-left-col'>";
+	responsePageData += "<span class= 'carrier-label-cls' id='carrier_scac_label' >SCAC : </span>";
+	responsePageData += "<span class= 'carrier-val-cls' id='carrier_scac'>" + carrier_scac + "</span>";
+	responsePageData += "</div>";
+ 	<!-- 4th row -->
+ 	responsePageData += "<div class='ci-left-col'>";
+	responsePageData += "<span class= 'carrier-label-cls' id='carrier_phone_label' >Phone : </span>";
+	responsePageData += "<span class= 'carrier-val-cls' id='carrier_phone'>" + carrier_phone + "</span>";
+	responsePageData += "</div>";
+	<!-- 5th row -->	  		
+	responsePageData += "<div class='ci-left-col'>";
+	responsePageData += "<span class= 'carrier-label-cls' id='carrier_email_label' >Email : </span>";
+	responsePageData += "<span class= 'carrier-val-cls' id='carrier_email'>" + carrier_email + "</span>";
+	responsePageData += "</div>";
+	
+	responsePageData += "</div>";
+ 	<!-- carrier 2nd column info ======================================================-->
+	responsePageData += "<div class='ci-second-column-cls' id='ci-carrier-column-id'>";
+	<!-- first column first row -->
+	responsePageData += "<div class='ci-right-col'>";
+	responsePageData += "<span class= 'carrier-label-cls' id='ci-one-col-span-id' >Pickup Date : </span>";
+	responsePageData += "<span class= 'carrier-val-cls' id='ci-sec-col-span-id'><input type='hidden' class='ci-input' id='dummy_pickup_date'><input  class='ci-input' id='pickup_date' value='"+pickup_date+"'></span>";
+	responsePageData += "</div>";
+	<!-- 2nd row -->
+	responsePageData += "<div class='ci-right-col'>";
+	responsePageData += "<span class= 'carrier-label-cls' id='vehicle-number-col' >Vehicle No : </span>";
+	responsePageData += "<span class= 'carrier-val-cls' id='ci-sec-col-span-id'><input class='ci-input' id='vehicle_no' value='"+vehicle_number+"'></span>";
+	responsePageData += "</div>";
+	<!-- 3rd row -->
+	responsePageData += "<div class='ci-right-col'>";
+	responsePageData += "<span class= 'carrier-label-cls' id='seal-no-col' >Seal No : </span>";
+	responsePageData += "<span class= 'carrier-val-cls' id='ci-sec-col-span-id'><input class='ci-input' id='seal_code' value='"+seal_code+"'></span>";
+	responsePageData += "</div>";
+	
+	<!-- 4th row -->
+	responsePageData += "<div class='ci-right-col'>";
+	responsePageData += "<span class= 'carrier-label-cls' id='notes-col' >Notes : </span>";
+	responsePageData += "<span class= 'carrier-val-cls' id='ci-sec-col-span-id'><input size='35' class='ci-input' id='appointment_notes' value='"+notes+"'></span>";
+	responsePageData += "</div>";
+		 
+	responsePageData += "</div>";
+	responsePageData += "</div>";
+	
+	$(".carrier-section-data").html(responsePageData);
+	$("#appointment_notes").val(notes);
+	$("#pickup_date").datepicker();
+	
+}
+
+
+
+function saveCarrier(){
+	console.log (carrierShipmentPrefix,carrierShipment);
+	var carrier_shipment_Prefix = carrierShipmentPrefix;
+	var carrier_shipment = carrierShipment;
+	var vehicle_number = $('#vehicle_no').val();
+	var seal_code = $('#seal_code').val();
+	var appointment_pickup_date = $('#pickup_date').val();
+	var appointment_notes = $('#appointment_notes').val();
+	var formattedDate = '';
+	if(appointment_pickup_date!=''){
+		var date_regex = /^(0[1-9]|1[0-2])\/(0[1-9]|1\d|2\d|3[01])\/(19|20)\d{2}$/;
+		if (!(date_regex.test(appointment_pickup_date))) {
+			 $("#carrier-response-message").html("<span style='color:red'>Invalid Date</span>");
+		    return ;
+		}
+		var date = new Date(appointment_pickup_date);
+		formattedDate = date.getFullYear() + ("0" + (date.getMonth() + 1)).slice(-2) + ("0" + date.getDate()).slice(-2) + ("0" + date.getHours() ).slice(-2) + ("0" + date.getMinutes()).slice(-2) + ("0" + date.getSeconds()).slice(-2) ;
+	}
+	
+	console.log(formattedDate);
+	  var saveDmsCarrierReq={"current_screen": "GEAD ASIS","gead_user":{"sso": "515511228","user_authority": "AGENT"},"save":{"key":{"shipment_prefix":carrier_shipment_Prefix,"shipment": carrier_shipment},"data":{"vehicle_number":vehicle_number,"seal_code": seal_code,"appointment_pickup_date":formattedDate,"appointment_notes": appointment_notes}}};
+	   var data = JSON.stringify(saveDmsCarrierReq);
+	   console.log(data);
+	   var response='';
+	   var url= "";
+	   console.log(url);
+	   showPleaseWait();
+	   var responseTable ="";
+	   var inv_overall_score ='';
+	    $.ajax({
+	    	  type: 'POST',
+	    	  url:url,
+	    	  data: data,
+	    	  dataType: 'json',
+	    	  contentType: 'application/json; charset=utf-8',
+	    	  success: function(response) {
+	    	  console.log('success');
+	    	  hidePleaseWait();  
+	    	  $("#carrier-response-message").html("<span style='color:green'>Changes Saved Successfully</span>");
+	    	  },error: function (jqXHR, exception) {
+	    		  $("#carrier-response-message").html("<span style='color:red'>Error for service: dms_save_carrier("+jqXHR.status+")</span>");
+	    		  hidePleaseWait();
+	    	  }
+		});  
+}
+
+function formatDate(date) {
+	if(date == undefined || date=='00000000000000' || date.trim() == ""  ){
+		return "";
+	}else{
+		var startDate = date.substring(0,8)
+		var year = startDate.substring(0, 4);
+		var month = startDate.substring(4, 6);
+		var day = startDate.substring(6, 8);
+		var dispDate=month+'/'+day+'/'+year;
+		return dispDate;
+	}
+	
+}
+</script>
+
+<div id="dmsCarrierDialog" style="display: none">
+<div id="carrier-response-message" style=" font-size: 12px; text-align:center; font-weight:bold;"></div>
+	<div class="carrier-section-data relative"></div>
+	
+   
+	   <div class="btn-ctrl carrier-confirm-btn" style="margin-left:43%;margin-top:18%;">
+	 		<button style=" font-size: 12px; font-family: Verdana, sans-serif; font-weight: 600;color: #006699;" class="button_txt" onclick="if (!window.__cfRLUnblockHandlers) return false; saveCarrier()">SUBMIT</button>
+	   </div> 
+   
+</div>
+
+
+<br>
+		<table align="center">
+			<tbody><tr>
+				<td align="center"><div class="messageDisplay"></div></td>
+			</tr>
+		</tbody></table>
+		<table border="0" id="table_header" align="center" cellpadding="0" cellspacing="0" width="1030" class="dataTable">
+			<thead>
+			  <tr>
+			    <td colspan="6">
+			    PARKING LOT
+			    </td>
+			  </tr>
+			</thead>
+			<tbody>
+				<tr>
+					<td> </td>
+					<td> </td>
+					<td colspan="2">
+						<div align="left">
+							<input type="radio" name="orderType" value="K" onclick="if (!window.__cfRLUnblockHandlers) return false; ShowOrders(&quot;K&quot;);PostShowParkingLotData();" checked=""> Show Picked Orders before/after Date
+						</div>
+					</td>
+					<td> </td>
+					<td> </td>
+				
+				</tr>
+				<tr>
+					<td width="150" rowspan="2">For DMS Location</td>
+					<td rowspan="2"><select name="cbDmsLoc" id="cbDmsLoc" style="width: 100px">
+							
+								
+									
+									
+										<option value="19SU">9SU</option>
+									
+								
+							
+					</select></td>
+
+					<td width="275" colspan="2">
+						<div align="left">
+							<input type="radio" name="orderType" value="O" onclick="if (!window.__cfRLUnblockHandlers) return false; ShowOrders(&quot;O&quot;);PostShowParkingLotData();"> Show Open
+							Orders before/after Date
+						</div>
+					</td>
+					<td rowspan="2"><input type="text" name="txtDeliveryDate" value="02-08-2026" style="width: 100px" onfocus="if (!window.__cfRLUnblockHandlers) return false; showCalendarControl(this);"></td>
+					<td width="150" rowspan="2"><select name="cbDays" style="width: 140px">
+							
+								
+									
+									
+										<option value="1">within last 1
+											&nbsp;Days</option>
+									
+								
+							
+								
+									
+									
+										<option value="15">within last 15
+											&nbsp;Days</option>
+									
+								
+							
+								
+									
+									
+										<option value="30">within last 30
+											&nbsp;Days</option>
+									
+								
+							
+								
+									
+									
+										<option value="45">within last 45
+											&nbsp;Days</option>
+									
+								
+							
+								
+									
+									
+										<option value="90">within last 90
+											&nbsp;Days</option>
+									
+								
+							
+								
+									
+										<option value="120" selected="">within last
+											120 &nbsp;Days</option>
+									
+									
+								
+							
+					</select></td>
+				</tr>
+				<tr>
+					<td colspan="2">
+						<div align="left">
+							<input type="radio" name="orderType" value="P" onclick="if (!window.__cfRLUnblockHandlers) return false; ShowOrders(&quot;P&quot;);PostShowParkingLotData();"> Show
+							Processed Orders before/after Date
+						</div>
+					</td>
+				</tr>
+
+				<tr>
+					<td colspan="6">Filter for: &nbsp;&nbsp;&nbsp;&nbsp; <input type="checkbox" name="chkShowWillCall" checked="">
+						Will Call &nbsp;&nbsp;&nbsp;&nbsp; <input type="checkbox" name="chkShowReturnCommonCarrier" checked=""> Return - Common Carrier
+						&nbsp;&nbsp;&nbsp;&nbsp; <input type="checkbox" name="chkShowReturnCustomer" checked="">
+						Return - Customer
+						&nbsp;&nbsp;&nbsp;&nbsp; <input type="checkbox" name="chkShowASISCommonCarrier" checked="">
+						ASIS - Common Carrier
+					</td>
+				</tr>
+
+				<tr>
+					<td> CSO: <input type="text" name="txtCSO" value="" size=""> </td>
+					<td><input type="button" id="dms_button" onclick="if (!window.__cfRLUnblockHandlers) return false; PostShowParkingLotData();" value="Search"></td>
+					<td colspan="1">Show only rows containing</td>
+					<td style="border: 0px"> <input name="filter" style="width: 250px;" class="textbox" onkeyup="if (!window.__cfRLUnblockHandlers) return false; filter2(this, 'table_list'); stripe('table_list');" onfocus="if (!window.__cfRLUnblockHandlers) return false; hideCalendarControl();" type="text">
+					</td>
+
+					<td colspan="2">&nbsp;</td>
+				</tr>
+
+			</tbody>
+			<tfoot style="border-top:thin solid;">
+				<tr>
+					<td colspan="6">&nbsp;&nbsp;&nbsp;</td>
+				</tr>
+				<tr>
+				<td colspan="5" align="right" style="vertical-align:top">&nbsp;Signed by: Name</td>
+				<td>				
+				
+					<input type="text" name="signedByName" id="signedByName" value="" maxlength="14" style="width:100px">
+				
+				</td>
+				</tr>				
+			</tfoot>
+		</table>
+
+
+		<br>		
+		 <table width="1000" align="center" class="selectionTable">
+			 <tbody><tr style="height: 30px;">
+					<td width="100%" colspan="5" align="center" class="message">
+						<div id="parkinglotResult"></div>
+					</td>
+				</tr>
+			<tr style="height: 10px;">
+			</tr>
+		</tbody></table>
+
+		
+			
+				<center>
+					<input type="button" id="dms_button" name="dms_noExceptionButton_bottom" onclick="if (!window.__cfRLUnblockHandlers) return false; checkInWithOutException('0');" value="Check In:NO EXCEPTION">
+					<!-- <input type='button' ID='dms_button'  onClick='PostAssign();' value='Move to Manifest'/> -->
+					<input type="button" id="dms_button" onclick="if (!window.__cfRLUnblockHandlers) return false; pdfDownload()" value="Print Pick List"> <input type="hidden" name="totalLineCount" value="4">
+					<input type="button" id="dms_button" name="dms_button_pod" onclick="if (!window.__cfRLUnblockHandlers) return false; podPDFDownload();" value="Print POD">	
+					<input type="button" id="dms_button" name="dms_button_pod" onclick="if (!window.__cfRLUnblockHandlers) return false; podPDFLabels();" value="Print Labels">
+					<input type="button" id="dms_button" name="dms_button_pod" onclick="if (!window.__cfRLUnblockHandlers) return false; printSelctedBols();" value="Print BOL">
+				</center>
+			
+		
+
+		<br>
+		<center>To SORT data, click on the column headings - to
+			Select ALL, click on the Select heading</center>
+
+			<table id="table_list" class="sortable_stripes" border="1" align="center" cellpadding="1" cellspacing="0">
+				<thead class="dataTableHeader">
+				<tr>
+					
+						
+							<th onclick="if (!window.__cfRLUnblockHandlers) return false; OnClickSelectAll();"><a href="#" style="color: #FFFFFF; text-decoration: None;" class="sortheader" onclick="ts_resort_stripe_table(this, 0);return false;">Select<span class="sortarrow">&nbsp;&nbsp;&nbsp;</span></a></th>
+						
+						
+					
+
+					<th><a href="#" style="color: #FFFFFF; text-decoration: None;" class="sortheader" onclick="ts_resort_stripe_table(this, 1);return false;">Delivery Date<span class="sortarrow">&nbsp;&nbsp;&nbsp;</span></a></th>
+					<th><a href="#" style="color: #FFFFFF; text-decoration: None;" class="sortheader" onclick="ts_resort_stripe_table(this, 2);return false;">Arrival Date<span class="sortarrow">&nbsp;&nbsp;&nbsp;</span></a></th>
+					<th><a href="#" style="color: #FFFFFF; text-decoration: None;" class="sortheader" onclick="ts_resort_stripe_table(this, 3);return false;">Status<span class="sortarrow">&nbsp;&nbsp;&nbsp;</span></a></th>
+					<th><a href="#" style="color: #FFFFFF; text-decoration: None;" class="sortheader" onclick="ts_resort_stripe_table(this, 4);return false;">CSO<span class="sortarrow">&nbsp;&nbsp;&nbsp;</span></a></th>
+					<th><a href="#" style="color: #FFFFFF; text-decoration: None;" class="sortheader" onclick="ts_resort_stripe_table(this, 5);return false;">Delivery ID<span class="sortarrow">&nbsp;&nbsp;&nbsp;</span></a></th>
+					<th><a href="#" style="color: #FFFFFF; text-decoration: None;" class="sortheader" onclick="ts_resort_stripe_table(this, 6);return false;">Customer<span class="sortarrow">&nbsp;&nbsp;&nbsp;</span></a></th>
+					<th><a href="#" style="color: #FFFFFF; text-decoration: None;" class="sortheader" onclick="ts_resort_stripe_table(this, 7);return false;">Zip<span class="sortarrow">&nbsp;&nbsp;&nbsp;</span></a></th>
+					<th><a href="#" style="color: #FFFFFF; text-decoration: None;" class="sortheader" onclick="ts_resort_stripe_table(this, 8);return false;">Group<span class="sortarrow">&nbsp;&nbsp;&nbsp;</span></a></th>
+					<th><a href="#" style="color: #FFFFFF; text-decoration: None;" class="sortheader" onclick="ts_resort_stripe_table(this, 9);return false;">Type<span class="sortarrow">&nbsp;&nbsp;&nbsp;</span></a></th>
+					<th><a href="#" style="color: #FFFFFF; text-decoration: None;" class="sortheader" onclick="ts_resort_stripe_table(this, 10);return false;">Action<span class="sortarrow">&nbsp;&nbsp;&nbsp;</span></a></th>
+				</tr>
+			</thead>
+
+
+			<tbody>
+
+				
+
+				
+			</tbody>
+		</table>
+
+
+		<input type="hidden" name="lineNumber"> <br>
+		
+			
+				<center>
+					<input type="button" id="dms_button" name="dms_noExceptionButton_bottom" onclick="if (!window.__cfRLUnblockHandlers) return false; checkInWithOutException('0');" value="Check In:NO EXCEPTION">
+					<input type="button" id="dms_button" onclick="if (!window.__cfRLUnblockHandlers) return false; pdfDownload()" value="Print Pick List"> <input type="hidden" name="totalLineCount">
+					<input type="button" id="dms_button" name="dms_button_pod" onclick="if (!window.__cfRLUnblockHandlers) return false; podPDFDownload();" value="Print POD">
+					<input type="button" id="dms_button" name="dms_button_pod" onclick="if (!window.__cfRLUnblockHandlers) return false; podPDFLabels();" value="Print Labels">	
+					<input type="button" id="dms_button" name="dms_button_pod" onclick="if (!window.__cfRLUnblockHandlers) return false; printSelctedBols();" value="Print BOL">
+				</center>
+			
+		
+
+		<input type="hidden" value="-1" name="totMARecCount">
+		<input type="hidden" name="totalRecCount" id="totalRecCount" value="0">
+	</form>
+	
+
+
+<div class="ui-dialog ui-widget ui-widget-content ui-corner-all ui-front ui-dialog-buttons ui-draggable ui-resizable" tabindex="-1" role="dialog" aria-describedby="alertDlg" aria-labelledby="ui-id-1" style="display: none; position: absolute;"><div class="ui-dialog-titlebar ui-widget-header ui-corner-all ui-helper-clearfix ui-draggable-handle"><span id="ui-id-1" class="ui-dialog-title">ALERT</span><button type="button" class="ui-button ui-widget ui-state-default ui-corner-all ui-button-icon-only ui-dialog-titlebar-close" role="button" title="Close"><span class="ui-button-icon-primary ui-icon ui-icon-closethick"></span><span class="ui-button-text">Close</span></button></div><div id="alertDlg" class="ui-dialog-content ui-widget-content"></div><div class="ui-dialog-buttonpane ui-widget-content ui-helper-clearfix"><div class="ui-dialog-buttonset"><button type="button" class="ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only" role="button"><span class="ui-button-text">OK</span></button></div></div><div class="ui-resizable-handle ui-resizable-n" style="z-index: 90;"></div><div class="ui-resizable-handle ui-resizable-e" style="z-index: 90;"></div><div class="ui-resizable-handle ui-resizable-s" style="z-index: 90;"></div><div class="ui-resizable-handle ui-resizable-w" style="z-index: 90;"></div><div class="ui-resizable-handle ui-resizable-se ui-icon ui-icon-gripsmall-diagonal-se" style="z-index: 90;"></div><div class="ui-resizable-handle ui-resizable-sw" style="z-index: 90;"></div><div class="ui-resizable-handle ui-resizable-ne" style="z-index: 90;"></div><div class="ui-resizable-handle ui-resizable-nw" style="z-index: 90;"></div></div></body></html>

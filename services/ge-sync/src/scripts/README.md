@@ -8,35 +8,19 @@ Scripts for exploring and documenting the GE Dealer Management System.
 
 ## Available Scripts
 
-### `exploreLink.ts`
+### `catalogExplore.ts`
 
-Navigate to a GE DMS page by clicking a dashboard link.
+Navigate the GE DMS catalog by URL and capture HTML/text/screenshots to `.ge-dms-archive/`.
 
 **Usage**:
 ```bash
-npx tsx src/scripts/exploreLink.ts "Link Text"
-```
-
-**Examples**:
-```bash
-npx tsx src/scripts/exploreLink.ts "ASIS"
-npx tsx src/scripts/exploreLink.ts "Order Download"
-npx tsx src/scripts/exploreLink.ts "Check In - Audit"
+npx tsx src/scripts/catalogExplore.ts
 ```
 
 **What it does**:
 1. Authenticates with GE SSO using credentials from Supabase
-2. Navigates to GE DMS dashboard
-3. Clicks the specified link text
-4. Takes full-page screenshot → `/tmp/ge-{timestamp}.png`
-5. Saves page content (text) → `/tmp/ge-content-{timestamp}.txt`
-6. Detects export buttons (Spreadsheet, Excel, CSV, Download)
-7. Keeps browser open for continued exploration
-
-**Notes**:
-- Browser stays open - press Ctrl+C to close
-- Detects new tab opens (some links open external pages)
-- Link text must match exactly (case-sensitive)
+2. Loads all URLs from `docs/ge-sync/GE_DMS_PAGES.md`
+3. Captures screenshot + HTML + text per page
 
 ---
 
@@ -70,25 +54,9 @@ npx tsx src/scripts/navigateDirect.ts "/dms/checkin/downloadsindex"
 
 ---
 
-### `navigateTo.ts`
-
-Legacy script - template for custom navigation logic.
-
-**Purpose**: Historical reference, not actively used.
-
-**Contains**: Example navigation to "ERP On Hand Qty" with multiple selector attempts.
-
-**Use**: Modify for custom exploration needs.
-
----
-
 ### `explore.ts`
 
 Generic exploration template.
-
-**Purpose**: Base template for custom exploration scripts.
-
-**Contains**: Authentication + page documentation helper functions.
 
 **Use**: Copy and modify for specific exploration tasks.
 
@@ -96,13 +64,13 @@ Generic exploration template.
 
 ## Output Files
 
-All scripts output to `/tmp/` directory:
+All scripts output to `.ge-dms-archive/`:
 
-- **Screenshots**: `/tmp/ge-{timestamp}.png`
+- **Screenshots**: `.ge-dms-archive/ge-{timestamp}.png`
   - Full-page PNG screenshot
   - Includes all visible content (may be very tall)
 
-- **Page Content**: `/tmp/ge-content-{timestamp}.txt`
+- **Page Content**: `.ge-dms-archive/ge-content-{timestamp}.txt`
   - Extracted text content from `document.body.innerText`
   - Useful for searching/analyzing page structure
   - Does not include HTML markup
@@ -110,10 +78,10 @@ All scripts output to `/tmp/` directory:
 **Cleanup**:
 ```bash
 # List recent exploration files
-ls -lt /tmp/ge-* | head -20
+ls -lt .ge-dms-archive | head -20
 
 # Clean up old files (optional)
-rm /tmp/ge-*.png /tmp/ge-content-*.txt
+rm .ge-dms-archive/*.png .ge-dms-archive/*.txt
 ```
 
 ---
@@ -123,7 +91,7 @@ rm /tmp/ge-*.png /tmp/ge-content-*.txt
 All scripts authenticate using credentials from Supabase:
 
 1. **Environment**: `.env` file must have `SUPABASE_URL` and `SUPABASE_SERVICE_KEY`
-2. **Database**: `location_configs` table must have entry for location ID `00000000-0000-0000-0000-000000000001`
+2. **Database**: `settings` table must have entry for location ID `00000000-0000-0000-0000-000000000001`
 3. **Fields**: `ssoUsername` and `ssoPassword` must be populated
 
 **Verify credentials**:
@@ -132,7 +100,7 @@ cd services/ge-sync
 npx tsx -e "import { getLocationConfig } from './src/db/supabase.js'; getLocationConfig('00000000-0000-0000-0000-000000000001').then(c => console.log('✅ Found:', !!c.ssoUsername, !!c.ssoPassword))"
 ```
 
-If credentials missing, see `../../docs/auth.md` for setup.
+If credentials are missing, see `../../docs/ge-sync/SECRETS.md` for setup.
 
 ---
 
@@ -154,28 +122,9 @@ browser = await chromium.launch({
 - Useful for automated runs
 - Cannot visually debug issues
 
-### Browser Stays Open
+### Browser Lifecycle
 
-All scripts keep browser open with:
-```typescript
-await new Promise(() => {}); // Infinite wait
-```
-
-**Why**: Allows continued exploration without re-authenticating.
-
-**To close**: Press Ctrl+C in terminal.
-
-**Check for orphaned browsers**:
-```bash
-ps aux | grep chromium | grep headless=false
-```
-
-**Kill all test browsers**:
-```bash
-pkill -f "chromium.*headless=false"
-```
-
----
+Scripts may keep the browser open depending on the task. Use Ctrl+C to close.
 
 ## Export Button Detection
 
@@ -289,5 +238,16 @@ npx tsx src/scripts/your-script.ts
 
 - **EXPLORATION_GUIDE.md** - Complete exploration workflow
 - **GE_DMS_PAGES.md** - Catalog of documented pages
-- **GE_DMS_SYSTEM_OVERVIEW.md** - Business processes and terminology
-- **auth.md** - Credential setup instructions
+- **GE_ENDPOINT_FIELDS.md** - Field mapping reference
+- **SECRETS.md** - Credential setup instructions
+
+## Audience Notes
+
+### For Developers
+- Use this to run exploration scripts safely.
+
+### For Operators
+- This is internal tooling, not daily workflow documentation.
+
+### For Agent
+- Use only for exploration process guidance.

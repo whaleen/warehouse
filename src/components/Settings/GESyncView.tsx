@@ -1,18 +1,19 @@
 import { AppHeader } from "@/components/Navigation/AppHeader";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { RefreshCw, Database, Package, Truck, ClipboardList } from "lucide-react";
+import { RefreshCw, Database, Package, Truck, ClipboardList, Archive } from "lucide-react";
 import { useState } from "react";
 import { PageContainer } from "@/components/Layout/PageContainer";
 import { getActiveLocationContext } from "@/lib/tenant";
 import { useGeSync } from "@/hooks/queries/useGeSync";
+import { syncBackhaul } from "@/lib/geSync";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 interface GESyncViewProps {
   onMenuClick?: () => void;
 }
 
-type SyncType = "asis" | "fg" | "sta" | "inbound" | "inventory";
+type SyncType = "asis" | "fg" | "sta" | "inbound" | "inventory" | "backhaul";
 
 interface SyncStatus {
   type: SyncType;
@@ -38,6 +39,7 @@ export function GESyncView({ onMenuClick }: GESyncViewProps) {
     fg: { type: "fg", loading: false, success: null, error: null },
     sta: { type: "sta", loading: false, success: null, error: null },
     inbound: { type: "inbound", loading: false, success: null, error: null },
+    backhaul: { type: "backhaul", loading: false, success: null, error: null },
   });
   const geSyncMutation = useGeSync();
 
@@ -63,7 +65,9 @@ export function GESyncView({ onMenuClick }: GESyncViewProps) {
     }));
 
     try {
-      const result = await geSyncMutation.mutateAsync({ type, locationId });
+      const result = type === "backhaul"
+        ? await syncBackhaul(locationId, { includeClosed: true })
+        : await geSyncMutation.mutateAsync({ type, locationId });
       setSyncStatuses((prev) => ({
         ...prev,
         [type]: {
@@ -95,7 +99,8 @@ export function GESyncView({ onMenuClick }: GESyncViewProps) {
     type: SyncType,
     title: string,
     description: string,
-    icon: typeof Database
+    icon: typeof Database,
+    footer?: string
   ) => {
     const status = syncStatuses[type];
     const Icon = icon;
@@ -131,6 +136,12 @@ export function GESyncView({ onMenuClick }: GESyncViewProps) {
                 <span className="text-muted-foreground">Changes Logged:</span>
                 <span className="font-medium">{status.stats.changesLogged}</span>
               </div>
+            </div>
+          )}
+
+          {footer && (
+            <div className="rounded-lg border border-border/40 bg-muted/20 p-3 text-xs text-muted-foreground">
+              {footer}
             </div>
           )}
 
@@ -257,6 +268,14 @@ export function GESyncView({ onMenuClick }: GESyncViewProps) {
           {renderSyncCard("sta", "Staged Inventory", "Sync staged items for delivery", Truck)}
 
           {renderSyncCard("inbound", "Inbound Receipts", "Sync inbound receiving reports", ClipboardList)}
+
+          {renderSyncCard(
+            "backhaul",
+            "Backhaul Orders",
+            "Sync open backhaul orders + initial historical snapshot",
+            Archive,
+            "Includes closed backhauls once, then keeps open orders up to date."
+          )}
         </div>
       </PageContainer>
     </div>

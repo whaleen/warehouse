@@ -1,0 +1,526 @@
+<html><head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Track and Trace</title>
+
+<!-- <link rel="stylesheet"
+	href="https://code.jquery.com/ui/1.11.1/themes/smoothness/jquery-ui.css"></link> -->
+	<link rel="stylesheet" type="text/css" href="/dms/resources/style/jquery-ui.css">
+<!-- <script src="https://code.jquery.com/jquery-1.10.2.js"></script> -->
+<script type="text/javascript" src="/dms/resources/js/jquery-1.10.2.js"></script>
+<!-- <script src="https://code.jquery.com/ui/1.11.1/jquery-ui.js"></script> -->
+<script type="text/javascript" src="/dms/resources/js/jquery-ui.js"></script>
+
+<script src="/dms/resources/js/FormTableSort.js" language="javascript" type="text/javascript"></script>
+<script src="/dms/resources/js/TableSearch.js" language="javascript" type="text/javascript"></script>
+<script src="/dms/resources/js/StripedTable.js" language="javascript" type="text/javascript"></script>
+<script src="/dms/resources/js/jqueryajaxcommon.js" language="javascript" type="text/javascript"></script>
+<script src="/dms/resources/js/CalendarControl.js" language="javascript" type="text/javascript"></script></head>
+
+
+<body onload="orderTypeLoad();" style=""><iframe id="CalendarControlIFrame" frameborder="0" scrolling="no"></iframe><div id="CalendarControl"></div>
+<!-- <link rel="stylesheet" href="/dms/web/resources/style/checkin.css"></link> -->
+<link rel="stylesheet" href="/dms/resources/style/CalendarControl.css">
+<link href="/dms/resources/style/Dms.css" rel="stylesheet" type="text/css">
+	
+<script type="text/javascript">
+	history.forward();
+</script>
+
+<script type="text/javascript">
+	$(document).ready(function(){
+	hidePleaseWait();
+	stripe('table_list');
+});
+</script>
+
+	
+<script type="text/javascript">
+
+	function orderTypeLoad() {
+		var orderTypeSelected = document.trackTraceFrm.orderTypeSelected.value;
+		var url = "/dms/tracktrace/orderType?dmsLoc="
+				+ document.trackTraceFrm.hDmsLoc.value;
+		$.getJSON(url, function(data) {
+			var options = document.getElementById('orderType');
+			$('#orderType').empty();
+			$('#orderType').append("<option  value=''>.....</option>");
+			for (var i = 0, len = data.length; i < len; i++) {
+				var option = document.createElement("option");
+				option.text = data[i].scheduleCode + " - "
+						+ data[i].scheduleType;
+				option.value = data[i].scheduleCode;
+				if(data[i].scheduleCode == orderTypeSelected){
+					option.selected = true;
+				}
+				
+				try {
+					options.add(option, null); //Standard 
+				} catch (error) {
+					options.add(option); // IE only
+				}
+			}
+
+		});
+	}
+	function SearchTrack() {
+		var isError = "false";
+		var msNo = document.trackTraceFrm.msNumber.value;
+		var custPo = document.trackTraceFrm.customerPo.value;
+		//var custOrdr = document.trackTraceFrm.consumerOrder.value;
+		var ph = document.trackTraceFrm.phone.value;
+		var zip = document.trackTraceFrm.zipCode.value;
+		var deliveryDate = document.trackTraceFrm.deliveryDateSearch.value;
+		//var showOnlyrows = document.trackTraceFrm.showOnlyRowsContain.value;
+		var dmsloc = document.trackTraceFrm.dmsLoc.value;
+		var startDate = document.trackTraceFrm.currentdate.value;
+		var days = document.trackTraceFrm.daysToSerach.value;
+		var ordertype = document.trackTraceFrm.orderType.value;
+		var cstCode = document.trackTraceFrm.custCode.value;
+		var searchString = document.trackTraceFrm.searchStringForAddress.value;
+		var strOrderNumber = msNo;
+		var strCustPoNumber = custPo;
+		//var strConsumerOrderNumber = custOrdr;
+		var strDeliveryPhone = ph;
+		var strShiptoZip = zip;
+		var strDeliveryDate = startDate;
+		var strDmsLoc = dmsloc;
+		var strCustCode = cstCode;
+		var strOrderType = ordertype;
+		var strDeliveryDateFrom = days;
+		var strDeliveryDateTo = startDate;
+		var strAddressSearch = searchString;
+		var strtrackingNumber = document.trackTraceFrm.trackingNumber.value;
+		var strSearchNotCheckedInChk = document.trackTraceFrm.searchNotCheckedIn.checked;
+		var strDeliveryId = document.trackTraceFrm.deliveryid.value;
+
+		
+		if(strSearchNotCheckedInChk==true){
+			document.trackTraceFrm.hSearchNotCheckedIn.value="true";
+		}else{
+			document.trackTraceFrm.hSearchNotCheckedIn.value="false";
+		}		
+
+		if ((strOrderNumber == '') && (strCustPoNumber == '') 
+				&& (strDeliveryPhone == '')
+				&& ($.trim($("#deliveryDateSearch").val()) == '') && (strShiptoZip == '')
+				&& (strAddressSearch == '') && (strCustCode == '')
+				&& (strDmsLoc == '') && (strDeliveryDateFrom == '')
+				&& (strOrderType == '') && (strtrackingNumber == '') && (strDeliveryId=='')) {
+			alert("Please enter Search Criteria before clicking on the Search button");
+			isError = "true";
+			return false;
+		}
+		if ((strAddressSearch != '')
+				&& (((strDmsLoc == '') || (strDeliveryDateFrom == '') || (strDeliveryDateTo == '')) && ((strDmsLoc == '')
+						|| (strOrderType == '') || (strDeliveryDateFrom == '') || (strDeliveryDateTo == '')))) {
+			alert("To Search using \"Search String for Address\", use the following combinations: \nEnter Dms Loc, Start Date for Search and Days to Search OR \nEnter Dms Loc, Start Date for Search, Days to Search and Specify an Order Type");
+			isError = "true";
+			return false;
+
+		}
+
+		if (strCustCode != ''
+				&& (strDmsLoc == '' || strDeliveryDateFrom == '' || strDeliveryDateTo == '')) {
+			alert("To Search Using Cust Code, please Select a Dms Loc, specify Start Date for Search & Days to Search");
+			isError = "true";
+			return false;
+
+		}
+
+		if (strOrderType != '' && strDmsLoc != ''
+				&& (strDeliveryDateFrom == '' || strDeliveryDateTo == '')) {
+			alert("Please specify Start Date for Search, Days to Search, to Search using Dms Loc & Order Type");
+			isError = "true";
+			return false;
+		}
+
+		if ((strAddressSearch == '') && (strDmsLoc != '')
+				&& (strDeliveryDateFrom == '' || strDeliveryDateTo == '')) {
+			alert("To Search using Dms Loc, make sure you specify Start Date for Search & Days to Search");
+			isError = "true";
+			return false;
+		}
+
+		if (strDeliveryDateFrom != '' && strDeliveryDateTo != ''
+				&& strDmsLoc == '') {
+			alert("To Search using Delivery Dates, please specify the Dms Loc");
+			isError = "true";
+			return false;
+		}
+		if (isError == "false") {
+			showPleaseWait();
+			
+			document.trackTraceFrm.htrackingNumber.value = document.trackTraceFrm.trackingNumber.value;
+			document.trackTraceFrm.hdeliveryid.value = document.trackTraceFrm.deliveryid.value; 
+			document.trackTraceFrm.action = "/dms/tracktrace/searchTrack";
+			document.trackTraceFrm.target = "_self";
+			document.trackTraceFrm.method = "POST";
+			document.trackTraceFrm.submit();
+
+		}
+		
+
+		
+		
+
+	}
+	function reloadOrderType() {
+		var url = "/dms/tracktrace/orderType?dmsLoc="
+				+ document.trackTraceFrm.dmsLoc.value;
+		$.getJSON(url, function(data) {
+			var options = document.getElementById('orderType');
+			$('#orderType').empty();
+			$('#orderType').append("<option  value=''>.....</option>");
+			for (var i = 0, len = data.length; i < len; i++) {
+				var option = document.createElement("option");
+				option.text = data[i].scheduleCode + " - "
+						+ data[i].scheduleType;
+				option.value = data[i].scheduleCode;
+				try {
+					options.add(option, null); //Standard 
+				} catch (error) {
+					options.add(option); // IE only
+				}
+			}
+
+		});
+	}
+	history.forward();
+	function SearchOrder(ordernum,deliveryNumber,truckNumber,dmsLoc) {
+		//alert("test" + ordernum);
+		//var ordernum = document.trackTraceFrm.orderNumber.value;
+		document.trackTraceFrm.msNumber.value = ordernum;
+		document.trackTraceFrm.hTruckNumber.value = truckNumber;
+		document.trackTraceFrm.hDmsLocVal.value = dmsLoc;
+		//alert("document.trackTraceFrm.msNumber.value"+document.trackTraceFrm.msNumber.value);
+		document.trackTraceFrm.deliveryNumber.value = deliveryNumber;
+		document.trackTraceFrm.action = "/dms/tracktrace/searchorder";
+		document.trackTraceFrm.target = "_blank";
+		document.trackTraceFrm.method = "POST";
+		document.trackTraceFrm.submit();
+
+	}
+	//added for sticky notes
+	function submitOrderNumberNotes(strDeliveryNumber, strAgentNoteInd) {
+		document.getElementById("deliveryNumber").value = strDeliveryNumber;
+		document.getElementById("agentNoteInd").value = strAgentNoteInd;
+		document.trackTraceFrm.target = "_blank";
+		document.trackTraceFrm.action = "/dms/meettruck/addNote";
+		document.trackTraceFrm.method = "POST";
+		document.trackTraceFrm.submit();
+
+	}
+	function TrackDetailMain(lineNo) {
+		document.getElementById("deliveryNumber").value = document
+				.getElementById("deliveryNum_" + lineNo).value;
+		document.getElementById("orderNumber").value = document
+				.getElementById("orderNumber_" + lineNo).value;
+		document.getElementById("deliveryDate").value = document
+				.getElementById("deliveryDate_" + lineNo).value;
+		document.getElementById("hDmsLoc").value = document
+				.getElementById("hDmsLoc" + lineNo).value;
+		document.getElementById("htrackingNumber").value = document
+				.getElementById("trackingNumber_" + lineNo).value;		
+		document.trackTraceFrm.action = "/dms/tracktrace/trackDetailMain";
+		document.trackTraceFrm.target = "_blank";
+		document.trackTraceFrm.method = "POST";
+		document.trackTraceFrm.submit();
+	}
+	function alphanumericFilter(txb) {
+		txb.value = txb.value.replace(/[^[a-zA-Z0-9]+$/, "");
+	}
+	function clearDiv() {
+		document.getElementById("trackResult").innerHTML = "<h2><center>Please enter SEARCH CRITERIA and click the SEARCH button to get a list of orders .</center></h2>";
+
+		document.getElementById("msNumber").value = "";
+		document.getElementById("trackingNumber").value = "";
+		document.getElementById("customerPo").value = "";
+		document.getElementById("phone").value = "";
+		document.getElementById("zipCode").value = "";
+		document.getElementById("deliveryDateSearch").value = "";
+		document.getElementById("currentdate").value = document
+				.getElementById("hCurrentDate").value;
+		document.getElementById("custCode").value = "";
+		document.getElementById("searchStringForAddress").value = "";
+		document.getElementById("deliveryid").value = "";
+		document.getElementById("searchNotCheckedIn").checked = false;
+
+		var selects = document.getElementsByTagName('select');
+		var bolDmsLocSet = "false";
+		var nDmsLocIndex = 0;
+		for (var k = 0; k < selects.length; k++) {
+			var select = selects[k];
+			select.options[0].selected = true;
+
+			if (select.id == "dmsLoc") {
+				document.trackTraceFrm.hDmsLoc.value = "";
+				orderTypeLoad();
+			}
+		}
+	}
+
+	function funRGA(lineNo) {
+		document.getElementById("deliveryNumber").value = document.getElementById("deliveryNum_" + lineNo).value;
+		document.getElementById("orderNumber").value = document.getElementById("orderNumber_" + lineNo).value;
+		document.getElementById("deliveryDate").value = document.getElementById("deliveryDate_" + lineNo).value;
+		document.trackTraceFrm.action = "/dms/tracktrace/createRGAHome/";
+		document.trackTraceFrm.target = "_blank";
+		document.trackTraceFrm.method = "POST";
+		document.trackTraceFrm.submit();
+
+	}
+	
+	function customerServiceAction(orderNumber,deliveryNumber,truckNumber,dmsLoc){
+		document.trackTraceFrm.orderNumber.value = orderNumber;
+		document.trackTraceFrm.deliveryNumber.value = deliveryNumber;
+		document.trackTraceFrm.hTruckNumber.value = truckNumber;
+		document.trackTraceFrm.hDmsLocVal.value = dmsLoc;
+		document.trackTraceFrm.action = "/dms/tracktrace/customerserviceaction/";
+		document.trackTraceFrm.target = "_blank";
+		document.trackTraceFrm.method = "POST";
+		document.trackTraceFrm.submit();
+	}
+	
+	function checkForChar(s)
+	{
+		   var alphaBetStr = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+		   var inputString = s.value;
+		   if(inputString.length>0)
+		   {
+			   for(i=0;i<inputString.length;++i)
+			   {
+				   var c =inputString.charAt(i);
+				   console.log(c);
+				   if(alphaBetStr.indexOf(c)!=-1)
+				   {
+						console.log("remove last character");
+						s.value = inputString.substr(0,inputString.length-1);
+				   }
+			   }
+			   
+		   }
+		   else
+		   {
+			   console.log(inputString)
+			   if(alphaBetStr.indexOf(inputString)!=-1)
+			   {
+					s.value = "";
+			   }			   
+
+		   }
+	}	
+	
+</script>
+<script type="text/javascript">
+window.onload=function(){
+	stripeYellow();
+	};
+	 function stripeYellow(){
+		   var authority = document.getElementById("strGeDmsAuthority").value;
+		   if(authority == "AGENT"){
+		   	   var manifestTable = document.getElementsByTagName("table");
+			   for (var i = 1, row; row = manifestTable[4].rows[i]; i++) {
+				   for (var j = 0, col; col = row.cells[j]; j++) {
+					   if(col.innerHTML.indexOf("*YES*") > -1){
+						   col.style.backgroundColor = "yellow";
+					   }
+				   }
+			   }
+		   }
+	   }
+	/* function stripeYellow(){
+		   var authority = document.getElementById("strGeDmsAuthority").value;
+		   if(authority == "AGENT"){
+			   var tableData = document.getElementsByName("table_list");
+			   if(tableData == "[object NodeList]"){ // Chrome
+				   var trackSearchTable = document.getElementsByTagName("table");
+				   for (var i = 1, row; row = trackSearchTable[4].rows[i]; i++) {
+					   for (var j = 0, col; col = row.cells[j]; j++) {
+						   var content = col.innerHTML.trim();
+						   if(content.indexOf("*YES*") >-1){
+							   col.style.backgroundColor = "yellow";
+						   }else if(content.indexOf("Add Note") >-1){
+							   //col.style.backgroundColor = "yellow";
+						   }
+					   }
+				   }
+			   }else if(tableData == "[object]"){ // IE
+				   var cellData = tableData[0].rows[1].cells[12];
+				   if(cellData.innerHTML.indexOf("*YES*")>-1){
+					   cellData.style.backgroundColor = "yellow";
+				   }else if(cellData.innerHTML.indexOf("Add Note")>-1){
+					   //cellData.style.backgroundColor = "yellow";
+				   }
+			   }
+		   }
+	   } */
+
+</script>
+
+
+<!-- Header Begins -->
+
+	
+
+<script type="text/javascript">
+jQuery(document).ready(function($) {
+    window.history.pushState('forward', null, null); 
+    $(window).on('popstate', function() {
+       history.pushState(null, null, window.location.pathname);
+    }); 
+    
+});
+
+</script>
+
+<table class="messageHeader" border="0" align="center" width="100%">
+	<tbody><tr>
+		<td width="30%" style="color:#000000;"><b>Track &amp; Trace</b></td>
+		
+		<td align="center"></td>
+				<td align="center">
+			
+				
+					
+					
+						
+							
+						
+						
+					
+					<a href="/dms/messages/messagetitledetail?&amp;type=TRACK" target="_blank"><b><font style="text-decoration: underline" color="RED">Having trouble with screen display or response?   </font></b></a>
+				
+				
+		</td>
+		<td align="right" width="20%" style="color:#000000;">Welcome &nbsp;<b><font color="red" id="usr_login_id">515511228</font></b>
+       		
+       			
+       			
+       				&nbsp;<b>AGENT</b>
+       			
+       		
+		</td>
+		
+			
+			
+			
+			<td align="right" width="5%">&nbsp;<b>|&nbsp;<a target="_BLANK" href="/dms/faqadmin/faqsearch" style="color:blue;">Help</a></b>
+			
+			
+		
+	</td></tr>
+</tbody></table>
+<!-- Header Ends -->   
+
+<br>
+	<form id="trackTraceFrm" name="trackTraceFrm" action="/dms/tracktrace" method="post">
+		<!-- <INPUT TYPE="HIDDEN" NAME="userid" VALUE="L742059"> -->
+		<input type="HIDDEN" name="userid" value="S002941">
+		<input type="hidden" name="deliveryNumber" id="deliveryNumber" value="">
+		<input type="hidden" name="orderNumber" id="orderNumber" value="">
+		<input type="hidden" name="htrackingNumber" id="htrackingNumber" value="">
+		<input type="hidden" name="hDmsLocVal" id="hDmsLocVal" value="">
+		<input type="hidden" name="deliveryDate" id="deliveryDate" value="">
+		<input type="hidden" name="hTruckNumber" id="hTruckNumber" value="">	
+		<input type="hidden" name="hDmsLoc" id="hDmsLoc" value="">
+		<input type="hidden" name="agentNoteInd" id="agentNoteInd" value="">
+		<input type="hidden" name="hCurrentDate" id="hCurrentDate" value="02-08-2026">
+		<input type="HIDDEN" name="strGeDmsAuthority" value="" id="strGeDmsAuthority">
+		<input type="hidden" name="orderTypeSelected" id="orderTypeSelected" value="">
+		<input type="hidden" name="hSearchNotCheckedIn" id="hSearchNotCheckedIn" value="">
+		<input type="hidden" name="hdeliveryid" id="hdeliveryid" value="">
+	<br>
+	<table align="center">
+	    <tbody><tr>
+			<td align="center"><div class="messageDisplay"></div></td>
+	    </tr>
+	</tbody></table>
+
+		<table border="1" id="table_header" align="center" width="66%" cellpadding="0" cellspacing="0" style="font-family: ge inspira, verdana; font-size: 12">
+			<thead>
+				<tr height="20">
+					<td colspan="8">SEARCH CRITERIA</td>
+				</tr>
+			</thead>
+			<tbody>
+				<tr>
+					<td width="100" align="center">CSO</td>
+					<td width="100" align="center">Delivery ID</td>
+					<td width="100" align="center">Tracking #</td>
+					<td width="100" align="center">Customer Po</td>
+					
+					<td width="100" align="center">Phone</td>
+					<td width="80" align="center">Zip Code</td>
+					<td width="100" align="center">Delivery Date</td>
+					<td width="100" align="center">Show&nbsp;only&nbsp;rows&nbsp;containing</td>
+				</tr>
+				<tr>
+					<td><input type="text" name="msNumber" id="msNumber" size="12" maxlength="10" value="" onfocus="if (!window.__cfRLUnblockHandlers) return false; hideCalendarControl();"></td>
+					<td><input type="text" name="deliveryid" id="deliveryid" size="12" maxlength="12" value="" onfocus="if (!window.__cfRLUnblockHandlers) return false; hideCalendarControl();"></td>
+					<td><input type="text" name="trackingNumber" id="trackingNumber" size="12" maxlength="10" value="" onfocus="if (!window.__cfRLUnblockHandlers) return false; hideCalendarControl();"></td>
+						<td><input type="text" name="customerPo" id="customerPo" value="" size="12" maxlength="50" onfocus="if (!window.__cfRLUnblockHandlers) return false; hideCalendarControl();"></td>
+					
+					<td><input type="text" name="phone" id="phone" value="" size="10" maxlength="20" onfocus="if (!window.__cfRLUnblockHandlers) return false; hideCalendarControl();" onkeyup="if (!window.__cfRLUnblockHandlers) return false; checkForChar(this)"></td>
+					<td><input type="text" name="zipCode" id="zipCode" value="" size="5" maxlength="5" onfocus="if (!window.__cfRLUnblockHandlers) return false; hideCalendarControl();"></td>
+					<td><input type="text" name="deliveryDateSearch" id="deliveryDateSearch" value="" style="width: 100px" onfocus="if (!window.__cfRLUnblockHandlers) return false; showCalendarControl(this)"></td>
+					<td><input name="filter" onkeyup="if (!window.__cfRLUnblockHandlers) return false; filter2(this, 'table_list'); stripe('table_list');yellow_note('table_list');" type="text" onfocus="if (!window.__cfRLUnblockHandlers) return false; hideCalendarControl();"></td> 
+				</tr>
+				<tr>
+					<td width="100" align="center">Inv Org</td>
+					<td width="100" align="center">Start Date<br>for Search
+					</td>
+					<td width="100" align="center">Days to search</td>
+					<td width="100" align="center">Order Type</td>
+					<td width="100" align="center">EBS Account#</td>
+					<td width="100" align="center"><div style="min-width:100px">Not Delivered <br> Or Cancelled</div></td>
+					<td align="center" colspan="2">Search String for
+						Address</td>
+				</tr>
+				<tr>
+					<td><select name="dmsLoc" id="dmsLoc" style="border: 1px solid #E2E2E2" size="1" onchange="if (!window.__cfRLUnblockHandlers) return false; reloadOrderType();" onfocus="if (!window.__cfRLUnblockHandlers) return false; hideCalendarControl();">
+							<option value="">.....</option>
+							
+								<option value="19SU">9SU</option>
+							
+					</select></td>
+					<td><input type="text" name="currentdate" id="currentdate" style="width: 100px" value="02-08-2026" onfocus="if (!window.__cfRLUnblockHandlers) return false; showCalendarControl(this);"></td>
+					<td><select style="width: 100px" name="daysToSerach" id="daysToSerach" onfocus="if (!window.__cfRLUnblockHandlers) return false; hideCalendarControl();">
+							<option value="">....</option>
+							<option value="5">....5 </option>
+							<option value="10">....10</option>
+							<option value="20">....20</option>
+							<option value="30">....30</option>
+							<option value="45">....45</option>
+							<option value="60">....60</option>
+							<option value="90">....90</option>
+							
+					</select></td>
+					
+					
+						<td width="5%" align="center"><select name="orderType" id="orderType" style="font-family: ge inspira, verdana; font-size: 12; width: 90" onfocus="if (!window.__cfRLUnblockHandlers) return false; hideCalendarControl();"><option value="">.....</option></select></td>
+					
+					<td><input type="text" size="10" maxlength="30" name="custCode" id="custCode" value="" onkeyup="if (!window.__cfRLUnblockHandlers) return false; alphanumericFilter(this)" onfocus="if (!window.__cfRLUnblockHandlers) return false; hideCalendarControl();"></td>
+				    <td>
+				    	<input type="checkbox" name="searchNotCheckedIn" id="searchNotCheckedIn">
+				    </td>
+					<td colspan="2"><input type="text" name="searchStringForAddress" id="searchStringForAddress" value="" style="width: 250px" onfocus="if (!window.__cfRLUnblockHandlers) return false; hideCalendarControl();"></td>
+				</tr>
+			</tbody>
+			<tfoot class="dataTableHeader">
+				<tr height="30">
+					<td colspan="8" align="center"><input type="button" id="dms_button1" class="submitButton" enabled="" value="SEARCH" onclick="if (!window.__cfRLUnblockHandlers) return false; SearchTrack();"> &nbsp;&nbsp;&nbsp; <input id="dms_button1" class="submitButton" value="RESET" type="button" onclick="if (!window.__cfRLUnblockHandlers) return false; clearDiv();"></td>
+			</tr></tfoot>
+		</table>
+		
+	 <div id="trackResult">
+			<h2>
+				
+					<center>Please enter SEARCH CRITERIA and click the SEARCH button to get a list of orders .</center>
+				
+			</h2>
+	
+	 </div>
+	<div>
+</div></form>
+
+</body></html>

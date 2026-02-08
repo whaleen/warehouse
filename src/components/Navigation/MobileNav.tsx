@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Menu, X, ScanBarcode } from 'lucide-react';
+import { Menu, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Drawer, DrawerContent } from '@/components/ui/drawer';
 import { MobilePrimaryNav } from './MobilePrimaryNav';
@@ -61,7 +61,6 @@ export function MobileNav({ currentView, onViewChange }: MobileNavProps) {
   // Determine FAB icon based on context
   const getFabIcon = () => {
     if (activeSheet !== 'closed') return X;
-    if (currentView === 'sessions') return ScanBarcode;
     return Menu;
   };
 

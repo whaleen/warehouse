@@ -1,0 +1,319 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html><head>
+
+<script type="text/javascript">
+	history.forward();
+</script>
+<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<title>Inventory-On Hand Qty</title>
+<!-- <link rel="stylesheet" type="text/css" href="https://code.jquery.com/ui/1.11.1/themes/smoothness/jquery-ui.css" /> -->
+
+<!-- <script type="text/javascript" src="https://code.jquery.com/jquery-1.10.2.js"></script> -->
+<script type="text/javascript" src="/dms/resources/js/jquery-1.10.2.js"></script>
+<!-- <script type="text/javascript" src="https://code.jquery.com/ui/1.11.1/jquery-ui.js"></script> -->
+<script type="text/javascript" src="/dms/resources/js/jquery-ui.js"></script> 
+<script type="text/javascript" src="/dms/resources/js/CalendarControl.js"></script></head>
+<body link="blue" vlink="purple" alink="red" style=""><iframe id="CalendarControlIFrame" frameborder="0" scrolling="no"></iframe><div id="CalendarControl"></div>
+<script type="text/javascript" src="/dms/resources/js/DmsFunction.js"></script>
+<script type="text/javascript" src="/dms/resources/js/jqueryajaxcommon.js"></script>
+<script type="text/javascript" src="/dms/resources/js/FormTableSort.js"></script>
+<script type="text/javascript" src="/dms/resources/js/TableSearch.js"></script>
+<script type="text/javascript" src="/dms/resources/js/TableSelectAll.js"></script>
+<script type="text/javascript" src="/dms/resources/js/StripedTable.js"></script>
+<script type="text/javascript" src="/dms/resources/js/jqueryajaxcommon.js"></script>
+<script type="text/javascript" src="/dms/resources/js/gebackhaul.js"></script>
+
+<!-- CSS -->
+<link rel="stylesheet" type="text/css" href="/dms/resources/style/jquery-ui.css">
+<link rel="stylesheet" type="text/css" href="/dms/resources/style/style.css">
+<link rel="stylesheet" type="text/css" href="/dms/resources/style/Dms.css">
+<link rel="stylesheet" type="text/css" href="/dms/resources/style/CalendarControl.css">
+<link rel="stylesheet" type="text/css" href="/dms/resources/style/checkin.css">
+
+<script type="text/javascript">
+window.onload=function(){ 
+	stripe('table_list'); 
+	
+}
+
+$(function () {
+	hidePleaseWait();	
+});
+
+$(document).ready(function() {
+	var invOrg = $('#dmsLoc').val();
+	if (invOrg == 'ALL') {
+		$('.subInvSection').hide();
+		$('#inv_data_body').hide();
+	}else{
+		/* $('#inv_data_body').show(); */
+	}
+
+});
+
+var baseURL = "/dms/erpCheckInventory";
+function reLoadInventoryOnSubInvChange(){
+	
+	var invOrg = $('#dmsLoc').val();
+	if (invOrg == 'ALL') {
+		$('.subInvSection').hide();
+	//	$('#inv_data_body').hide();
+	   $('.dataSection').hide();
+		$('#subInvLoc').val('');
+		return;
+	}else{
+		
+		$('.subInvSection').show();
+		var subInv = $('#subInvLoc').val();
+		if (subInv == '') {
+			//$('#inv_data_body').hide();
+			$('.dataSection').hide();
+			return;
+		}else{
+			showPleaseWait();
+		}
+	}
+	
+	console.log('calling reLoadInventoryOnChange');
+	
+	document.frmErpInv.action = baseURL ;
+	document.frmErpInv.method = 'POST';
+	document.frmErpInv.submit();
+
+}
+
+function reLoadInventoryOnInvChange(){
+	
+	var invOrg = $('#dmsLoc').val();
+	if (invOrg == 'ALL') {
+		 $('.subInvSection').hide();
+		//$('#inv_data_body').hide();
+		$('.dataSection').hide();
+		$('#subInvLoc').val('');
+		return;
+	}else{
+		showPleaseWait();
+		//$('#inv_data_body').hide();
+		$('.dataSection').hide();
+		$('#subInvLoc').val('');
+		
+	}
+	
+	console.log('calling reLoadInventoryOnInvChange');
+	
+	document.frmErpInv.action = baseURL ;
+	document.frmErpInv.method = 'POST';
+	document.frmErpInv.submit();
+
+}
+
+function erpInventorySpreadsheet(){
+	
+	document.frmErpInv.action = baseURL+"/erpInventorySpreadsheet";
+	document.frmErpInv.method = 'POST';
+	document.frmErpInv.submit();
+}
+
+</script>
+<style type="text/css">
+
+.headerLink a:visited {
+	color: #FFFFFF;
+}
+
+.headerLink a:link {
+	color: #FFFFFF;
+}
+
+.headerLink a:hover {
+	color: #FFFFFF;
+}
+
+.headerLink a:focus {
+	color: #FFFFFF;
+}
+
+.headerLink a:active {
+	color: #FFFFFF;
+}
+
+.headerLinkActive a:visited {
+	color: #006699;
+}
+
+#table_header tbody tr td {
+text-align: left;
+  background-color: #FFFFFF;
+}
+.linkable {
+
+}
+
+.erp-inv-btn{
+   /*  padding-right: 137px; */
+    padding-top: 5px;
+     padding-bottom: 10px;
+   }
+.erp_inv_txt{
+	font-size: 8.5pt;
+	font-family: Verdana, sans-serif;
+	font-weight: 600;
+	color: #006699;
+   }
+</style>
+
+
+
+
+    
+	<form name="frmErpInv" id="frmErpInv">
+	<input type="hidden" id="invorg" name="invorg" value="">
+	<input type="hidden" id="erpDataList" name="erpDataList" value="[]">
+		<!-- Header Begins -->
+
+	
+
+<script type="text/javascript">
+jQuery(document).ready(function($) {
+    window.history.pushState('forward', null, null); 
+    $(window).on('popstate', function() {
+       history.pushState(null, null, window.location.pathname);
+    }); 
+    
+});
+
+</script>
+
+<table class="messageHeader" border="0" align="center" width="100%">
+	<tbody><tr>
+		<td width="30%" style="color:#000000;"><b>Inventory - On Hand Qty</b></td>
+		
+		<td align="center"></td>
+				<td align="center">
+				
+		</td>
+		<td align="right" width="20%" style="color:#000000;">Welcome &nbsp;<b><font color="red" id="usr_login_id">515511228</font></b>
+       		
+       			
+       			
+       				&nbsp;<b>AGENT</b>
+       			
+       		
+		</td>
+		
+			
+			
+			
+			<td align="right" width="5%">&nbsp;<b>|&nbsp;<a target="_BLANK" href="/dms/faqadmin/faqsearch" style="color:blue;">Help</a></b>
+			
+			
+		
+	</td></tr>
+</tbody></table>
+<!-- Header Ends -->   
+
+		&nbsp;
+<!-- sec1-------------------------------------------------------------------------------------------------------------- -->
+<table id="" border="0" width="100%" align="center">
+<tbody><tr><td colspan="7"><br>
+<center>
+	<b><i style="color:#000000">INV ORG: &nbsp;</i></b> 
+	<select name="dmsLoc" style="width: 60px" id="dmsLoc" onchange="if (!window.__cfRLUnblockHandlers) return false; reLoadInventoryOnInvChange();">
+			
+			
+				<option value="9SU" selected="">9SU
+				</option>
+			
+	</select>
+	 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+	<b><i class="subInvSection" style="color:#000000">SUBINVENTORY: &nbsp;</i></b> 
+	<select class="subInvSection" name="subInvLoc" style="width: auto" id="subInvLoc" onchange="if (!window.__cfRLUnblockHandlers) return false; reLoadInventoryOnSubInvChange();">
+				<option value="">....</option>
+			
+				<option value="ASIS">ASIS
+				
+			
+				</option><option value="FG">FG
+				
+			
+				</option><option value="NONRES">NONRES
+				
+			
+				</option><option value="RCV">RCV
+				
+			
+				</option><option value="RFSCRAP">RFSCRAP
+				
+			
+				</option><option value="SCRAP">SCRAP
+				
+			
+				</option><option value="STA">STA
+				
+			
+				</option><option value="SURDEF">SURDEF
+				
+			
+				</option><option value="UFG">UFG
+				
+			
+	</option></select>
+</center>
+<br></td>
+<td>
+
+</td></tr>
+<tr>
+<td>
+<center style="margin-left:20%;">
+ <b><i style="color:#000000">SHOW ONLY ROWS CONTAINING: &nbsp;</i></b> 
+	 <input name="filter" id="filter" style="width: 235px;" class="textbox" onkeyup="if (!window.__cfRLUnblockHandlers) return false; filter2(this, 'table_list'); stripe('table_list');" onfocus="if (!window.__cfRLUnblockHandlers) return false; hideCalendarControl();" type="text">
+</center>
+</td>
+<td>
+	<div class="erp-inv-btn" style="margin-left:0%;">
+	<button style="display:inline-block;" class="erp_inv_txt" onclick="if (!window.__cfRLUnblockHandlers) return false; erpInventorySpreadsheet()">Spreadsheet</button>
+	
+	</div>
+</td>
+</tr>
+</tbody></table>
+
+
+	<!-- sec4 start---------------------------------------------------------------------------------------------------------------->	
+	
+		
+	<table style="width:80%" id="table_list" class="sortable_stripes dataTable" border="0" align="center" cellpadding="1" cellspacing="0">
+		<thead>
+			<tr>
+				<th width="20%"><a href="#" style="color: #FFFFFF; text-decoration: None;" class="sortheader" onclick="ts_resort_stripe_table(this, 0);return false;">Model #<span class="sortarrow">&nbsp;&nbsp;&nbsp;</span></a></th>
+				<th width="20%"><a href="#" style="color: #FFFFFF; text-decoration: None;" class="sortheader" onclick="ts_resort_stripe_table(this, 1);return false;">Serial #<span class="sortarrow">&nbsp;&nbsp;&nbsp;</span></a></th>
+				<th width="10%"><a href="#" style="color: #FFFFFF; text-decoration: None;" class="sortheader" onclick="ts_resort_stripe_table(this, 2);return false;">Inv Qty<span class="sortarrow">&nbsp;&nbsp;&nbsp;</span></a></th>
+				<th width="20%"><a href="#" style="color: #FFFFFF; text-decoration: None;" class="sortheader" onclick="ts_resort_stripe_table(this, 3);return false;">Availability Status<span class="sortarrow">&nbsp;&nbsp;&nbsp;</span></a></th>
+				<th width="30%"><a href="#" style="color: #FFFFFF; text-decoration: None;" class="sortheader" onclick="ts_resort_stripe_table(this, 4);return false;">Availability Message<span class="sortarrow">&nbsp;&nbsp;&nbsp;</span></a></th>
+			</tr>
+			
+		</thead>
+		<tbody class="dataSection">
+		      
+		</tbody>
+	</table>
+	 
+	
+
+	
+	
+		
+			
+			
+				<div class="messageDisplay">Please select a SubInventory</div>
+			
+		
+	
+
+
+</form>
+<!-- sec4 end---------------------------------------------------------------------------------------------------------------->
+
+
+
+<div class="ui-dialog ui-widget ui-widget-content ui-corner-all ui-front ui-dialog-buttons ui-draggable ui-resizable" tabindex="-1" role="dialog" aria-describedby="alertDlg" aria-labelledby="ui-id-1" style="position: absolute; height: auto; width: 400px; top: 360px; left: 496px; display: none;"><div class="ui-dialog-titlebar ui-widget-header ui-corner-all ui-helper-clearfix ui-draggable-handle"><span id="ui-id-1" class="ui-dialog-title">ALERT</span><button type="button" class="ui-button ui-widget ui-state-default ui-corner-all ui-button-icon-only ui-dialog-titlebar-close" role="button" title="Close"><span class="ui-button-icon-primary ui-icon ui-icon-closethick"></span><span class="ui-button-text">Close</span></button></div><div id="alertDlg" class="ui-dialog-content ui-widget-content" style="width: auto; min-height: 0px; max-height: none; height: 49px;"></div><div class="ui-resizable-handle ui-resizable-n" style="z-index: 90;"></div><div class="ui-resizable-handle ui-resizable-e" style="z-index: 90;"></div><div class="ui-resizable-handle ui-resizable-s" style="z-index: 90;"></div><div class="ui-resizable-handle ui-resizable-w" style="z-index: 90;"></div><div class="ui-resizable-handle ui-resizable-se ui-icon ui-icon-gripsmall-diagonal-se" style="z-index: 90;"></div><div class="ui-resizable-handle ui-resizable-sw" style="z-index: 90;"></div><div class="ui-resizable-handle ui-resizable-ne" style="z-index: 90;"></div><div class="ui-resizable-handle ui-resizable-nw" style="z-index: 90;"></div><div class="ui-dialog-buttonpane ui-widget-content ui-helper-clearfix"><div class="ui-dialog-buttonset"><button type="button" class="ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only" role="button"><span class="ui-button-text">OK</span></button></div></div></div></body></html>

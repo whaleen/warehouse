@@ -1,0 +1,748 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html><head>
+
+<script type="text/javascript">
+	history.forward();
+</script>
+<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<title>Inventory-Backhaul</title>
+<!-- <link rel="stylesheet" type="text/css" href="https://code.jquery.com/ui/1.11.1/themes/smoothness/jquery-ui.css" /> -->
+
+<!-- <script type="text/javascript" src="https://code.jquery.com/jquery-1.10.2.js"></script> -->
+<script type="text/javascript" src="/dms/resources/js/jquery-1.10.2.js"></script>
+<!-- <script type="text/javascript" src="https://code.jquery.com/ui/1.11.1/jquery-ui.js"></script> -->
+<script type="text/javascript" src="/dms/resources/js/jquery-ui.js"></script> 
+<script type="text/javascript" src="/dms/resources/js/CalendarControl.js"></script></head>
+<body link="blue" vlink="purple" alink="red" style=""><iframe id="CalendarControlIFrame" frameborder="0" scrolling="no"></iframe><div id="CalendarControl"></div>
+<script type="text/javascript" src="/dms/resources/js/DmsFunction.js"></script>
+<script type="text/javascript" src="/dms/resources/js/jqueryajaxcommon.js"></script>
+<script type="text/javascript" src="/dms/resources/js/FormTableSort.js"></script>
+<script type="text/javascript" src="/dms/resources/js/TableSearch.js"></script>
+<script type="text/javascript" src="/dms/resources/js/TableSelectAll.js"></script>
+<script type="text/javascript" src="/dms/resources/js/StripedTable.js"></script>
+<script type="text/javascript" src="/dms/resources/js/jqueryajaxcommon.js"></script>
+<script type="text/javascript" src="/dms/resources/js/gebackhaul.js"></script>
+
+<!-- CSS -->
+<link rel="stylesheet" type="text/css" href="/dms/resources/style/jquery-ui.css">
+<link rel="stylesheet" type="text/css" href="/dms/resources/style/style.css">
+<link rel="stylesheet" type="text/css" href="/dms/resources/style/Dms.css">
+<link rel="stylesheet" type="text/css" href="/dms/resources/style/CalendarControl.css">
+<link rel="stylesheet" type="text/css" href="/dms/resources/style/checkin.css">
+
+<script type="text/javascript">
+window.onload=function(){ 
+	stripe('table_list'); 
+	//console.log('backhaul_mode='+ backhaul_mode + ' backhaul_on_off='+backhaul_on_off+' manualBackhaulExists='+manualBackhaulExists);
+//	$('#notComplete').is(":checked")=true;
+}
+$(function () {
+	hidePleaseWait();	
+});
+
+var baseURL = "/dms/backhaul";
+function reLoadBackhaulOnChange(){
+	console.log('calling reLoadBackhaulOnInvChange');
+	showPleaseWait();
+	/* var selDmsLocObj = document.getElementById("dmsLoc");	
+	var selDmsLoc = selDmsLocObj.options[selDmsLocObj.selectedIndex].value;			
+	document.frmBackhaul.dmsLoc.value = selDmsLoc; */
+	if($('#notComplete').is(":checked")){
+		console.log('Checked');
+		document.frmBackhaul.notComplete.value = 'Y';
+	}else{
+		console.log('Not Checked');
+		$('#notComplete').val('N');
+		document.frmBackhaul.notComplete.value = 'N';
+	}
+	document.frmBackhaul.action = baseURL ;
+	document.frmBackhaul.method = 'POST';
+	document.frmBackhaul.submit();
+}
+
+function exportSpreadSheet(){
+	var notCompleteVal;
+	if($('#notComplete').is(":checked")){
+		notCompleteVal = 'Y';
+	}else{
+		notCompleteVal = 'N';
+	}
+	document.frmBackhaul.action = baseURL+"/downloadBackhaulSpreadsheet?notComplete="+notCompleteVal;
+	document.frmBackhaul.method = 'POST';
+	document.frmBackhaul.submit();
+}
+
+function printBackhaul(isoId) {
+	console.log("creating PDF for:" + isoId);
+	$("<form action=/dms/backhaul/printBackhaul?id="+isoId+" method='POST'></form>").appendTo('body').submit().remove();
+}
+
+function populateManualBackhaulButton() {
+	invOrg = $('#dmsLoc').val()
+	showPleaseWait();
+	$.ajax({
+		url :"backhaul/getManualIdForInv?invorg="+invOrg,
+		type : "GET",
+		success : function(response, textStatus, jqXHR) {
+			console.log(response);
+			if(response.status === "SUCCESS") {
+				var manual_id = response.insert.manual_id;
+				console.log(manual_id, invOrg)
+				var buttonContent = "<a class='cmbsubmitbutton' target='_blank' href='/dms/backhaul/manual?invorg="+invOrg+"&id="+manual_id+"' style='color: #006699; padding: 1px 1px 1px 1px;' >&nbsp;Create Manual Backhaul&nbsp;</a>";
+				/* var buttonContent = "<form name='cmbbform' href='/dms/backhaul/manual' target='_blank' action='GET'><input  class='submitButton' type='submit' value='Create Manual Backhaul' /></form>"; */
+				$(".manualBackhaulButton").html(buttonContent);
+				/* $("#openManualBackhaul").attr("href", "/dms/backhaul/manual?id="+manual_id+"&invOrg="+invOrg); */
+				//$("#openManualBackhaul").attr("href", "/dms/backhaul/manual?invorg="+invOrg+"&id="+manual_id);
+				//$("#openManualBackhaul").attr("target", "_blank");
+				//$('#openManualBackhaul')[0].click();
+				
+				/* $("#hdn_invorg").val(invOrg)
+				$("#hdn_id").val(manual_id)
+				
+				$("#redirectToCreate").attr('action', "/dms/backhaul/manual");
+				jQuery("#redirectToCreate").submit(); */
+			}
+			else {
+				console.log("not success");
+				$("#backhaulMessage").html("MANUAL BACKHAUL could not be created("+response.error_message+")");
+			}
+			hidePleaseWait();
+		},
+		error : function(jqXHR, textStatus, errorThrown) {
+			console.log("Error-The MANUAL BACKHAUL could not be created");
+			console.log(textStatus)
+			$("#backhaulMessage").html("MANUAL BACKHAUL could not be created("+textStatus+")");
+			hidePleaseWait();
+		}
+	});
+};
+
+/* function createManualBackhaul() {
+	invOrg = $('#dmsLoc').val()
+	console.log(invOrg)
+	showPleaseWait();
+	$.ajax({
+		url :"backhaul/getManualIdForInv?invorg="+invOrg,
+		type : "GET",
+		success : function(response, textStatus, jqXHR) {
+			console.log(response);
+			if(response.status === "SUCCESS") {
+				var manual_id = response.insert.manual_id;
+				console.log(manual_id, invOrg)
+				/* $("#openManualBackhaul").attr("href", "/dms/backhaul/manual?id="+manual_id+"&invOrg="+invOrg); */
+				//$("#openManualBackhaul").attr("href", "/dms/backhaul/manual?invorg="+invOrg+"&id="+manual_id);
+				//$("#openManualBackhaul").attr("target", "_blank");
+				//$('#openManualBackhaul')[0].click();
+				
+				/* $("#hdn_invorg").val(invOrg)
+				$("#hdn_id").val(manual_id)
+				
+				$("#redirectToCreate").attr('action', "/dms/backhaul/manual");
+				jQuery("#redirectToCreate").submit();
+			}
+			else {
+				console.log("not success");
+				$("#backhaulMessage").html("MANUAL BACKHAUL could not be created("+response.error_message+")");
+			}
+			hidePleaseWait();
+		},
+		error : function(jqXHR, textStatus, errorThrown) {
+			console.log("Error-The MANUAL BACKHAUL could not be created");
+			console.log(textStatus)
+			$("#backhaulMessage").html("MANUAL BACKHAUL could not be created("+textStatus+")");
+			hidePleaseWait();
+		}
+	});
+};  */
+
+function redirectToAdmin(){
+	var invOrg=$('#dmsLoc').val();
+	location.href=location.origin+'/dms/backhaul/admin?dmsLoc='+invOrg;
+}
+</script>
+<style type="text/css">
+.cmbsubmitbutton {
+	font-family: ge inspira, verdana, arial;	
+	border: 2px solid #cccccc;
+	background-color: #f7f7f7;
+	font-family: arial, serif;
+	font-size: 13px;
+	font-weight: bold;
+	color: #006699;
+}
+
+.headerLink a:visited {
+	color: #FFFFFF;
+}
+
+.headerLink a:link {
+	color: #FFFFFF;
+}
+
+.headerLink a:hover {
+	color: #FFFFFF;
+}
+
+.headerLink a:focus {
+	color: #FFFFFF;
+}
+
+.headerLink a:active {
+	color: #FFFFFF;
+}
+
+.headerLinkActive a:visited {
+	color: #006699;
+}
+
+#table_header tbody tr td {
+text-align: left;
+  background-color: #FFFFFF;
+}
+.linkable {
+
+}
+</style>
+
+
+
+
+ 
+
+	<script type="text/javascript">
+		 $(document).ready(function() { 
+			$('.manualBackhaulButton').hide();
+			//populateManualBackhaulButton();
+		}); 
+	</script>
+
+
+
+    
+	<form name="frmBackhaul" id="frmBackhaul">
+	<input type="hidden" name="request" value="BACKHAUL">
+	<input type="hidden" id="invorg" name="invorg" value="">
+	<input type="hidden" id="backhaul_mode" name="invorg" value="PUSH">
+	<input type="hidden" id="backhaul_on_off" name="invorg" value="ON">
+	
+	<input type="hidden" id="geSaveManulaBackhaulurl" value="">
+	<a target="_blank" id="openManualBackhaul" href="" style="visibility: hidden">GTManual</a>
+	
+		<!-- Header Begins -->
+
+	
+
+<script type="text/javascript">
+jQuery(document).ready(function($) {
+    window.history.pushState('forward', null, null); 
+    $(window).on('popstate', function() {
+       history.pushState(null, null, window.location.pathname);
+    }); 
+    
+});
+
+</script>
+
+<table class="messageHeader" border="0" align="center" width="100%">
+	<tbody><tr>
+		<td width="30%" style="color:#000000;"><b>Inventory - Backhaul</b></td>
+		
+		<td align="center"></td>
+				<td align="center">
+				
+		</td>
+		<td align="right" width="20%" style="color:#000000;">Welcome &nbsp;<b><font color="red" id="usr_login_id">515511228</font></b>
+       		
+       			
+       			
+       				&nbsp;<b>AGENT</b>
+       			
+       		
+		</td>
+			
+		
+	</tr>
+</tbody></table>
+<!-- Header Ends -->   
+<br>
+		
+
+
+
+
+<title>Carrier</title>
+<link rel="stylesheet" type="text/css" href="/dms/resources/style/jquery-ui.css">
+<link rel="stylesheet" type="text/css" href="/dms/resources/style/style.css">
+<link rel="stylesheet" type="text/css" href="/dms/resources/style/Dms.css">
+<style>
+/*  Carrier Information*/
+.ci-first-column-cls{
+margin-left:2px;
+display: inline-block;
+float:left;
+padding:2px;
+width:45%;
+}
+.ci-second-column-cls{
+display: inline-block;
+vertical-align: top;
+margin-right: 2px;
+float:left;
+padding:5px;
+width:50%;
+}
+
+
+   .carrier-label-cls{
+	    padding: 4px;
+	    font-size: 9pt;
+	    font-family: Verdana, sans-serif;
+	    font-weight: 800;
+	   color: #3c3939;
+    }
+    .carrier-val-cls {
+	    padding: 4px;
+	    font-size: 9pt;
+	    font-family: Verdana, sans-serif;
+	    color:#3c3939;
+    }
+    .ci-input{
+    	padding: 0px 0px 0px 0px;
+    }
+    .ci-seal-input{
+   		 margin-left: 20px;
+    }
+    .ci-left-col{
+    	padding: 5px;
+    	text-allign:left;
+    }
+    
+     .ci-right-col{
+    	padding: 5px;
+    	text-allign:right;
+    }
+    
+.button_txt {
+	font-size: 8.5pt;
+	font-family: Verdana, sans-serif;
+	font-weight: 600;
+	color: #006699;
+}
+
+#carrier_name_label{
+margin-left: 12px;
+}
+/* #carrier_contact_label{
+margin-left: 3px;
+} */
+#carrier_scac_label{
+margin-left: 16px;
+}
+#carrier_phone_label{
+margin-left: 10px;
+}
+#carrier_email_label{
+margin-left: 15px;
+}
+
+#vehicle-number-col{
+margin-left: 9px;
+}
+#seal-no-col{
+margin-left: 30px;
+}
+#notes-col{
+margin-left: 41px;
+}
+</style>
+
+<script type="text/javascript">
+var carrierShipmentPrefix;
+var carrierShipment;
+function openDmsCarrierDialog(shipmentPrefix,shipment,additionalParam){
+   $("#carrier-response-message").html('');
+   carrierShipmentPrefix = shipmentPrefix;
+   carrierShipment = shipment;
+   console.log('Open openDmsCarrierDialog',shipmentPrefix,shipment);
+   var getDmsCarrierReq={"current_screen": "GEAD ASIS","gead_user":{"sso": "515511228","user_authority": "AGENT"},"search_criteria":[{"shipment_prefix":shipmentPrefix,"shipment": shipment}]};
+   var data = JSON.stringify(getDmsCarrierReq);
+   console.log(data);
+   var response='';
+   var url= "https://k7cn34eq14.execute-api.us-east-1.amazonaws.com/prd/dms_get_carrier";
+   console.log(url);
+   showPleaseWait();
+   var responseTable ="";
+   var inv_overall_score ='';
+    $.ajax({
+    	  type: 'POST',
+    	  url:url,
+    	  data: data,
+    	  dataType: 'json',
+    	  contentType: 'application/json; charset=utf-8',
+    	  success: function(response) {
+    	  console.log('success');
+    	  hidePleaseWait();  
+             populateDmsCarrierDialog(response,shipmentPrefix,shipment,additionalParam);	
+    	  },error: function (jqXHR, exception) {
+    		  $("#carrier-response-message").html("<span style='color:red'>Error for service: dms_get_carrier("+jqXHR.status+")</span>");
+    		  hidePleaseWait();
+    	  }
+	});  
+		  
+	}	
+	
+function populateDmsCarrierDialog(response,shipmentPrefix,shipment,additionalParam){
+	var csiTitle ="";
+	if('BCK'==shipmentPrefix){
+		csiTitle = "Carrier Information | ISO="+additionalParam;
+	}else{
+		 csiTitle = "Carrier Information | CSO="+shipment;
+	}
+	
+	printCarrierInfoDiv(response);
+	 $(function () {
+   	  $("#dmsCarrierDialog").dialog({
+   	      autoOpen: false,
+   	      modal: true,
+   	      title: csiTitle, 
+   	      width: 830,
+   	      height: 250,
+   	      autoResize:true,
+   	      open : carrierDialogFunction
+   	      
+   	  });
+   	  console.log('dialog ready');    
+   	   $("#dmsCarrierDialog").closest(".ui-dialog").children(".ui-dialog-titlebar").css("background", "#006699"); 
+   	   $("#dmsCarrierDialog").closest(".ui-dialog").children(".ui-widget-header").css("color", "white"); 
+   	});   
+	$("#dmsCarrierDialog").dialog("open");
+	
+}
+
+function carrierDialogFunction(){
+	console.log('dialog open');
+	
+}
+
+/** Carrier info div population mechanism */
+function printCarrierInfoDiv(response) {
+console.log('printCarrierInfoDiv');
+	var carrier_name = '';
+	var carrier_contact = '';
+	var carrier_scac = '';
+	var carrier_phone = '';
+	var carrier_email = '';
+	
+    var pickup_date= '';
+    var vehicle_number = '';
+	var seal_code = '';
+	var notes = '';
+ if (!jQuery.isEmptyObject(response.list[0].data )){
+	//carrier_name = 'VEER';
+	carrier_name = response.list[0].data.carrier_name;
+	//carrier_contact = 'contact';
+	carrier_contact = response.list[0].data.carrier_contact;
+	//carrier_scac = 'SARC';
+	carrier_scac = response.list[0].data.carrier_scac;
+	//carrier_phone = '898989899';
+	carrier_phone = response.list[0].data.carrier_phone;
+	//carrier_email = 'a@gmail.com';
+	carrier_email = response.list[0].data.carrier_email;
+	
+	pickup_date = formatDate(response.list[0].data.appointment_pickup_date);
+	vehicle_number = response.list[0].data.vehicle_number;
+	seal_code = response.list[0].data.seal_code;
+	notes = response.list[0].data.appointment_note;
+
+	
+ }
+	var responsePageData = "";
+	responsePageData += "<div class='carrier-info-main-cls' id='carrier-info-main-div'>";
+	responsePageData += "<input type='text' style='width: 0; height: 0; top: -100px; position: absolute;'/>";
+	<!-- 1st column carrier info ====================================================-->
+	responsePageData += "<div class='ci-first-column-cls' id='ci-first-column-id'>";
+	<!-- 1st column first row -->
+	responsePageData += "<div class='ci-left-col'>";
+	responsePageData += "<span class= 'carrier-label-cls' id='carrier_name_label'>Name : </span>";
+	responsePageData += "<span class= 'carrier-val-cls' id='carrier_name'>" + carrier_name + "</span>";
+	responsePageData += "</div>";
+	<!-- 2nd row -->
+	responsePageData += "<div class='ci-left-col'>";
+	responsePageData += "<span class= 'carrier-label-cls' id='carrier_contact_label' >Contact : </span>";
+	responsePageData += "<span class= 'carrier-val-cls' id='carrier_contact'>" + carrier_contact + "</span>";
+	responsePageData += "</div>";
+	<!-- 3rd row -->
+	responsePageData += "<div class='ci-left-col'>";
+	responsePageData += "<span class= 'carrier-label-cls' id='carrier_scac_label' >SCAC : </span>";
+	responsePageData += "<span class= 'carrier-val-cls' id='carrier_scac'>" + carrier_scac + "</span>";
+	responsePageData += "</div>";
+ 	<!-- 4th row -->
+ 	responsePageData += "<div class='ci-left-col'>";
+	responsePageData += "<span class= 'carrier-label-cls' id='carrier_phone_label' >Phone : </span>";
+	responsePageData += "<span class= 'carrier-val-cls' id='carrier_phone'>" + carrier_phone + "</span>";
+	responsePageData += "</div>";
+	<!-- 5th row -->	  		
+	responsePageData += "<div class='ci-left-col'>";
+	responsePageData += "<span class= 'carrier-label-cls' id='carrier_email_label' >Email : </span>";
+	responsePageData += "<span class= 'carrier-val-cls' id='carrier_email'>" + carrier_email + "</span>";
+	responsePageData += "</div>";
+	
+	responsePageData += "</div>";
+ 	<!-- carrier 2nd column info ======================================================-->
+	responsePageData += "<div class='ci-second-column-cls' id='ci-carrier-column-id'>";
+	<!-- first column first row -->
+	responsePageData += "<div class='ci-right-col'>";
+	responsePageData += "<span class= 'carrier-label-cls' id='ci-one-col-span-id' >Pickup Date : </span>";
+	responsePageData += "<span class= 'carrier-val-cls' id='ci-sec-col-span-id'><input type='hidden' class='ci-input' id='dummy_pickup_date'><input  class='ci-input' id='pickup_date' value='"+pickup_date+"'></span>";
+	responsePageData += "</div>";
+	<!-- 2nd row -->
+	responsePageData += "<div class='ci-right-col'>";
+	responsePageData += "<span class= 'carrier-label-cls' id='vehicle-number-col' >Vehicle No : </span>";
+	responsePageData += "<span class= 'carrier-val-cls' id='ci-sec-col-span-id'><input class='ci-input' id='vehicle_no' value='"+vehicle_number+"'></span>";
+	responsePageData += "</div>";
+	<!-- 3rd row -->
+	responsePageData += "<div class='ci-right-col'>";
+	responsePageData += "<span class= 'carrier-label-cls' id='seal-no-col' >Seal No : </span>";
+	responsePageData += "<span class= 'carrier-val-cls' id='ci-sec-col-span-id'><input class='ci-input' id='seal_code' value='"+seal_code+"'></span>";
+	responsePageData += "</div>";
+	
+	<!-- 4th row -->
+	responsePageData += "<div class='ci-right-col'>";
+	responsePageData += "<span class= 'carrier-label-cls' id='notes-col' >Notes : </span>";
+	responsePageData += "<span class= 'carrier-val-cls' id='ci-sec-col-span-id'><input size='35' class='ci-input' id='appointment_notes' value='"+notes+"'></span>";
+	responsePageData += "</div>";
+		 
+	responsePageData += "</div>";
+	responsePageData += "</div>";
+	
+	$(".carrier-section-data").html(responsePageData);
+	$("#appointment_notes").val(notes);
+	$("#pickup_date").datepicker();
+	
+}
+
+
+
+function saveCarrier(){
+	console.log (carrierShipmentPrefix,carrierShipment);
+	var carrier_shipment_Prefix = carrierShipmentPrefix;
+	var carrier_shipment = carrierShipment;
+	var vehicle_number = $('#vehicle_no').val();
+	var seal_code = $('#seal_code').val();
+	var appointment_pickup_date = $('#pickup_date').val();
+	var appointment_notes = $('#appointment_notes').val();
+	var formattedDate = '';
+	if(appointment_pickup_date!=''){
+		var date_regex = /^(0[1-9]|1[0-2])\/(0[1-9]|1\d|2\d|3[01])\/(19|20)\d{2}$/;
+		if (!(date_regex.test(appointment_pickup_date))) {
+			 $("#carrier-response-message").html("<span style='color:red'>Invalid Date</span>");
+		    return ;
+		}
+		var date = new Date(appointment_pickup_date);
+		formattedDate = date.getFullYear() + ("0" + (date.getMonth() + 1)).slice(-2) + ("0" + date.getDate()).slice(-2) + ("0" + date.getHours() ).slice(-2) + ("0" + date.getMinutes()).slice(-2) + ("0" + date.getSeconds()).slice(-2) ;
+	}
+	
+	console.log(formattedDate);
+	  var saveDmsCarrierReq={"current_screen": "GEAD ASIS","gead_user":{"sso": "515511228","user_authority": "AGENT"},"save":{"key":{"shipment_prefix":carrier_shipment_Prefix,"shipment": carrier_shipment},"data":{"vehicle_number":vehicle_number,"seal_code": seal_code,"appointment_pickup_date":formattedDate,"appointment_notes": appointment_notes}}};
+	   var data = JSON.stringify(saveDmsCarrierReq);
+	   console.log(data);
+	   var response='';
+	   var url= "https://k7cn34eq14.execute-api.us-east-1.amazonaws.com/prd/dms_save_carrier";
+	   console.log(url);
+	   showPleaseWait();
+	   var responseTable ="";
+	   var inv_overall_score ='';
+	    $.ajax({
+	    	  type: 'POST',
+	    	  url:url,
+	    	  data: data,
+	    	  dataType: 'json',
+	    	  contentType: 'application/json; charset=utf-8',
+	    	  success: function(response) {
+	    	  console.log('success');
+	    	  hidePleaseWait();  
+	    	  $("#carrier-response-message").html("<span style='color:green'>Changes Saved Successfully</span>");
+	    	  },error: function (jqXHR, exception) {
+	    		  $("#carrier-response-message").html("<span style='color:red'>Error for service: dms_save_carrier("+jqXHR.status+")</span>");
+	    		  hidePleaseWait();
+	    	  }
+		});  
+}
+
+function formatDate(date) {
+	if(date == undefined || date=='00000000000000' || date.trim() == ""  ){
+		return "";
+	}else{
+		var startDate = date.substring(0,8)
+		var year = startDate.substring(0, 4);
+		var month = startDate.substring(4, 6);
+		var day = startDate.substring(6, 8);
+		var dispDate=month+'/'+day+'/'+year;
+		return dispDate;
+	}
+	
+}
+</script>
+
+<div id="dmsCarrierDialog" style="display: none">
+<div id="carrier-response-message" style=" font-size: 12px; text-align:center; font-weight:bold;"></div>
+	<div class="carrier-section-data relative"></div>
+	
+   
+	   <div class="btn-ctrl carrier-confirm-btn" style="margin-left:43%;margin-top:18%;">
+	 		<button style=" font-size: 12px; font-family: Verdana, sans-serif; font-weight: 600;color: #006699;" class="button_txt" onclick="if (!window.__cfRLUnblockHandlers) return false; saveCarrier()">SUBMIT</button>
+	   </div> 
+   
+</div>
+
+
+
+		&nbsp;
+<!-- sec1-------------------------------------------------------------------------------------------------------------- -->
+
+<table id="" border="0" width="100%" align="center">
+<tbody><tr><td colspan="7"><br>
+<center>
+	<b><i style="color:#000000">INV ORG: &nbsp;</i></b> 
+	<select name="dmsLoc" style="width: 60px" id="dmsLoc" onchange="if (!window.__cfRLUnblockHandlers) return false; reLoadBackhaulOnChange();">
+			
+			
+				<option value="9SU" selected="">9SU
+				</option>
+			
+	</select>
+	 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+	 <b><i style="color:#000000">SHOW ONLY ROWS CONTAINING: &nbsp;</i></b> 
+	 <input name="filter" id="filter" style="width: 100px;" class="textbox" onkeyup="if (!window.__cfRLUnblockHandlers) return false; filter2(this, 'table_list'); stripe('table_list');" onfocus="if (!window.__cfRLUnblockHandlers) return false; hideCalendarControl();" type="text">
+</center>
+<br></td></tr>
+</tbody></table>
+<!-- sec1 end-------------------------------------------------------------------------------------------------------------- -->
+
+<table align="center" class="backhaulMessage">
+	<tbody><tr>
+		<td id="backhaulMessage" style="color: red;"></td>
+	</tr>
+</tbody></table> 
+<!-- sec2 end---------------------------------------------------------------------------------------------------------------->
+<!-- sec3 start---------------------------------------------------------------------------------------------------------------->
+<table border="1" id="table_header" width="90%" align="center" cellpadding="0" cellspacing="0">
+	<tbody>
+		<tr align="left">
+			<td width="25%" align="left" bgcolor="white" style="border: 0px;background-color:#FFFFFF;">Reporting Period: Yearly
+			
+				<select name="searchYear" style="width: 60px" id="searchYear" onchange="if (!window.__cfRLUnblockHandlers) return false; reLoadBackhaulOnChange();">
+				  
+					
+						<option value="2026" selected="">2026
+					
+						</option><option value="2025">2025
+					
+						</option><option value="2024">2024
+					
+						</option><option value="2023">2023
+					
+						</option><option value="2022">2022
+					
+			   </option></select>
+			</td>
+			
+			<td width="55%" align="left" bgcolor="white" style="border: 0px;background-color:#FFFFFF;">Not Complete
+				&nbsp;
+				<input type="checkbox" name="notComplete" id="notComplete" value="Y" onchange="if (!window.__cfRLUnblockHandlers) return false; reLoadBackhaulOnChange();">
+				<input type="hidden" value="N" name="notComplete">
+			</td>
+	
+			<td width="30%" style="border: 0px;background-color:#FFFFFF;">
+				<a class="cmbsubmitbutton manualBackhaulButton" target="_blank" href="/dms/backhaul/manual?invorg=9SU&amp;createNew=Y" style="color: rgb(0, 102, 153); padding: 1px; display: none;">&nbsp;Create Manual Backhaul&nbsp;</a>
+			</td>
+			
+			<td width="30%" style="border: 0px;background-color:#FFFFFF;">
+			</td><td width="30%" style="border: 0px;background-color:#FFFFFF;">
+				<input id="exportSpreadsheetbutton" class="submitButton" type="button" align="right" value="Spreadsheet" onclick="if (!window.__cfRLUnblockHandlers) return false; exportSpreadSheet();">
+			</td>
+		
+	</tr>
+</tbody>
+</table>
+<!-- sec3 end---------------------------------------------------------------------------------------------------------------->
+	&nbsp;
+	<br>
+	
+		
+		
+			
+		
+	
+
+	<!-- sec4 start---------------------------------------------------------------------------------------------------------------->	
+ 
+	 
+	
+		
+	<table style="width:90%" id="table_list" class="sortable_stripes dataTable" border="0" align="center" cellpadding="1" cellspacing="0">
+		<thead>
+			<tr>
+				<th><a href="#" style="color: #FFFFFF; text-decoration: None;" class="sortheader" onclick="ts_resort_stripe_table(this, 0);return false;">Inv
+Org<span class="sortarrow">&nbsp;&nbsp;&nbsp;</span></a></th>
+				<th width="25%"><a href="#" style="color: #FFFFFF; text-decoration: None;" class="sortheader" onclick="ts_resort_stripe_table(this, 1);return false;">ISO<span class="sortarrow">&nbsp;&nbsp;&nbsp;</span></a></th>
+				<th style="width:25%; align:center;"><a href="#" style="color: #FFFFFF; text-decoration: None;" class="sortheader" onclick="ts_resort_stripe_table(this, 2);return false;">Start Date<span class="sortarrow">&nbsp;&nbsp;&nbsp;</span></a></th>
+				<th style="width:25%; align:center;"><a href="#" style="color: #FFFFFF; text-decoration: None;" class="sortheader" onclick="ts_resort_stripe_table(this, 3);return false;">End Date<span class="sortarrow">&nbsp;&nbsp;&nbsp;</span></a></th>
+				<th width="35%"><a href="#" style="color: #FFFFFF; text-decoration: None;" class="sortheader" onclick="ts_resort_stripe_table(this, 4);return false;">Backhaul Status<span class="sortarrow">&nbsp;&nbsp;&nbsp;</span></a></th>
+				<th width="35%"><a href="#" style="color: #FFFFFF; text-decoration: None;" class="sortheader" onclick="ts_resort_stripe_table(this, 5);return false;">Cancel<span class="sortarrow">&nbsp;&nbsp;&nbsp;</span></a></th>
+				<th width="35%"><a href="#" style="color: #FFFFFF; text-decoration: None;" class="sortheader" onclick="ts_resort_stripe_table(this, 6);return false;">Total Units<span class="sortarrow">&nbsp;&nbsp;&nbsp;</span></a></th>
+				<th width="35%"><a href="#" style="color: #FFFFFF; text-decoration: None;" class="sortheader" onclick="ts_resort_stripe_table(this, 7);return false;">Total Points<span class="sortarrow">&nbsp;&nbsp;&nbsp;</span></a></th>
+				<th width="35%"><a href="#" style="color: #FFFFFF; text-decoration: None;" class="sortheader" onclick="ts_resort_stripe_table(this, 8);return false;">Type<span class="sortarrow">&nbsp;&nbsp;&nbsp;</span></a></th>
+				<th width="35%"><a href="#" style="color: #FFFFFF; text-decoration: None;" class="sortheader" onclick="ts_resort_stripe_table(this, 9);return false;">Sub Inventory<span class="sortarrow">&nbsp;&nbsp;&nbsp;</span></a></th>
+				<th width="35%"><a href="#" style="color: #FFFFFF; text-decoration: None;" class="sortheader" onclick="ts_resort_stripe_table(this, 10);return false;">ADC<span class="sortarrow">&nbsp;&nbsp;&nbsp;</span></a></th>
+			    <th width="35%"><a href="#" style="color: #FFFFFF; text-decoration: None;" class="sortheader" onclick="ts_resort_stripe_table(this, 11);return false;">BOL<span class="sortarrow">&nbsp;&nbsp;&nbsp;</span></a></th>
+			    <th width="35%"><a href="#" style="color: #FFFFFF; text-decoration: None;" class="sortheader" onclick="ts_resort_stripe_table(this, 12);return false;">SCAC<span class="sortarrow">&nbsp;&nbsp;&nbsp;</span></a></th>
+			</tr>
+			
+		</thead>
+		<tbody>
+		      
+		        
+		        
+		        
+				<tr>
+			    	<td style="text-align: center; background-color: rgb(238, 238, 238);">9SU</td>
+			     	
+			      
+			      
+			    	<td style="text-align: center; background-color: rgb(238, 238, 238);">	<a href="/dms/backhaul/iso?id=96780268" style="text-decoration:underline; color:blue;" target="_blank">18925939</a></td>
+			      
+			      
+			     
+			    	<td style="text-align: center; background-color: rgb(238, 238, 238);">01/17/2026</td>
+			    	<td style="text-align: center; background-color: rgb(238, 238, 238);">01/23/2026</td>
+			    	<td style="text-align: center; background-color: rgb(238, 238, 238);">COMPLETE</td>
+			    	<td style="text-align: center; background-color: rgb(238, 238, 238);">0</td>
+			    	<td style="text-align: center; background-color: rgb(238, 238, 238);">83</td>
+			    	<td style="text-align: center; background-color: rgb(238, 238, 238);">92</td>
+			    	<td style="text-align: center; background-color: rgb(238, 238, 238);">PUSH</td>
+			    	<td style="text-align: center; background-color: rgb(238, 238, 238);">FG</td>
+			    	<td style="text-align: center; background-color: rgb(238, 238, 238);">SAC</td>
+				  	
+					   
+						 <td style="text-align: center; background-color: rgb(238, 238, 238);"><a class="backhaul_print" onclick="if (!window.__cfRLUnblockHandlers) return false; printBackhaul('96780268');return false;" target="_self" href="" style="text-decoration:none; color:blue;">Print</a></td>
+					  
+					  
+					 
+					 <td style="text-align: center; background-color: rgb(238, 238, 238);"><a href="javascript:openDmsCarrierDialog('BCK','18925939','18925939');" style="text-decoration:underline; color:blue;" target="_self">DLAM</a></td>
+		    	</tr>
+		     
+		</tbody>
+	</table>
+ 	
+	
+  
+</form>
+<!-- sec4 end---------------------------------------------------------------------------------------------------------------->
+
+<form id="redirectToCreate" name="redirectToCreate" target="_blank" action="GET">
+	<input type="hidden" name="invorg" id="hdn_invorg" value="">
+	<input type="hidden" name="id" id="hdn_id" value="">
+</form>
+
+
+<div class="ui-dialog ui-widget ui-widget-content ui-corner-all ui-front ui-dialog-buttons ui-draggable ui-resizable" tabindex="-1" role="dialog" aria-describedby="alertDlg" aria-labelledby="ui-id-1" style="position: absolute; height: auto; width: 400px; top: 360px; left: 496px; display: none;"><div class="ui-dialog-titlebar ui-widget-header ui-corner-all ui-helper-clearfix ui-draggable-handle"><span id="ui-id-1" class="ui-dialog-title">ALERT</span><button type="button" class="ui-button ui-widget ui-state-default ui-corner-all ui-button-icon-only ui-dialog-titlebar-close" role="button" title="Close"><span class="ui-button-icon-primary ui-icon ui-icon-closethick"></span><span class="ui-button-text">Close</span></button></div><div id="alertDlg" class="ui-dialog-content ui-widget-content" style="width: auto; min-height: 0px; max-height: none; height: 49px;"></div><div class="ui-resizable-handle ui-resizable-n" style="z-index: 90;"></div><div class="ui-resizable-handle ui-resizable-e" style="z-index: 90;"></div><div class="ui-resizable-handle ui-resizable-s" style="z-index: 90;"></div><div class="ui-resizable-handle ui-resizable-w" style="z-index: 90;"></div><div class="ui-resizable-handle ui-resizable-se ui-icon ui-icon-gripsmall-diagonal-se" style="z-index: 90;"></div><div class="ui-resizable-handle ui-resizable-sw" style="z-index: 90;"></div><div class="ui-resizable-handle ui-resizable-ne" style="z-index: 90;"></div><div class="ui-resizable-handle ui-resizable-nw" style="z-index: 90;"></div><div class="ui-dialog-buttonpane ui-widget-content ui-helper-clearfix"><div class="ui-dialog-buttonset"><button type="button" class="ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only" role="button"><span class="ui-button-text">OK</span></button></div></div></div></body></html>

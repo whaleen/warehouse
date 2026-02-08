@@ -1,0 +1,388 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html><head>
+
+<script type="text/javascript">
+	history.forward();
+</script>
+<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<title>ASIS</title>
+<!-- <link rel="stylesheet" type="text/css" href="https://code.jquery.com/ui/1.11.1/themes/smoothness/jquery-ui.css" /> -->
+
+<!-- <script type="text/javascript" src="https://code.jquery.com/jquery-1.10.2.js"></script> -->
+<script type="text/javascript" src="/dms/resources/js/jquery-1.10.2.js"></script>
+<!-- <script type="text/javascript" src="https://code.jquery.com/ui/1.11.1/jquery-ui.js"></script> -->
+<script type="text/javascript" src="/dms/resources/js/jquery-ui.js"></script> 
+<script type="text/javascript" src="/dms/resources/js/CalendarControl.js"></script></head>
+<body link="blue" vlink="purple" alink="red" style=""><iframe id="CalendarControlIFrame" frameborder="0" scrolling="no"></iframe><div id="CalendarControl"></div>
+<script type="text/javascript" src="/dms/resources/js/DmsFunction.js"></script>
+<script type="text/javascript" src="/dms/resources/js/jqueryajaxcommon.js"></script>
+<script type="text/javascript" src="/dms/resources/js/FormTableSort.js"></script>
+<script type="text/javascript" src="/dms/resources/js/TableSearch.js"></script>
+<script type="text/javascript" src="/dms/resources/js/TableSelectAll.js"></script>
+<script type="text/javascript" src="/dms/resources/js/StripedTable.js"></script>
+<script type="text/javascript" src="/dms/resources/js/jqueryajaxcommon.js"></script>
+<script type="text/javascript" src="/dms/resources/js/NewAsis.js"></script>
+
+<!-- CSS -->
+<link rel="stylesheet" type="text/css" href="/dms/resources/style/jquery-ui.css">
+<link rel="stylesheet" type="text/css" href="/dms/resources/style/style.css">
+<link rel="stylesheet" type="text/css" href="/dms/resources/style/Dms.css">
+<link rel="stylesheet" type="text/css" href="/dms/resources/style/CalendarControl.css">
+<link rel="stylesheet" type="text/css" href="/dms/resources/style/checkin.css">
+
+<script type="text/javascript">
+window.onload=function(){ 
+	stripe('table_list'); 
+}
+$(function () {
+	hidePleaseWait();	
+});
+
+</script>
+<style type="text/css">
+.headerLink a:visited {
+	color: #FFFFFF;
+}
+
+.headerLink a:link {
+	color: #FFFFFF;
+}
+
+.headerLink a:hover {
+	color: #FFFFFF;
+}
+
+.headerLink a:focus {
+	color: #FFFFFF;
+}
+
+.headerLink a:active {
+	color: #FFFFFF;
+}
+
+.headerLinkActive a:visited {
+	color: #006699;
+}
+
+.ui-dialog>.ui-widget-header {
+  background: #006699;
+}
+
+#dialog-confirm {
+	display: none;
+	resizable: false;
+	modal: true;
+	width: 450;
+	height: 160;
+}
+
+.linkable {
+
+}
+</style>
+
+
+
+
+    
+	<form name="frmAsis" id="frmAsis">
+	<input type="hidden" name="request" value="ASIS">
+	
+	<!-- <input type="hidden" name="dmsLoc" value=""> -->
+	<input type="hidden" name="statusChangeCode" value="">
+	<input type="hidden" name="hCsvView" value="">
+	<input type="hidden" id="operation" name="operation" value="">
+	<input type="hidden" id="loadCreatedOn" name="loadCreatedOn" value="">
+	<input type="hidden" id="loadNo" name="loadNo" value="">
+	<input type="hidden" id="invorg" name="invorg" value="">
+	<input type="hidden" id="hinvorg_delete" name="hinvorg_delete" value="">
+	<input type="hidden" id="screen" name="screen" value="loadstatus">
+		<!-- Header Begins -->
+
+	
+
+<script type="text/javascript">
+jQuery(document).ready(function($) {
+    window.history.pushState('forward', null, null); 
+    $(window).on('popstate', function() {
+       history.pushState(null, null, window.location.pathname);
+    }); 
+    
+});
+
+</script>
+
+<table class="messageHeader" border="0" align="center" width="100%">
+	<tbody><tr>
+		<td width="30%" style="color:#000000;"><b>ASIS</b></td>
+		
+		<td align="center"></td>
+				<td align="center">
+				
+		</td>
+		<td align="right" width="20%" style="color:#000000;">Welcome &nbsp;<b><font color="red" id="usr_login_id">515511228</font></b>
+       		
+       			
+       			
+       				&nbsp;<b>AGENT</b>
+       			
+       		
+		</td>
+		
+			
+			
+			
+			<td align="right" width="5%">&nbsp;<b>|&nbsp;<a target="_BLANK" href="/dms/faqadmin/faqsearch" style="color:blue;">Help</a></b>
+			
+			
+		
+	</td></tr>
+</tbody></table>
+<!-- Header Ends -->   
+
+		<div id="openaccountListWindow"></div>
+		<div id="openaLoadNumberWindow"></div>
+		<br>
+		&nbsp;
+
+		<table width="50%" align="center" cellspacing="2">
+			<tbody><tr style="height: 25">
+				<td class="form_tab_selected headerLinkActive" width="35%" style="border: 1px solid #3b73b9;" id="scanned_load" title="VIEW SCANNED LOAD STATUS">
+					<a href="/dms/newasis" style="text-decoration: none"><div class="linkable">VIEW SCANNED LOAD STATUS</div></a>
+				</td>
+				<td class="form_tab headerLink" width="30%" style="border: 1px solid #3b73b9;" id="report_history" title="REPORT HISTORY">
+					<a href="/dms/newasis/getreporthistory" style="text-decoration: none"><div class="linkable">REPORT HISTORY</div></a>			
+				</td>
+				
+			</tr>
+		</tbody></table>
+		&nbsp;
+		<br>
+		
+			
+			
+				
+			
+		
+
+		
+			
+			
+				
+			
+		
+
+		
+			
+		
+
+		
+		<table border="0" id="table_header" width="65%" align="center" cellpadding="0" cellspacing="0" class="dataTable">
+			<thead>
+				<tr>
+					<td colspan="4">ASIS-VIEW SCANNED LOAD SUMMARY</td>
+				</tr>
+			</thead>
+			<tbody>
+				<tr align="left">
+					<td width="30%" style="border: 0px"></td>
+					<td width="40%" align="left" style="border: 0px">Inventory Loc
+						&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+						<select name="dmsLoc" style="width: 60px" id="dmsLoc" onchange="if (!window.__cfRLUnblockHandlers) return false; loadAsisScannedData();">
+							
+							
+								<option value="9SU" selected="">9SU
+								</option>
+							
+					</select>
+					</td>
+					<td width="30%" style="border: 0px"></td>
+					<td width="30%" style="border: 0px"></td>
+				</tr>
+			</tbody>
+			<tfoot>
+				<tr>
+					<td width="30%" style="border: 0px">
+						<input id="dms_button" class="submitButton" type="button" align="right" value="Model Details SpreadSheet" onclick="if (!window.__cfRLUnblockHandlers) return false; exportCSVSpreadSheet('modelDetailsSpreadSheet');">
+					</td>
+					<td width="30%" style="border: 0px">
+						<input id="dms_button" class="submitButton" type="button" align="right" value="ASIS Load SpreadSheet" onclick="if (!window.__cfRLUnblockHandlers) return false; exportSpreadSheet();">
+					</td>
+					<td width="10%" align="left" style="border: 0px">Show only rows containing 
+						<input name="filter" id="filter" style="width: 100px;" class="textbox" onkeyup="if (!window.__cfRLUnblockHandlers) return false; filter2(this, 'table_list'); stripe('table_list');" onfocus="if (!window.__cfRLUnblockHandlers) return false; hideCalendarControl();" type="text">
+					</td>
+					<td width="30%" style="border: 0px">
+						<input id="dms_button" class="submitButton" type="button" value="Create ASIS Load" onclick="if (!window.__cfRLUnblockHandlers) return false; saveAsisLoad('insert','','','');return false;">
+					</td>
+				</tr>
+			</tfoot>
+		</table>
+			
+		
+			
+				&nbsp;<center><p style="color:#006699;">Click on the Load Number you would like to review</p></center>
+				
+			<table id="table_list" class="sortable_stripes dataTable" border="0" align="center" cellpadding="1" cellspacing="0" style="width:1100px">
+				<thead>
+					<tr>
+						<th><a href="#" style="color: #FFFFFF; text-decoration: None;" class="sortheader" onclick="ts_resort_stripe_table(this, 0);return false;">Load Number<span class="sortarrow">&nbsp;&nbsp;&nbsp;</span></a></th>
+						<th width="2%" style="text-align:center;padding-left:10px"><a href="#" style="color: #FFFFFF; text-decoration: None;" class="sortheader" onclick="ts_resort_stripe_table(this, 1);return false;">Units<span class="sortarrow">&nbsp;&nbsp;&nbsp;</span></a></th>
+						<th width="35%"><a href="#" style="color: #FFFFFF; text-decoration: None;" class="sortheader" onclick="ts_resort_stripe_table(this, 2);return false;">Notes<span class="sortarrow">&nbsp;&nbsp;&nbsp;</span></a></th>
+						<th style="width:20%; align:center;"><a href="#" style="color: #FFFFFF; text-decoration: None;" class="sortheader" onclick="ts_resort_stripe_table(this, 3);return false;">Scanned Date/Time<span class="sortarrow">&nbsp;&nbsp;&nbsp;</span></a></th>
+						<th width="20%"><a href="#" style="color: #FFFFFF; text-decoration: None;" class="sortheader" onclick="ts_resort_stripe_table(this, 4);return false;">Status<span class="sortarrow">&nbsp;&nbsp;&nbsp;</span></a></th>
+						
+							<th><a href="#" style="color: #FFFFFF; text-decoration: None;" class="sortheader" onclick="ts_resort_stripe_table(this, 5);return false;">Delete Load<span class="sortarrow">&nbsp;&nbsp;&nbsp;</span></a></th>
+						
+						
+					</tr>
+				</thead>
+				<tbody>
+				       
+						<tr>
+						    <td style="background-color: rgb(238, 238, 238);">
+						    
+						    	
+								
+								
+					    		<a href="/dms/newasis/viewloadnumber?invorg=9SU&amp;loadCreatedOn=20260206075615" style="text-decoration:underline; color:blue;" target="_blank">9SU20260206075615</a>
+					    	</td>
+					    	
+					    	<td style="text-align: center; background-color: rgb(238, 238, 238);">60</td>
+					    	<td style="text-align: center; background-color: rgb(238, 238, 238);">2/6&nbsp;</td>
+					    	<td style="text-align: center; background-color: rgb(238, 238, 238);">2026/02/06 07:56:15&nbsp;</td>
+					    	<td style="text-align: center; background-color: rgb(238, 238, 238);">FOR SALE&nbsp;</td>
+					    	
+						    	
+				    	</tr>
+				    	 
+						<tr>
+						    <td style="background-color: rgb(255, 255, 255);">
+						    
+						    	
+								
+								
+					    		<a href="/dms/newasis/viewloadnumber?invorg=9SU&amp;loadCreatedOn=20260204112201" style="text-decoration:underline; color:blue;" target="_blank">9SU20260204112201</a>
+					    	</td>
+					    	
+					    	<td style="text-align: center; background-color: rgb(255, 255, 255);">60</td>
+					    	<td style="text-align: center; background-color: rgb(255, 255, 255);">2/4&nbsp;</td>
+					    	<td style="text-align: center; background-color: rgb(255, 255, 255);">2026/02/04 11:22:01&nbsp;</td>
+					    	<td style="text-align: center; background-color: rgb(255, 255, 255);">FOR SALE&nbsp;</td>
+					    	
+						    	
+				    	</tr>
+				    	 
+						<tr>
+						    <td style="background-color: rgb(238, 238, 238);">
+						    
+						    	
+								
+								
+					    		<a href="/dms/newasis/viewloadnumber?invorg=9SU&amp;loadCreatedOn=20260203095507" style="text-decoration:underline; color:blue;" target="_blank">9SU20260203095507</a>
+					    	</td>
+					    	
+					    	<td style="text-align: center; background-color: rgb(238, 238, 238);">61</td>
+					    	<td style="text-align: center; background-color: rgb(238, 238, 238);">2/3&nbsp;</td>
+					    	<td style="text-align: center; background-color: rgb(238, 238, 238);">2026/02/03 09:55:07&nbsp;</td>
+					    	<td style="text-align: center; background-color: rgb(238, 238, 238);">FOR SALE&nbsp;</td>
+					    	
+						    	
+				    	</tr>
+				    	 
+						<tr>
+						    <td style="background-color: rgb(255, 255, 255);">
+						    
+						    	
+								
+								
+					    		<a href="/dms/newasis/viewloadnumber?invorg=9SU&amp;loadCreatedOn=20260129142324" style="text-decoration:underline; color:blue;" target="_blank">9SU20260129142324</a>
+					    	</td>
+					    	
+					    	<td style="text-align: center; background-color: rgb(255, 255, 255);">60</td>
+					    	<td style="text-align: center; background-color: rgb(255, 255, 255);">1/29&nbsp;</td>
+					    	<td style="text-align: center; background-color: rgb(255, 255, 255);">2026/01/29 14:23:24&nbsp;</td>
+					    	<td style="text-align: center; background-color: rgb(255, 255, 255);">FOR SALE&nbsp;</td>
+					    	
+						    	
+				    	</tr>
+				    	 
+						<tr>
+						    <td style="background-color: rgb(238, 238, 238);">
+						    
+						    	
+								
+								
+					    		<a href="/dms/newasis/viewloadnumber?invorg=9SU&amp;loadCreatedOn=20260122112108" style="text-decoration:underline; color:blue;" target="_blank">9SU20260122112108</a>
+					    	</td>
+					    	
+					    	<td style="text-align: center; background-color: rgb(238, 238, 238);">60</td>
+					    	<td style="text-align: center; background-color: rgb(238, 238, 238);">LETTER B&nbsp;</td>
+					    	<td style="text-align: center; background-color: rgb(238, 238, 238);">2026/01/22 11:21:08&nbsp;</td>
+					    	<td style="text-align: center; background-color: rgb(238, 238, 238);">FOR SALE&nbsp;</td>
+					    	
+						    	
+				    	</tr>
+				    	 
+						<tr>
+						    <td style="background-color: rgb(255, 255, 255);">
+						    
+						    	
+								
+								
+					    		<a href="/dms/newasis/viewloadnumber?invorg=9SU&amp;loadCreatedOn=20260122110648" style="text-decoration:underline; color:blue;" target="_blank">9SU20260122110648</a>
+					    	</td>
+					    	
+					    	<td style="text-align: center; background-color: rgb(255, 255, 255);">60</td>
+					    	<td style="text-align: center; background-color: rgb(255, 255, 255);">LETTER A&nbsp;</td>
+					    	<td style="text-align: center; background-color: rgb(255, 255, 255);">2026/01/22 11:06:48&nbsp;</td>
+					    	<td style="text-align: center; background-color: rgb(255, 255, 255);">FOR SALE&nbsp;</td>
+					    	
+						    	
+				    	</tr>
+				    	 
+						<tr>
+						    <td style="background-color: rgb(238, 238, 238);">
+						    
+						    	
+								
+								
+					    		<a href="/dms/newasis/viewloadnumber?invorg=9SU&amp;loadCreatedOn=20260114134738" style="text-decoration:underline; color:blue;" target="_blank">9SU20260114134738</a>
+					    	</td>
+					    	
+					    	<td style="text-align: center; background-color: rgb(238, 238, 238);">60</td>
+					    	<td style="text-align: center; background-color: rgb(238, 238, 238);">14TH&nbsp;</td>
+					    	<td style="text-align: center; background-color: rgb(238, 238, 238);">2026/01/14 13:47:38&nbsp;</td>
+					    	<td style="text-align: center; background-color: rgb(238, 238, 238);">FOR SALE&nbsp;</td>
+					    	
+						    	
+				    	</tr>
+				    	 
+						<tr>
+						    <td style="background-color: rgb(255, 255, 255);">
+						    
+						    	
+								
+								
+					    		<a href="/dms/newasis/viewloadnumber?invorg=9SU&amp;loadCreatedOn=20260102093116" style="text-decoration:underline; color:blue;" target="_blank">9SU20260102093116</a>
+					    	</td>
+					    	
+					    	<td style="text-align: center; background-color: rgb(255, 255, 255);">60</td>
+					    	<td style="text-align: center; background-color: rgb(255, 255, 255);">1/2-BSTOCK&nbsp;</td>
+					    	<td style="text-align: center; background-color: rgb(255, 255, 255);">2026/01/02 09:31:16&nbsp;</td>
+					    	<td style="text-align: center; background-color: rgb(255, 255, 255);">FOR SALE&nbsp;</td>
+					    	
+						    	
+				    	</tr>
+				    	 
+				</tbody>
+			</table>
+			
+			
+		
+ 
+	</form>
+	
+<div id="dialog-confirm" style="width:500px;"><div id="myDialogText"></div></div>
+
+
+
+<div class="ui-dialog ui-widget ui-widget-content ui-corner-all ui-front ui-dialog-buttons ui-draggable ui-resizable" tabindex="-1" role="dialog" aria-describedby="alertDlg" aria-labelledby="ui-id-1" style="position: absolute; height: auto; width: 400px; top: 360px; left: 496px; display: none;"><div class="ui-dialog-titlebar ui-widget-header ui-corner-all ui-helper-clearfix ui-draggable-handle"><span id="ui-id-1" class="ui-dialog-title">ALERT</span><button type="button" class="ui-button ui-widget ui-state-default ui-corner-all ui-button-icon-only ui-dialog-titlebar-close" role="button" title="Close"><span class="ui-button-icon-primary ui-icon ui-icon-closethick"></span><span class="ui-button-text">Close</span></button></div><div id="alertDlg" class="ui-dialog-content ui-widget-content" style="width: auto; min-height: 0px; max-height: none; height: 49px;"></div><div class="ui-resizable-handle ui-resizable-n" style="z-index: 90;"></div><div class="ui-resizable-handle ui-resizable-e" style="z-index: 90;"></div><div class="ui-resizable-handle ui-resizable-s" style="z-index: 90;"></div><div class="ui-resizable-handle ui-resizable-w" style="z-index: 90;"></div><div class="ui-resizable-handle ui-resizable-se ui-icon ui-icon-gripsmall-diagonal-se" style="z-index: 90;"></div><div class="ui-resizable-handle ui-resizable-sw" style="z-index: 90;"></div><div class="ui-resizable-handle ui-resizable-ne" style="z-index: 90;"></div><div class="ui-resizable-handle ui-resizable-nw" style="z-index: 90;"></div><div class="ui-dialog-buttonpane ui-widget-content ui-helper-clearfix"><div class="ui-dialog-buttonset"><button type="button" class="ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only" role="button"><span class="ui-button-text">OK</span></button></div></div></div></body></html>

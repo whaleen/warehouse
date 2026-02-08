@@ -1,0 +1,123 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html><head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<title>MANIFEST - Delivery Team</title>
+	
+
+<!--<link rel="stylesheet"
+ href="https://code.jquery.com/ui/1.11.1/themes/smoothness/jquery-ui.css"></link> -->
+	<link rel="stylesheet" type="text/css" href="/dms/resources/style/jquery-ui.css">
+<!-- <script src="https://code.jquery.com/jquery-1.10.2.js"></script> -->
+<script type="text/javascript" src="/dms/resources/js/jquery-1.10.2.js"></script>
+<!-- <script src="https://code.jquery.com/ui/1.11.1/jquery-ui.js"></script> -->
+<script type="text/javascript" src="/dms/resources/js/jquery-ui.js"></script>
+<script src="/dms/web/resources/js/jqueryajaxcommon.js" language="javascript" type="text/javascript"></script>
+<script src="/dms/web/resources/js/CalendarControl.js" language="javascript" type="text/javascript"></script>
+<script src="/dms/web/resources/js/manifest.js" language="javascript" type="text/javascript"></script>
+<script src="/dms/web/resources/js/deliveryteam.js" language="javascript" type="text/javascript"></script>
+<link rel="stylesheet" href="/dms/web/resources/style/Dms.css">
+<link rel="stylesheet" href="/dms/web/resources/style/CalendarControl.css">
+<style type="text/css">
+body {
+	font-family: ge inspira, verdana;
+	font-size: 12px;
+}
+
+dt {
+	font-family: "arial unicode MS", arial, geneva, sans-serif;
+}
+
+.ui-widget {
+	font-size: 12px;
+}
+
+#accordion .ui-accordion-content {
+	max-height: 100px;
+}
+.menuitem{border:1px solid #006699;text-decoration:none;color:#FFFFFF;background-color:#006699;padding:4px 20px 4px 20px;font-size:13px;font-weight:bold;}
+.activemenu{border:1px solid #006699;text-decoration:none;color:#006699;background-color:#FFFFFF;padding:4px 20px 4px 20px;font-size:13px;font-weight:bold;}
+.menuitem:hover {background-color: #FFFFFF;color:#006699;}
+</style>
+<script type="text/javascript">
+	history.forward();
+</script>
+</head>
+
+<body link="blue" vlink="purple" alink="red" onload="" style="">
+	<div id="alertDlg"></div>	
+	
+	<!-- Header Begins -->
+
+	
+
+<script type="text/javascript">
+jQuery(document).ready(function($) {
+    window.history.pushState('forward', null, null); 
+    $(window).on('popstate', function() {
+       history.pushState(null, null, window.location.pathname);
+    }); 
+    
+});
+
+</script>
+
+<table class="messageHeader" border="0" align="center" width="100%">
+	<tbody><tr>
+		<td width="30%" style="color:#000000;"><b></b></td>
+		
+		<td align="center"></td>
+				<td align="center">
+			
+				
+					
+					
+						
+							
+						
+						
+					
+					<a href="/dms/messages/messagetitledetail?&amp;type=MANIFEST" target="_blank"><b><font style="text-decoration: underline" color="RED">Having trouble with screen display or response?   </font></b></a>
+				
+				
+		</td>
+		<td align="right" width="20%" style="color:#000000;">Welcome &nbsp;<b><font color="red" id="usr_login_id">515511228</font></b>
+       		
+       			
+       			
+       				&nbsp;<b>AGENT</b>
+       			
+       		
+		</td>
+			
+		
+	</tr>
+</tbody></table>
+<!-- Header Ends -->   
+
+	<table cellpadding="0" cellspacing="0" align="center" border="0" style="width:1200px;">
+		<tbody><tr height="10">
+		</tr>
+		<tr>
+			<td align="center">
+				<table id="manifestmenu">
+					<tbody><tr>
+						<td><a href="javascript:loadDeliveryTeamPage();" class="activemenu">DELIVERY
+					TEAM</a></td>
+						<td><a href="/dms/web/manifest/inbounddsso" class="menuitem">Inbound DSSO Review</a></td>
+					</tr>
+				</tbody></table>
+			</td>
+		</tr>
+		<tr height="10">
+
+		</tr>
+	</tbody></table>
+	<table cellpadding="0" cellspacing="0" align="center" border="0" style="width:1200px;">
+		<tbody><tr>
+			<td colspan="4" width="100%">
+				<div id="mainresult"></div>
+			</td>
+		</tr>
+	</tbody></table>
+
+</body></html>

@@ -1,0 +1,13 @@
+Inventory - Backhaul ISO			Welcome  515511228  AGENT
+
+
+Inv Org	ISO	Start Date	End Date	Backhaul Status	Cancel	Total Units	Total Points	Type	Sub Inventory	ADC	BOL
+
+Carrier Information
+
+SHIP CONFIRM
+PICK LIST
+ISO
+Line #	Model  #	Serial  #	Acc
+Qty	ISO
+Line Status	Cancel	Confirm	Confirm Status

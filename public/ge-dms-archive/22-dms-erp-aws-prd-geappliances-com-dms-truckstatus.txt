@@ -1,0 +1,11 @@
+Truck - Status		Having trouble with screen display or response?	Welcome  515511228  AGENT	 | Help
+
+
+
+INV ORG:  	
+9SU
+	Date :   02-07-2026	 	Time :   20:56 Pacific DLT	 		 
+
+
+
+TRUCK	PRIMARY DRIVER	DRIVER ID	PHONE #1	CURRENT STOP	IVR RESPONSE FOR CURRENT STOP	TIME FRAME	IVR DATE/TIME STAMP	LINKS	Warehouse Exception Report

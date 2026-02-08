@@ -1,0 +1,239 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd"><html><head>
+<title>OPEN ORDER REPORT</title>
+  
+   <script type="text/javascript">history.forward();</script>
+   
+   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+   <script src="/dms/resources/js/jquery-1.10.2.js" type="text/javascript"></script>
+   <script src="/dms/resources/js/DmsFunction.js" type="text/javascript"></script>
+   <script src="/dms/resources/js/StripedTable.js" type="text/javascript"></script>
+   <script src="/dms/resources/js/TableSearch.js" type="text/javascript"></script>
+   <script src="/dms/resources/js/FormTableSort.js" type="text/javascript"></script>
+   <script src="/dms/resources/js/CalendarControl.js" type="text/javascript"></script></head>
+ <body bgcolor="#FFFFFF" style=""><iframe id="CalendarControlIFrame" frameborder="0" scrolling="no"></iframe><div id="CalendarControl"></div>
+   <script src="/dms/resources/js/openorderreport.js" type="text/javascript"></script>   
+   <link href="/dms/resources/style/Dms.css" rel="stylesheet" type="text/css">
+   <link href="/dms/resources/style/CalendarControl.css" rel="stylesheet" type="text/css">
+   <link href="/dms/resources/style/openorderreport.css" rel="stylesheet" type="text/css">   
+   <script language="javascript" type="text/javascript">
+
+      window.onload = function()
+      {
+         stripe('table_list');
+      }
+
+   </script>
+
+<!-- Header Begins -->
+
+	
+
+<script type="text/javascript">
+jQuery(document).ready(function($) {
+    window.history.pushState('forward', null, null); 
+    $(window).on('popstate', function() {
+       history.pushState(null, null, window.location.pathname);
+    }); 
+    
+});
+
+</script>
+
+<table class="messageHeader" border="0" align="center" width="100%">
+	<tbody><tr>
+		<td width="30%" style="color:#000000;"><b>BUILDER OPEN ORDER by CUSTOMER</b></td>
+		
+		<td align="center"></td>
+				<td align="center">
+				
+		</td>
+		<td align="right" width="20%" style="color:#000000;">Welcome &nbsp;<b><font color="red" id="usr_login_id">515511228</font></b>
+       		
+       			
+       			
+       				&nbsp;<b>AGENT</b>
+       			
+       		
+		</td>
+		
+			
+			
+			
+			<td align="right" width="5%">&nbsp;<b>|&nbsp;<a target="_BLANK" href="/dms/faqadmin/faqsearch" style="color:blue;">Help</a></b>
+			
+			
+		
+	</td></tr>
+</tbody></table>
+<!-- Header Ends -->   
+
+<br>
+	<form name="FrmOpenOrdersRpt">
+		<input type="hidden" name="hInvOrg" value="">
+		<input type="hidden" name="hPartyName" value="">
+            <table align="center">
+                <tbody><tr>
+                    <td width="100%" height="15" colspan="15">
+                    <br>
+                    <br>
+	                    <center>
+		                    <div style="font-family:arial">
+	                                 <span style="font:bold;font-size:20px"><b>National Builder Open Orders Report</b> </span>
+	                                 <br>
+	                                 <span style="font-size:12px"> Only Top 50 Builder Customers are available in Dropdown </span>
+	                                  <br>
+	                         </div>
+	                   </center>
+                    </td>
+                </tr>
+                <tr>
+                	<td width="15%" align="left" height="23">
+			         <b><span><i>Inv Org: &nbsp;</i></span></b>
+							<select name="cbDmsLoc" id="cbDmsLoc" style="width: 100px" onchange="if (!window.__cfRLUnblockHandlers) return false; OnChangeDmsLoc()">
+							    
+								
+									<option value="19SU">9SU</option>
+								
+							</select>                	
+                	</td>
+                    <td width="25%" align="left" height="23">
+                     <b><span style="font-family: arial;">Customer Name:&nbsp;</span></b>
+                        <select name="partyName" id="selPartyName" style="border: 1px solid #E2E2E2" size="1">
+	                            <option value="...">...</option>
+							 	                        	                        
+	                        
+		                        <option value="ARTHUR RUTENBERG">ARTHUR RUTENBERG</option>
+	                        
+		                        <option value="ASHTON WOODS">ASHTON WOODS</option>
+	                        
+		                        <option value="CASTLEROCK COMMUNITIES">CASTLEROCK COMMUNITIES</option>
+	                        
+		                        <option value="CENTURY COMMUNITIES">CENTURY COMMUNITIES</option>
+	                        
+		                        <option value="CHESMAR">CHESMAR</option>
+	                        
+		                        <option value="CLAYTON HOMES">CLAYTON HOMES</option>
+	                        
+		                        <option value="DAVID WEEKLEY HOMES">DAVID WEEKLEY HOMES</option>
+	                        
+		                        <option value="DRB GROUP">DRB GROUP</option>
+	                        
+		                        <option value="EPMARK INC">EPMARK INC</option>
+	                        
+		                        <option value="FISCHER HOMES, INC">FISCHER HOMES, INC</option>
+	                        
+		                        <option value="FULTON HOMES">FULTON HOMES</option>
+	                        
+		                        <option value="G L HOMES">G L HOMES</option>
+	                        
+		                        <option value="GREEN BRICK PARTNERS">GREEN BRICK PARTNERS</option>
+	                        
+		                        <option value="HAYDEN HOMES">HAYDEN HOMES</option>
+	                        
+		                        <option value="HIGHLAND HOMES">HIGHLAND HOMES</option>
+	                        
+		                        <option value="HOMES BY WEST BAY LLC">HOMES BY WEST BAY LLC</option>
+	                        
+		                        <option value="IVORY HOMES">IVORY HOMES</option>
+	                        
+		                        <option value="K HOVNANIAN">K HOVNANIAN</option>
+	                        
+		                        <option value="KB HOME">KB HOME</option>
+	                        
+		                        <option value="KOLTER HOMES">KOLTER HOMES</option>
+	                        
+		                        <option value="LENNAR HOMES">LENNAR HOMES</option>
+	                        
+		                        <option value="M/I SCHOTTENSTEIN">M/I SCHOTTENSTEIN</option>
+	                        
+		                        <option value="MAIN STREET RENEWAL">MAIN STREET RENEWAL</option>
+	                        
+		                        <option value="MCBRIDE &amp; SONS ASSOC">MCBRIDE &amp; SONS ASSOC</option>
+	                        
+		                        <option value="MUNGO HOMES">MUNGO HOMES</option>
+	                        
+		                        <option value="N V R INC (RYAN)">N V R INC (RYAN)</option>
+	                        
+		                        <option value="NEAL COMMUNITIES">NEAL COMMUNITIES</option>
+	                        
+		                        <option value="NEW HOME COMPANY">NEW HOME COMPANY</option>
+	                        
+		                        <option value="PERRY HOMES">PERRY HOMES</option>
+	                        
+		                        <option value="RICHMOND AMERICAN">RICHMOND AMERICAN</option>
+	                        
+		                        <option value="SCHELL BROTHERS">SCHELL BROTHERS</option>
+	                        
+		                        <option value="SHEA">SHEA</option>
+	                        
+		                        <option value="STANLEY MARTIN HOMES">STANLEY MARTIN HOMES</option>
+	                        
+		                        <option value="TAYLOR MORRISON">TAYLOR MORRISON</option>
+	                        
+		                        <option value="TRI POINTE GROUP">TRI POINTE GROUP</option>
+	                        
+		                        <option value="VAN METRE COMPANIES">VAN METRE COMPANIES</option>
+	                        
+		                        <option value="WOODSIDE GROUP">WOODSIDE GROUP</option>
+	                        
+                       </select>
+                       
+                       	<script type="text/javascript">
+                       		function selectTopPartyname(){
+                       			$("#selPartyName").val($("#selPartyName option:first").val());
+                       		}
+                       		selectTopPartyname();
+                       	</script>
+                       
+                    </td>                	
+                </tr>
+                <tr align="right">
+                	<td>
+                	
+                	</td>
+                	<td>
+                		<span style="padding-left: 80px; float: left;">
+                	    	<input type="button" name="openOrderSearchBtn" value="RUN REPORT" onclick="if (!window.__cfRLUnblockHandlers) return false; JAVASCRIPT:searchOpenOrdersReport()">
+                	    </span>                	
+                	    <span>
+			        		<font color="darkgreen" size="4"> Export To Excel </font>
+				        	<a href="javascript:exportToExcel()">       	
+				           		<img alt="Export To Excel" border="0" src="/dms/resources/images/excel.gif">
+				        	</a>   
+			        	</span>             	
+                	</td>                	
+                </tr>
+           </tbody></table>
+
+           <table class="sortable_stripes" border="1" id="table_list" align="center" width="80%" cellpadding="1" cellspacing="0">
+             <thead>
+           		<tr>
+           			<th><a href="#" style="color: #FFFFFF; text-decoration: None;" class="sortheader" onclick="ts_resort_stripe_table(this, 0);return false;">Original
+Delivery
+Date<span class="sortarrow">&nbsp;&nbsp;&nbsp;</span></a></th>
+           			<th><a href="#" style="color: #FFFFFF; text-decoration: None;" class="sortheader" onclick="ts_resort_stripe_table(this, 1);return false;">Ship Method<span class="sortarrow">&nbsp;&nbsp;&nbsp;</span></a></th>
+           			<th><a href="#" style="color: #FFFFFF; text-decoration: None;" class="sortheader" onclick="ts_resort_stripe_table(this, 2);return false;">DMS Loc<span class="sortarrow">&nbsp;&nbsp;&nbsp;</span></a></th>
+           			<th><a href="#" style="color: #FFFFFF; text-decoration: None;" class="sortheader" onclick="ts_resort_stripe_table(this, 3);return false;">Age<span class="sortarrow">&nbsp;&nbsp;&nbsp;</span></a></th>
+           			<th><a href="#" style="color: #FFFFFF; text-decoration: None;" class="sortheader" onclick="ts_resort_stripe_table(this, 4);return false;">Delivery ID<span class="sortarrow">&nbsp;&nbsp;&nbsp;</span></a></th>
+           			<th><a href="#" style="color: #FFFFFF; text-decoration: None;" class="sortheader" onclick="ts_resort_stripe_table(this, 5);return false;">CSO<span class="sortarrow">&nbsp;&nbsp;&nbsp;</span></a></th>
+           			<th><a href="#" style="color: #FFFFFF; text-decoration: None;" class="sortheader" onclick="ts_resort_stripe_table(this, 6);return false;">Arrival Date<span class="sortarrow">&nbsp;&nbsp;&nbsp;</span></a></th>
+           			<th><a href="#" style="color: #FFFFFF; text-decoration: None;" class="sortheader" onclick="ts_resort_stripe_table(this, 7);return false;">Requested Delivery Date<span class="sortarrow">&nbsp;&nbsp;&nbsp;</span></a></th>
+           			<th><a href="#" style="color: #FFFFFF; text-decoration: None;" class="sortheader" onclick="ts_resort_stripe_table(this, 8);return false;">Address<span class="sortarrow">&nbsp;&nbsp;&nbsp;</span></a></th>
+           			<th><a href="#" style="color: #FFFFFF; text-decoration: None;" class="sortheader" onclick="ts_resort_stripe_table(this, 9);return false;">Delivery Type<span class="sortarrow">&nbsp;&nbsp;&nbsp;</span></a></th>
+           			<th><a href="#" style="color: #FFFFFF; text-decoration: None;" class="sortheader" onclick="ts_resort_stripe_table(this, 10);return false;">Order Status<span class="sortarrow">&nbsp;&nbsp;&nbsp;</span></a></th>
+           			<th><a href="#" style="color: #FFFFFF; text-decoration: None;" class="sortheader" onclick="ts_resort_stripe_table(this, 11);return false;">Schedule Code<span class="sortarrow">&nbsp;&nbsp;&nbsp;</span></a></th>
+           			<th><a href="#" style="color: #FFFFFF; text-decoration: None;" class="sortheader" onclick="ts_resort_stripe_table(this, 12);return false;">Assignment Type<span class="sortarrow">&nbsp;&nbsp;&nbsp;</span></a></th>
+           			<th><a href="#" style="color: #FFFFFF; text-decoration: None;" class="sortheader" onclick="ts_resort_stripe_table(this, 13);return false;">Inv Org<span class="sortarrow">&nbsp;&nbsp;&nbsp;</span></a></th>
+           			<th><a href="#" style="color: #FFFFFF; text-decoration: None;" class="sortheader" onclick="ts_resort_stripe_table(this, 14);return false;">Sold To<span class="sortarrow">&nbsp;&nbsp;&nbsp;</span></a></th>
+           			<th><a href="#" style="color: #FFFFFF; text-decoration: None;" class="sortheader" onclick="ts_resort_stripe_table(this, 15);return false;">Customer Account<span class="sortarrow">&nbsp;&nbsp;&nbsp;</span></a></th>
+           			<th><a href="#" style="color: #FFFFFF; text-decoration: None;" class="sortheader" onclick="ts_resort_stripe_table(this, 16);return false;">RM Code<span class="sortarrow">&nbsp;&nbsp;&nbsp;</span></a></th>
+           			<th><a href="#" style="color: #FFFFFF; text-decoration: None;" class="sortheader" onclick="ts_resort_stripe_table(this, 17);return false;">RM Last Name<span class="sortarrow">&nbsp;&nbsp;&nbsp;</span></a></th>
+           		</tr>
+           	 </thead>
+           	 <tbody>
+				           
+           	</tbody>
+        </table>
+	</form>
+
+</body></html>

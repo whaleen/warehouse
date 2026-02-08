@@ -1,5 +1,5 @@
-import { ScanBarcode, LayoutDashboard, TruckIcon, Map, MoreHorizontal, User, Moon, Sun, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Bot, LayoutDashboard, Map, MoreHorizontal, Moon, Search, Sun, TruckIcon, User } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/context/AuthContext';
 import { haptic } from '@/lib/feedback';
@@ -12,13 +12,6 @@ interface MobilePrimaryNavProps {
 }
 
 const primaryItems = [
-  {
-    icon: ScanBarcode,
-    label: 'Sessions',
-    view: 'sessions' as AppView,
-    description: 'Scanning sessions',
-    action: 'route' as const,
-  },
   {
     icon: LayoutDashboard,
     label: 'Dashboard',
@@ -37,7 +30,14 @@ const primaryItems = [
     icon: Map,
     label: 'Warehouse Map',
     view: 'map' as AppView,
-    description: 'View floor layout',
+    description: 'View scan map',
+    action: 'route' as const,
+  },
+  {
+    icon: Bot,
+    label: 'Agent',
+    view: 'agent' as AppView,
+    description: 'Ask the agent',
     action: 'route' as const,
   },
 ];

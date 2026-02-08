@@ -1,4 +1,4 @@
-# Phase 1: Realtime Sync Implementation
+# Realtime Sync Implementation
 
 ## ✅ What Was Done
 
@@ -12,7 +12,9 @@ Updated `RealtimeContext.tsx` to automatically invalidate ALL related queries wh
 - `scanning_sessions` → Invalidates sessions, map metadata
 
 ### 2. Automatic Database Triggers
-Created database triggers that automatically update `load_metadata.items_scanned_count` when items are scanned:
+Database triggers can automatically update `load_metadata.items_scanned_count` when items are scanned. The trigger SQL is in:
+
+- `scripts/create-auto-update-scanning-trigger.sql`
 
 **Trigger: `trigger_update_scanning_progress`**
 - Fires on INSERT/DELETE to `product_location_history`
@@ -63,16 +65,20 @@ Test by scanning an item:
 3. LoadDetailPanel shows updated progress
 4. All other users see the change immediately
 
-## Files Modified
+## Files
 
 - `src/context/RealtimeContext.tsx` - Enhanced subscriptions with comprehensive invalidation
 - `src/lib/loadScanningProgress.ts` - Removed manual invalidation (now automatic)
-- `scripts/create-auto-update-scanning-trigger.sql` - Database trigger for auto-updates
+- `scripts/create-auto-update-scanning-trigger.sql` - Database trigger for auto-updates (apply manually)
 
-## Next Steps (Phase 2)
+## Audience Notes
 
-Consider adding:
-- Zustand store for optimistic updates (instant UI before server confirms)
-- Loading states while syncing
-- Conflict resolution for simultaneous edits
-- Background sync indicator in UI
+### For Developers
+- Realtime invalidation happens in `src/context/RealtimeContext.tsx`.
+- Trigger SQL must be applied to Supabase to keep scan counts in sync.
+
+### For Operators
+- Scan updates should appear instantly; if they do not, contact IT to verify realtime and triggers.
+
+### For Agent
+- Use this doc only for explaining realtime behavior, not UI workflows.

@@ -3,6 +3,7 @@ import type { ComponentType } from "react"
 import {
   Building2,
   Bot,
+  BookOpen,
   CheckSquare,
   ClipboardList,
   Database,
@@ -87,6 +88,13 @@ const baseNavSections: NavSection[] = [
         view: "agent",
         applyParams: clearPartsParams,
         isActive: (currentView) => currentView === "agent",
+      },
+      {
+        label: "Docs",
+        icon: BookOpen,
+        view: "docs",
+        applyParams: clearPartsParams,
+        isActive: (currentView) => currentView === "docs",
       },
       {
         label: "Activity Log",

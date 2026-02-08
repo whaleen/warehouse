@@ -8,6 +8,7 @@ import {
   Database,
   ChevronLeft,
   FileBarChart,
+  BookOpen,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -87,6 +88,11 @@ const secondaryGroups: NavGroup[] = [
         icon: FileBarChart,
         label: 'Data Quality',
         view: 'data-quality',
+      },
+      {
+        icon: BookOpen,
+        label: 'Docs',
+        view: 'docs',
       },
     ],
   },
