@@ -12,6 +12,7 @@ import { useInventoryScanCounts } from '@/hooks/queries/useMap';
 import { useFogOfWar } from '@/hooks/queries/useFogOfWar';
 import { AppHeader } from '@/components/Navigation/AppHeader';
 import { ReorderAlertsCard } from './ReorderAlertsCard';
+import { SyncStatusCard } from './SyncStatusCard';
 import { PageContainer } from '@/components/Layout/PageContainer';
 import { getPathForView } from '@/lib/routes';
 import type { AppView } from '@/lib/routes';
@@ -27,12 +28,32 @@ interface DashboardViewProps {
 interface DetailedStats {
   totalItems: number;
 
+  // STA = Sold items (migrated from ASIS loads when sold)
+  sta: {
+    total: number;
+    inAsisLoads: number; // STA items still in ASIS loads (sold but not yet delivered)
+    unassigned: number;  // STA items not in any load
+  };
+
+  // LocalStock = Normal crated STA ready for ordering (floor terminology)
   localStock: {
     total: number;
+    inOrders: number;    // Assigned to CSOs
+    unassigned: number;  // Not assigned to CSOs
+  };
+
+  // Staged = Items staged for something
+  staged: {
+    total: number;
+    assigned: number;
     unassigned: number;
-    staged: number;
-    inbound: number;
-    routes: number;
+  };
+
+  // Inbound = Incoming items
+  inbound: {
+    total: number;
+    assigned: number;
+    unassigned: number;
   };
 
   fg: {
@@ -73,7 +94,10 @@ interface DetailedStats {
 
 const EMPTY_STATS: DetailedStats = {
   totalItems: 0,
-  localStock: { total: 0, unassigned: 0, staged: 0, inbound: 0, routes: 0 },
+  sta: { total: 0, inAsisLoads: 0, unassigned: 0 },
+  localStock: { total: 0, inOrders: 0, unassigned: 0 },
+  staged: { total: 0, assigned: 0, unassigned: 0 },
+  inbound: { total: 0, assigned: 0, unassigned: 0 },
   fg: { total: 0, regular: 0, backhaul: 0 },
   asis: { total: 0, unassigned: 0, regular: 0, salvage: 0, scrap: 0 },
   asisLoads: {
@@ -133,13 +157,16 @@ export function DashboardView({ onViewChange, onMenuClick }: DashboardViewProps)
   const [selectedDrilldown, setSelectedDrilldown] = useState<string | null>(null);
   // const [isCompact, setIsCompact] = useState(false);
 
-  // Helper to navigate to inventory with filter
+  // Helper to navigate to inventory with filter - use path-based URLs
   const navigateToInventory = (filterType?: 'LocalStock' | 'FG' | 'ASIS' | 'Parts') => {
     if (filterType) {
       const params = new URLSearchParams(window.location.search);
-      params.set('type', filterType);
       params.delete('view');
-      const path = getPathForView('inventory');
+      params.delete('type'); // Remove legacy query param
+      // Build path-based URL
+      const path = getPathForView('inventory', undefined, undefined, {
+        inventoryType: filterType
+      });
       const newUrl = params.toString() ? `${path}?${params.toString()}` : path;
       window.history.replaceState({}, '', newUrl);
       window.dispatchEvent(new Event('app:locationchange'));
@@ -147,22 +174,26 @@ export function DashboardView({ onViewChange, onMenuClick }: DashboardViewProps)
     onViewChange?.('inventory');
   };
 
-  // Helper to navigate to Parts inventory
+  // Helper to navigate to Parts inventory - use path-based URLs
   const navigateToPartsInventory = (status?: 'reorder') => {
     const params = new URLSearchParams(window.location.search);
-    params.set('type', 'Parts');
-    params.set('partsTab', 'inventory');
     params.delete('view');
+    params.delete('type');
+    params.delete('tab');
+    // Status is kept as query param
     if (status === 'reorder') {
-      params.set('partsStatus', 'reorder');
+      params.set('status', 'reorder');
     } else {
-      params.delete('partsStatus');
+      params.delete('status');
     }
-    const path = getPathForView('inventory');
+    // Build path-based URL for parts/inventory
+    const path = getPathForView('parts', undefined, undefined, {
+      partsTab: 'inventory'
+    });
     const newUrl = params.toString() ? `${path}?${params.toString()}` : path;
     window.history.replaceState({}, '', newUrl);
     window.dispatchEvent(new Event('app:locationchange'));
-    onViewChange?.('inventory');
+    onViewChange?.('parts');
   };
 
   const navigateToLoad = (loadNumber: string) => {
@@ -213,7 +244,10 @@ export function DashboardView({ onViewChange, onMenuClick }: DashboardViewProps)
 
     const newStats: DetailedStats = {
       totalItems: activeItemCount,
-      localStock: { total: 0, unassigned: 0, staged: 0, inbound: 0, routes: 0 },
+      sta: { total: 0, inAsisLoads: 0, unassigned: 0 },
+      localStock: { total: 0, inOrders: 0, unassigned: 0 },
+      staged: { total: 0, assigned: 0, unassigned: 0 },
+      inbound: { total: 0, assigned: 0, unassigned: 0 },
       fg: { total: 0, regular: 0, backhaul: 0 },
       asis: { total: 0, unassigned: 0, regular: 0, salvage: 0, scrap: 0 },
       asisLoads: {
@@ -237,22 +271,55 @@ export function DashboardView({ onViewChange, onMenuClick }: DashboardViewProps)
     });
 
     itemsData.forEach((item) => {
-      if (item.inventory_type === 'LocalStock' || item.inventory_type === 'Staged' || item.inventory_type === 'STA' || item.inventory_type === 'Inbound') {
+      // STA = Sold items (migrated from ASIS when sold)
+      if (item.inventory_type === 'STA') {
+        newStats.sta.total++;
+        if (!item.sub_inventory) {
+          newStats.sta.unassigned++;
+        } else {
+          // STA items with sub_inventory are in ASIS loads (sold but not yet delivered)
+          newStats.sta.inAsisLoads++;
+        }
+      }
+      // LocalStock = Normal crated STA ready for ordering
+      else if (item.inventory_type === 'LocalStock') {
         newStats.localStock.total++;
         if (!item.sub_inventory) {
           newStats.localStock.unassigned++;
         } else {
-          newStats.localStock.routes++;
+          newStats.localStock.inOrders++;
         }
-        if (item.inventory_type === 'Staged' || item.inventory_type === 'STA') newStats.localStock.staged++;
-        if (item.inventory_type === 'Inbound') newStats.localStock.inbound++;
-      } else if (item.inventory_type === 'FG') {
+      }
+      // Staged = Items staged for something
+      else if (item.inventory_type === 'Staged') {
+        newStats.staged.total++;
+        if (!item.sub_inventory) {
+          newStats.staged.unassigned++;
+        } else {
+          newStats.staged.assigned++;
+        }
+      }
+      // Inbound = Incoming items
+      else if (item.inventory_type === 'Inbound') {
+        newStats.inbound.total++;
+        if (!item.sub_inventory) {
+          newStats.inbound.unassigned++;
+        } else {
+          newStats.inbound.assigned++;
+        }
+      }
+      // FG = Finished Goods
+      else if (item.inventory_type === 'FG') {
         newStats.fg.total++;
         newStats.fg.regular++;
-      } else if (item.inventory_type === 'BackHaul') {
+      }
+      // BackHaul
+      else if (item.inventory_type === 'BackHaul') {
         newStats.fg.total++;
         newStats.fg.backhaul++;
-      } else if (item.inventory_type === 'ASIS') {
+      }
+      // ASIS = Uncrated items in loads
+      else if (item.inventory_type === 'ASIS') {
         newStats.asis.total++;
 
         if (!item.sub_inventory) {
@@ -402,15 +469,20 @@ export function DashboardView({ onViewChange, onMenuClick }: DashboardViewProps)
     // Level 2: Sub-inventories for a specific type
     if (selectedChartType === 'overview') {
       return [
-        { name: 'STA', value: stats.localStock.total, fill: 'var(--color-chart-1)' },
-        { name: 'FG', value: stats.fg.total, fill: 'var(--color-chart-2)' },
-        { name: 'ASIS', value: stats.asis.total, fill: 'var(--color-chart-3)' },
+        { name: 'STA', value: stats.sta.total, fill: 'var(--color-chart-1)' },
+        { name: 'LocalStock', value: stats.localStock.total, fill: 'var(--color-chart-2)' },
+        { name: 'FG', value: stats.fg.total, fill: 'var(--color-chart-3)' },
+        { name: 'ASIS', value: stats.asis.total, fill: 'var(--color-chart-4)' },
+      ];
+    } else if (selectedChartType === 'STA') {
+      return [
+        { name: 'In ASIS Loads', value: stats.sta.inAsisLoads, fill: 'var(--color-chart-1)' },
+        { name: 'Unassigned', value: stats.sta.unassigned, fill: 'var(--color-chart-2)' },
       ];
     } else if (selectedChartType === 'LocalStock') {
       return [
-        { name: 'Unassigned', value: stats.localStock.unassigned, fill: 'var(--color-chart-1)' },
-        { name: 'In Loads', value: stats.localStock.routes, fill: 'var(--color-chart-2)' },
-        { name: 'Staged', value: stats.localStock.staged, fill: 'var(--color-chart-3)' },
+        { name: 'In Orders', value: stats.localStock.inOrders, fill: 'var(--color-chart-1)' },
+        { name: 'Unassigned', value: stats.localStock.unassigned, fill: 'var(--color-chart-2)' },
       ];
     } else if (selectedChartType === 'FG') {
       return [
@@ -450,6 +522,7 @@ export function DashboardView({ onViewChange, onMenuClick }: DashboardViewProps)
       priority: number;
       title: string;
       subtitle?: string;
+      description: string;
       load?: AsisActionLoad;
       sessionId?: string;
       icon: typeof AlertTriangle;
@@ -485,12 +558,18 @@ export function DashboardView({ onViewChange, onMenuClick }: DashboardViewProps)
         const progress = total > 0
           ? Math.round((scanned / total) * 100)
           : 0;
+        const progressDesc = progress < 25
+          ? 'Just getting started - continue scanning items'
+          : progress < 75
+          ? 'Making progress - keep scanning to complete this load'
+          : 'Almost done - finish scanning the remaining items';
         items.push({
           id: `session-${session.id}`,
           type: 'session',
           priority: 2,
           title: `Scan ${loadLabel}`,
           subtitle: `${scanned}/${total} scanned (${progress}%)`,
+          description: progressDesc,
           sessionId: session.id,
           icon: ScanBarcode,
           color: 'text-blue-600 dark:text-blue-400',
@@ -507,12 +586,18 @@ export function DashboardView({ onViewChange, onMenuClick }: DashboardViewProps)
       const progress = total > 0
         ? Math.round((scanned / total) * 100)
         : 0;
+      const progressDesc = progress < 25
+        ? 'Just getting started - continue scanning items'
+        : progress < 75
+        ? 'Making progress - keep scanning to complete this session'
+        : 'Almost done - finish scanning the remaining items';
       items.push({
         id: `session-${session.id}`,
         type: 'session',
         priority: 2,
         title: `Scan ${session.name}`,
         subtitle: `${scanned}/${total} scanned (${progress}%)`,
+        description: progressDesc,
         sessionId: session.id,
         icon: ScanBarcode,
         color: 'text-blue-600 dark:text-blue-400',
@@ -531,6 +616,7 @@ export function DashboardView({ onViewChange, onMenuClick }: DashboardViewProps)
         priority: 1,
         title: `Sanity check ${loadLabel}`,
         subtitle: csoTail ? `CSO ${csoTail}` : `Load ${load.sub_inventory_name}`,
+        description: 'Verify that the items in this load match GE records',
         load,
         icon: AlertTriangle,
         color: 'text-amber-600 dark:text-amber-400',
@@ -547,12 +633,29 @@ export function DashboardView({ onViewChange, onMenuClick }: DashboardViewProps)
       const needsWrap = !load.prep_wrapped;
       const needsTag = !load.prep_tagged;
       const actions = [needsWrap && 'wrap', needsTag && 'tag'].filter(Boolean).join(' & ');
+      const pickupDate = load.pickup_date ? new Date(load.pickup_date) : null;
+      const daysUntilPickup = pickupDate
+        ? Math.ceil((pickupDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))
+        : null;
+      const urgencyText = daysUntilPickup === 0
+        ? 'Pickup is today'
+        : daysUntilPickup === 1
+        ? 'Pickup is tomorrow'
+        : daysUntilPickup
+        ? `Pickup in ${daysUntilPickup} days`
+        : 'Pickup soon';
+      const taskText = needsWrap && needsTag
+        ? 'wrap and apply a sold tag to'
+        : needsWrap
+        ? 'wrap'
+        : 'apply a sold tag to';
       items.push({
         id: `pickup-${load.sub_inventory_name}`,
         type: 'pickup',
         priority: 2,
         title: `Prep ${loadLabel} for pickup`,
         subtitle: `Needs ${actions} · Pickup ${formatPickupDate(load.pickup_date)}`,
+        description: `${urgencyText} - ${taskText} this load now`,
         load,
         icon: TruckIcon,
         color: 'text-red-600 dark:text-red-400',
@@ -572,12 +675,18 @@ export function DashboardView({ onViewChange, onMenuClick }: DashboardViewProps)
       const needsWrap = !load.prep_wrapped;
       const needsTag = !load.prep_tagged;
       const actions = [needsWrap && 'wrap', needsTag && 'tag'].filter(Boolean).join(' & ');
+      const taskDesc = needsWrap && needsTag
+        ? 'Wrap and apply a sold tag to this load before pickup'
+        : needsWrap
+        ? 'Wrap this sold load to protect it for pickup'
+        : 'Apply a sold tag to this load';
       items.push({
         id: `prep-${load.sub_inventory_name}`,
         type: 'tag',
         priority: 3,
         title: `Prep ${loadLabel}`,
         subtitle: `Needs ${actions}`,
+        description: taskDesc,
         load,
         icon: Package,
         color: 'text-orange-600 dark:text-orange-400',
@@ -597,6 +706,7 @@ export function DashboardView({ onViewChange, onMenuClick }: DashboardViewProps)
         priority: 4,
         title: `Wrap ${loadLabel}`,
         subtitle: 'For Sale',
+        description: 'Wrap this for-sale load to prepare it for potential buyers',
         load,
         icon: PackageOpen,
         color: 'text-blue-600 dark:text-blue-400',
@@ -731,6 +841,7 @@ export function DashboardView({ onViewChange, onMenuClick }: DashboardViewProps)
                           {item.subtitle && (
                             <div className="text-xs text-muted-foreground truncate">{item.subtitle}</div>
                           )}
+                          <div className="text-xs text-foreground mt-1">{item.description}</div>
                         </div>
                         <ArrowRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                       </button>
@@ -780,6 +891,9 @@ export function DashboardView({ onViewChange, onMenuClick }: DashboardViewProps)
                 </div>
               </div>
             </Card>
+
+          {/* Sync Status */}
+          <SyncStatusCard onViewChange={onViewChange} />
 
           {/* Quick Actions */}
           <div>
@@ -906,15 +1020,15 @@ export function DashboardView({ onViewChange, onMenuClick }: DashboardViewProps)
                         onClick={(data) => {
                           // Level 1: Overview -> drill to sub-inventories
                           if (selectedChartType === 'overview' && !selectedDrilldown) {
-                            if (data.name === 'STA') setSelectedChartType('LocalStock');
+                            if (data.name === 'STA') setSelectedChartType('STA');
+                            else if (data.name === 'LocalStock') setSelectedChartType('LocalStock');
                             else if (data.name === 'FG') setSelectedChartType('FG');
                             else if (data.name === 'ASIS') setSelectedChartType('ASIS');
                           }
                           // Level 2: Sub-inventories -> drill to loads
                           else if (!selectedDrilldown) {
-                            if (selectedChartType === 'LocalStock' && data.name === 'In Loads') {
-                              setSelectedDrilldown('LocalStock-routes');
-                            } else if (selectedChartType === 'FG' && data.name === 'BackHaul') {
+                            // STA and LocalStock don't have drilldowns yet
+                            if (selectedChartType === 'FG' && data.name === 'BackHaul') {
                               setSelectedDrilldown('FG-backhaul');
                             } else if (selectedChartType === 'ASIS') {
                               if (data.name === 'Regular') setSelectedDrilldown('ASIS-regular');
@@ -958,16 +1072,16 @@ export function DashboardView({ onViewChange, onMenuClick }: DashboardViewProps)
                       </div>
                       <h4 className="text-sm font-semibold">STA</h4>
                     </div>
-                    <span className="text-lg font-bold">{stats.localStock.total}</span>
+                    <span className="text-lg font-bold">{stats.sta.total}</span>
                   </div>
                   <div className="space-y-1 text-xs">
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">In Loads</span>
-                      <span className="font-medium">{stats.localStock.routes}</span>
+                      <span className="text-muted-foreground">In ASIS Loads</span>
+                      <span className="font-medium">{stats.sta.inAsisLoads}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Unassigned</span>
-                      <span className="font-medium">{stats.localStock.unassigned}</span>
+                      <span className="font-medium">{stats.sta.unassigned}</span>
                     </div>
                   </div>
                 </div>
@@ -1079,6 +1193,7 @@ export function DashboardView({ onViewChange, onMenuClick }: DashboardViewProps)
                           {item.subtitle && (
                             <div className="text-sm text-muted-foreground">{item.subtitle}</div>
                           )}
+                          <div className="text-sm text-foreground mt-1">{item.description}</div>
                         </div>
                         <ArrowRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                       </button>
@@ -1208,6 +1323,9 @@ export function DashboardView({ onViewChange, onMenuClick }: DashboardViewProps)
                   )}
                 </Card>
               </div>
+
+              {/* Sync Status */}
+              <SyncStatusCard onViewChange={onViewChange} />
 
               {/* Quick Actions */}
               <div>

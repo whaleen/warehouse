@@ -133,7 +133,22 @@ const applyInventoryFilters = (query: InventoryQuery, filters: InventoryFilters,
   }
 
   if (filters.subInventory !== 'all') {
-    nextQuery = nextQuery.eq('sub_inventory', filters.subInventory);
+    // For ASIS/FG: filter by sub_inventory (load name)
+    // For LocalStock/STA/Staged/Inbound: filter by cso (order number)
+    const typesWithLoads = ['ASIS', 'FG', 'BackHaul'];
+    const hasLoads = types.some(t => typesWithLoads.includes(t));
+    const hasOrders = types.some(t => !typesWithLoads.includes(t));
+
+    if (hasLoads && !hasOrders) {
+      // Only load-based types selected
+      nextQuery = nextQuery.eq('sub_inventory', filters.subInventory);
+    } else if (hasOrders && !hasLoads) {
+      // Only order-based types selected
+      nextQuery = nextQuery.eq('cso', filters.subInventory);
+    } else {
+      // Mixed types - filter by either sub_inventory OR cso
+      nextQuery = nextQuery.or(`sub_inventory.eq.${filters.subInventory},cso.eq.${filters.subInventory}`);
+    }
   }
 
   if (filters.productCategory !== 'all') {
@@ -283,59 +298,97 @@ export async function getSubInventoryOptions(params: {
   inventoryType: InventoryTypeFilter;
 }): Promise<InventorySubInventoryOption[]> {
   const { locationId, inventoryType } = params;
-  const typesWithLoads = ['ASIS', 'FG', 'LocalStock'];
 
-  if (!typesWithLoads.includes(inventoryType)) {
-    return [];
-  }
+  // ASIS and FG have loads (from load_metadata)
+  // LocalStock, STA, Staged, Inbound have CSOs/orders (from inventory_items.cso)
+  const typesWithLoads = ['ASIS', 'FG'];
+  const typesWithOrders = ['LocalStock', 'STA', 'Staged', 'Inbound'];
 
-  const types = resolveInventoryTypes(inventoryType);
-  const { data, error } = await supabase
-    .from('load_metadata')
-    .select('sub_inventory_name, friendly_name, primary_color, ge_cso')
-    .eq('location_id', locationId)
-    .in('inventory_type', types);
+  if (typesWithLoads.includes(inventoryType)) {
+    // Query load_metadata for ASIS/FG loads
+    const types = resolveInventoryTypes(inventoryType);
+    const { data, error } = await supabase
+      .from('load_metadata')
+      .select('sub_inventory_name, friendly_name, primary_color, ge_cso')
+      .eq('location_id', locationId)
+      .in('inventory_type', types);
 
-  if (error) throw new Error(error.message);
+    if (error) throw new Error(error.message);
 
-  const optionMap = new Map<string, {
-    value: string;
-    friendlyName?: string | null;
-    color?: string | null;
-    cso?: string | null;
-  }>();
+    const optionMap = new Map<string, {
+      value: string;
+      friendlyName?: string | null;
+      color?: string | null;
+      cso?: string | null;
+    }>();
 
-  (data ?? []).forEach((item) => {
-    const value = item.sub_inventory_name?.trim();
-    if (!value) return;
-    const existing = optionMap.get(value);
-    optionMap.set(value, {
-      value,
-      friendlyName: item.friendly_name?.trim() || existing?.friendlyName || null,
-      color: item.primary_color?.trim() || existing?.color || null,
-      cso: item.ge_cso?.trim() || existing?.cso || null,
+    (data ?? []).forEach((item) => {
+      const value = item.sub_inventory_name?.trim();
+      if (!value) return;
+      const existing = optionMap.get(value);
+      optionMap.set(value, {
+        value,
+        friendlyName: item.friendly_name?.trim() || existing?.friendlyName || null,
+        color: item.primary_color?.trim() || existing?.color || null,
+        cso: item.ge_cso?.trim() || existing?.cso || null,
+      });
     });
-  });
 
-  const isAsis = inventoryType === 'ASIS';
-  const options = Array.from(optionMap.values())
-    .map(option => {
-      if (!isAsis) {
+    const isAsis = inventoryType === 'ASIS';
+    const options = Array.from(optionMap.values())
+      .map(option => {
+        if (!isAsis) {
+          return {
+            ...option,
+            label: option.value,
+          };
+        }
+        const friendly = option.friendlyName?.trim() || 'Unnamed';
+        const csoOrLoad = option.cso?.trim() || option.value;
         return {
           ...option,
-          label: option.value,
+          label: `${friendly} | ${csoOrLoad}`,
         };
-      }
-      const friendly = option.friendlyName?.trim() || 'Unnamed';
-      const csoOrLoad = option.cso?.trim() || option.value;
-      return {
-        ...option,
-        label: `${friendly} | ${csoOrLoad}`,
-      };
-    })
-    .sort((a, b) => a.label.localeCompare(b.label));
+      })
+      .sort((a, b) => a.label.localeCompare(b.label));
 
-  return options;
+    return options;
+  }
+
+  else if (typesWithOrders.includes(inventoryType)) {
+    // Query inventory_items for distinct CSOs (orders)
+    const types = resolveInventoryTypes(inventoryType);
+    const { data, error } = await supabase
+      .from('inventory_items')
+      .select('cso')
+      .eq('location_id', locationId)
+      .in('inventory_type', types)
+      .not('cso', 'is', null)
+      .or('ge_orphaned.is.null,ge_orphaned.eq.false');
+
+    if (error) throw new Error(error.message);
+
+    // Get distinct CSOs
+    const csoSet = new Set<string>();
+    (data ?? []).forEach((item) => {
+      const cso = item.cso?.trim();
+      if (cso) csoSet.add(cso);
+    });
+
+    const options = Array.from(csoSet)
+      .map(cso => ({
+        value: cso,
+        label: `Order ${cso}`,
+        friendlyName: null,
+        color: null,
+        cso: cso,
+      }))
+      .sort((a, b) => a.label.localeCompare(b.label));
+
+    return options;
+  }
+
+  return [];
 }
 
 export async function nukeInventoryItems(params: {

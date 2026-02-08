@@ -156,9 +156,10 @@ const exportColumns: ExportColumn[] = [
 
 interface InventoryViewProps {
   onMenuClick?: () => void;
+  inventoryType?: string | null;
 }
 
-export function InventoryView({ onMenuClick }: InventoryViewProps) {
+export function InventoryView({ onMenuClick, inventoryType }: InventoryViewProps) {
   const { locationId, companyId } = getActiveLocationContext();
   const geSyncMutation = useGeSync();
   const importSnapshotMutation = useImportInventorySnapshot();
@@ -173,8 +174,17 @@ export function InventoryView({ onMenuClick }: InventoryViewProps) {
   const [includeRowNumbers, setIncludeRowNumbers] = useState(false);
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
 
-  // Read filter from URL on mount
+  // Read filter from URL on mount - try path-based first, then query param
   const getInitialFilter = (): InventoryTypeFilter => {
+    // Try path-based parameter first
+    if (inventoryType) {
+      const normalized = inventoryType.toUpperCase();
+      if (normalized === 'ASIS' || normalized === 'FG' || normalized === 'LOCALSTOCK') {
+        return normalized === 'LOCALSTOCK' ? 'LocalStock' : (normalized as InventoryTypeFilter);
+      }
+    }
+
+    // Fall back to query param for backward compatibility
     const params = new URLSearchParams(window.location.search);
     const type = params.get('type');
     if (type === 'ASIS' || type === 'FG' || type === 'LocalStock') {
@@ -238,13 +248,24 @@ export function InventoryView({ onMenuClick }: InventoryViewProps) {
 
   // Keep tabs in sync with URL changes (e.g., sidebar navigation)
   useEffect(() => {
-    const syncFromParams = () => {
+    const syncFromUrl = () => {
+      // Read type from URL path: /inventory/:type
+      const pathSegments = window.location.pathname.split('/').filter(Boolean);
+      const pathType = pathSegments[1]; // /inventory/:type
+
+      // Normalize and validate type
+      let nextType: InventoryTypeFilter = 'all';
+      if (pathType) {
+        const normalized = pathType.toUpperCase();
+        if (normalized === 'ASIS' || normalized === 'FG') {
+          nextType = normalized;
+        } else if (normalized === 'LOCALSTOCK') {
+          nextType = 'LocalStock';
+        }
+      }
+
+      // Sort stays in query params
       const params = new URLSearchParams(window.location.search);
-      const type = params.get('type');
-      const nextType =
-        type === 'ASIS' || type === 'FG' || type === 'LocalStock'
-          ? type
-          : 'all';
       const sort = params.get('sort');
       const nextSort =
         sort === 'model-desc' || sort === 'created-desc' || sort === 'created-asc' || sort === 'model-asc'
@@ -255,8 +276,8 @@ export function InventoryView({ onMenuClick }: InventoryViewProps) {
       setSortOption(prev => (prev === nextSort ? prev : nextSort));
     };
 
-    syncFromParams();
-    const handleChange = () => syncFromParams();
+    syncFromUrl();
+    const handleChange = () => syncFromUrl();
     window.addEventListener('app:locationchange', handleChange);
     window.addEventListener('popstate', handleChange);
     return () => {
@@ -273,24 +294,34 @@ export function InventoryView({ onMenuClick }: InventoryViewProps) {
     return () => window.clearTimeout(timeout);
   }, [searchInput]);
 
-  // Update URL when filters change
+  // Update URL when filters change - use path-based URLs for type
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
+
+    // Build path-based URL for inventory type
+    let basePath = '/inventory';
     if (inventoryTypeFilter !== 'all') {
-      params.set('type', inventoryTypeFilter);
-    } else {
-      params.delete('type');
+      basePath = `/inventory/${inventoryTypeFilter.toLowerCase()}`;
     }
 
+    // Keep sort as query param
     if (sortOption !== 'model-asc') {
       params.set('sort', sortOption);
     } else {
       params.delete('sort');
     }
 
-    const newUrl = params.toString() ? `?${params.toString()}` : window.location.pathname;
-    window.history.replaceState({}, '', newUrl);
-    window.dispatchEvent(new Event('app:locationchange'));
+    // Remove legacy type query param
+    params.delete('type');
+
+    const query = params.toString();
+    const newUrl = query ? `${basePath}?${query}` : basePath;
+
+    // Only update if URL changed
+    if (window.location.pathname + window.location.search !== newUrl) {
+      window.history.replaceState({}, '', newUrl);
+      window.dispatchEvent(new Event('app:locationchange'));
+    }
   }, [inventoryTypeFilter, sortOption]);
 
   

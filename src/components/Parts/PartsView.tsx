@@ -12,11 +12,21 @@ type PartsTab = 'inventory' | 'history';
 
 interface PartsViewProps {
   onMenuClick?: () => void;
+  partsTab?: string | null;
 }
 
-export function PartsView({ onMenuClick }: PartsViewProps) {
+export function PartsView({ onMenuClick, partsTab: partsTabProp }: PartsViewProps) {
   const isMobile = useIsMobile();
   const getInitialTab = (): PartsTab => {
+    // Try path-based parameter first
+    if (partsTabProp) {
+      const normalized = partsTabProp.toLowerCase();
+      if (normalized === 'history' || normalized === 'inventory') {
+        return normalized as PartsTab;
+      }
+    }
+
+    // Fall back to query param for backward compatibility
     const params = new URLSearchParams(window.location.search);
     const tab = params.get('tab');
     if (tab === 'history') {
@@ -35,12 +45,16 @@ export function PartsView({ onMenuClick }: PartsViewProps) {
   const [partsTab, setPartsTab] = useState<PartsTab>(getInitialTab);
   const [partsStatus, setPartsStatus] = useState<'all' | 'reorder'>(getInitialStatus);
 
-  // Keep tabs in sync with URL changes
+  // Keep tabs in sync with URL changes - support path-based URLs
   useEffect(() => {
-    const syncFromParams = () => {
+    const syncFromUrl = () => {
+      // Try path-based first: /parts/history
+      const pathSegments = window.location.pathname.split('/').filter(Boolean);
+      const pathTab = pathSegments[1]; // /parts/:tab
+      const nextTab = pathTab === 'history' ? 'history' : 'inventory';
+
+      // Status stays as query param
       const params = new URLSearchParams(window.location.search);
-      const tab = params.get('tab');
-      const nextTab = tab === 'history' ? 'history' : 'inventory';
       const status = params.get('status');
       const nextStatus = status === 'reorder' ? 'reorder' : 'all';
 
@@ -48,8 +62,8 @@ export function PartsView({ onMenuClick }: PartsViewProps) {
       setPartsStatus(prev => (prev === nextStatus ? prev : nextStatus));
     };
 
-    syncFromParams();
-    const handleChange = () => syncFromParams();
+    syncFromUrl();
+    const handleChange = () => syncFromUrl();
     window.addEventListener('app:locationchange', handleChange);
     window.addEventListener('popstate', handleChange);
     return () => {
@@ -65,25 +79,34 @@ export function PartsView({ onMenuClick }: PartsViewProps) {
     }
   }, [partsTab, partsStatus]);
 
-  // Update URL when filters change
+  // Update URL when filters change - use path-based URLs for tab
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
 
+    // Build path-based URL for tab
+    let basePath = '/parts';
     if (partsTab !== 'inventory') {
-      params.set('tab', partsTab);
-    } else {
-      params.delete('tab');
+      basePath = `/parts/${partsTab}`;
     }
 
+    // Keep status as query param
     if (partsStatus !== 'all') {
       params.set('status', partsStatus);
     } else {
       params.delete('status');
     }
 
-    const newUrl = params.toString() ? `?${params.toString()}` : window.location.pathname;
-    window.history.replaceState({}, '', newUrl);
-    window.dispatchEvent(new Event('app:locationchange'));
+    // Remove legacy tab query param
+    params.delete('tab');
+
+    const query = params.toString();
+    const newUrl = query ? `${basePath}?${query}` : basePath;
+
+    // Only update if URL changed
+    if (window.location.pathname + window.location.search !== newUrl) {
+      window.history.replaceState({}, '', newUrl);
+      window.dispatchEvent(new Event('app:locationchange'));
+    }
   }, [partsTab, partsStatus]);
 
   return (

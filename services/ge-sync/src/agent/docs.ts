@@ -111,8 +111,10 @@ const getDocFiles = async () => {
 };
 
 const buildDocChunks = async (): Promise<DocChunk[]> => {
+  console.log('[Docs] Building doc chunks...');
   const chunks: DocChunk[] = [];
   const files = await getDocFiles();
+  console.log(`[Docs] Found ${files.length} files to index`);
 
   for (const filePath of files) {
     const normalized = normalizePath(filePath);
@@ -120,6 +122,12 @@ const buildDocChunks = async (): Promise<DocChunk[]> => {
 
     const content = await fs.readFile(filePath, 'utf8');
     const sections = splitIntoSections(content);
+
+    // Log loads.md specifically to debug
+    if (normalized.includes('loads.md')) {
+      console.log(`[Docs] Processing loads.md - found ${sections.length} sections:`, sections.map(s => s.title));
+    }
+
     sections.forEach((section) => {
       const sectionChunks = chunkSection(section.content);
       sectionChunks.forEach((chunk) => {
@@ -132,6 +140,7 @@ const buildDocChunks = async (): Promise<DocChunk[]> => {
     });
   }
 
+  console.log(`[Docs] Built ${chunks.length} total chunks`);
   return chunks;
 };
 
@@ -139,9 +148,17 @@ let docChunks: DocChunk[] | null = null;
 
 const getDocChunks = async () => {
   if (!docChunks) {
-    docChunks = await buildDocChunks();
+    console.log('[Docs] No cached chunks, building fresh...');
+    try {
+      docChunks = await buildDocChunks();
+    } catch (error) {
+      console.error('[Docs] Error building doc chunks:', error);
+      docChunks = [];
+    }
+  } else {
+    console.log('[Docs] Using cached chunks:', docChunks.length);
   }
-  return docChunks;
+  return docChunks || [];
 };
 
 const tokenize = (input: string) =>
@@ -151,14 +168,37 @@ const tokenize = (input: string) =>
     .filter((word) => word.length > 1);
 
 const scoreChunk = (queryTokens: string[], chunk: DocChunk) => {
-  const haystack = `${chunk.section}\n${chunk.content}`.toLowerCase();
+  const sectionLower = chunk.section.toLowerCase();
+  const haystack = `${sectionLower}\n${chunk.content}`.toLowerCase();
   let score = 0;
+
+  // Count token matches
   queryTokens.forEach((token) => {
     if (!token) return;
-    if (chunk.section.toLowerCase().includes(token)) score += 3;
+    if (sectionLower.includes(token)) score += 3;
     const matches = haystack.split(token).length - 1;
     score += matches;
   });
+
+  // MASSIVE boost for section title exact matches
+  // If 3+ query tokens appear in the section title, this is likely the exact section they want
+  const tokensInSection = queryTokens.filter(token => token && sectionLower.includes(token)).length;
+  if (tokensInSection >= 3) {
+    score *= 10; // 10x multiplier for high relevance section titles
+  } else if (tokensInSection >= 2) {
+    score *= 3; // 3x for moderate relevance
+  }
+
+  // Path-based multipliers (applied after section matching bonus)
+  // Warehouse operational docs (highest priority for user-facing workflows)
+  if (chunk.path.includes('docs/warehouse/')) {
+    score *= 6; // Increased from 4 to 6
+  }
+
+  // GE DMS docs
+  if (chunk.path.includes('docs/ge-dms/')) {
+    score *= 2; // Reduced from 3 to 2 to prioritize warehouse docs
+  }
 
   if (chunk.path.includes('services/ge-sync/docs/')) {
     score *= 2;
@@ -168,14 +208,21 @@ const scoreChunk = (queryTokens: string[], chunk: DocChunk) => {
     score *= 3;
   }
 
+  // Reduce code file relevance
   if (chunk.path.includes('.tsx') || chunk.path.includes('.ts')) {
     score *= 0.3;
+  }
+
+  // Reduce README relevance (too general)
+  if (chunk.path === 'README.md') {
+    score *= 0.5;
   }
 
   return score;
 };
 
 export const searchDocChunks = async (query: string, limit = 6): Promise<DocChunk[]> => {
+  console.log('[Docs] Searching for:', query);
   const tokens = tokenize(query);
   if (!tokens.length) return [];
 
@@ -183,14 +230,32 @@ export const searchDocChunks = async (query: string, limit = 6): Promise<DocChun
   const isGeDmsQuery = tokens.some((token) => geDmsKeywords.includes(token));
 
   let candidates = await getDocChunks();
+  if (!candidates || !Array.isArray(candidates)) {
+    console.error('[Docs] getDocChunks returned invalid data:', candidates);
+    return [];
+  }
+
+  console.log(`[Docs] Total chunks before filtering: ${candidates.length}`);
+  console.log(`[Docs] Is GE DMS query: ${isGeDmsQuery}`);
 
   if (isGeDmsQuery) {
+    const beforeCount = candidates.length;
     candidates = candidates.filter((chunk) =>
+      chunk.path.includes('docs/warehouse/') ||
+      chunk.path.includes('docs/ge-dms/') ||
       chunk.path.includes('services/ge-sync/docs/') ||
       chunk.path.includes('docs/agent/') ||
       chunk.path.includes('docs/features/') ||
       chunk.path === 'README.md'
     );
+    console.log(`[Docs] After GE DMS filter: ${beforeCount} -> ${candidates.length} chunks`);
+
+    // Log warehouse chunks specifically
+    const warehouseChunks = candidates.filter(c => c.path.includes('docs/warehouse/'));
+    console.log(`[Docs] Warehouse chunks in candidates: ${warehouseChunks.length}`);
+    if (warehouseChunks.length > 0) {
+      console.log('[Docs] Warehouse sections:', warehouseChunks.slice(0, 5).map(c => `${c.path} (${c.section})`));
+    }
   } else {
     const hasAgentDocs = candidates.some((chunk) => chunk.path.includes('docs/agent/'));
     if (hasAgentDocs) {
@@ -198,12 +263,28 @@ export const searchDocChunks = async (query: string, limit = 6): Promise<DocChun
     }
   }
 
-  return candidates
+  const scored = candidates
     .map((chunk) => ({ chunk, score: scoreChunk(tokens, chunk) }))
     .filter((entry) => entry.score > 0)
-    .sort((a, b) => b.score - a.score)
-    .slice(0, limit)
-    .map((entry) => entry.chunk);
+    .sort((a, b) => b.score - a.score);
+
+  // Log loads.md chunks specifically with their scores
+  const loadsChunks = scored.filter(s => s.chunk.path.includes('loads.md'));
+  if (loadsChunks.length > 0) {
+    console.log(`[Docs] loads.md chunks (${loadsChunks.length} total):`);
+    loadsChunks.slice(0, 5).forEach((r) => {
+      console.log(`  - ${r.chunk.section}: score ${r.score}`);
+    });
+  }
+
+  const results = scored.slice(0, limit);
+
+  console.log(`[Docs] Top ${results.length} results:`);
+  results.forEach((r, i) => {
+    console.log(`  ${i + 1}. ${r.chunk.path} (${r.chunk.section}) - score: ${r.score}`);
+  });
+
+  return results.map((entry) => entry.chunk);
 };
 
 export const buildContextBlock = (chunks: DocChunk[]) => {

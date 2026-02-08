@@ -51,7 +51,7 @@ export function LoadDisplay({
   className,
 }: LoadDisplayProps) {
   const isASIS = load.inventory_type === 'ASIS';
-  const isSalvage = load.sub_inventory_name?.match(/^S\d+$/i);
+  const isSalvage = load.category?.toLowerCase() === 'salvage';
   const loadColor = load.primary_color || '#9ca3af'; // Default gray if no color
   const displayName = load.friendly_name || load.sub_inventory_name;
 
@@ -61,9 +61,9 @@ export function LoadDisplay({
   const isShipped = geStatus.toLowerCase().includes('shipped');
   const isPicked = geStatus.toLowerCase().includes('picked');
 
-  // Determine what prep is required
-  const wrappingRequired = isShipped || isSold;
-  const taggingRequired = isSold;
+  // Determine what prep is required (salvage loads never require wrapping or tagging)
+  const wrappingRequired = !isSalvage && (isShipped || isSold);
+  const taggingRequired = !isSalvage && isSold;
 
   // Get scanning progress
   const scanningProgress = load.items_scanned_count && load.items_total_count
@@ -122,7 +122,14 @@ export function LoadDisplay({
             )}
           </div>
           <div className="min-w-0 flex-1">
-            <div className="font-medium text-sm truncate">{displayName}</div>
+            <div className="font-medium text-sm truncate flex items-center gap-2">
+              {displayName}
+              {isSalvage && (
+                <Badge className="text-[10px] px-1.5 py-0 bg-amber-100 text-amber-900 dark:bg-amber-500/20 dark:text-amber-400">
+                  Salvage
+                </Badge>
+              )}
+            </div>
             <div className="text-xs text-muted-foreground">
               {load.sub_inventory_name} • {load.ge_units || '0'} items
             </div>
@@ -226,11 +233,18 @@ export function LoadDisplay({
           </div>
         </div>
 
-        {showCSO && load.ge_cso && (
-          <Badge variant="outline" className="text-xs">
-            CSO: {load.ge_cso}
-          </Badge>
-        )}
+        <div className="flex flex-wrap gap-2">
+          {isSalvage && (
+            <Badge className="text-xs bg-amber-100 text-amber-900 dark:bg-amber-500/20 dark:text-amber-400">
+              Salvage
+            </Badge>
+          )}
+          {showCSO && load.ge_cso && (
+            <Badge variant="outline" className="text-xs">
+              CSO: {load.ge_cso}
+            </Badge>
+          )}
+        </div>
 
         {showProgress && (
           <div className="space-y-2">
@@ -341,6 +355,11 @@ export function LoadDisplay({
 
       {/* GE Status & CSO */}
       <div className="flex flex-wrap gap-2">
+        {isSalvage && (
+          <Badge className="bg-amber-100 text-amber-900 dark:bg-amber-500/20 dark:text-amber-400 border-amber-300 dark:border-amber-500/50">
+            Salvage
+          </Badge>
+        )}
         {geStatus && (
           <Badge
             variant="secondary"

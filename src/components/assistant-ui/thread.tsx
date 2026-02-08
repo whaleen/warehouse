@@ -5,6 +5,7 @@ import {
 } from "@/components/assistant-ui/attachment";
 import { MarkdownText } from "@/components/assistant-ui/markdown-text";
 import { ToolFallback } from "@/components/assistant-ui/tool-fallback";
+import { ToolFindItem } from "@/components/assistant-ui/tool-find-item";
 import { TooltipIconButton } from "@/components/assistant-ui/tooltip-icon-button";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -205,7 +206,10 @@ const AssistantMessage: FC = () => {
         <MessagePrimitive.Parts
           components={{
             Text: MarkdownText,
-            tools: { Fallback: ToolFallback },
+            tools: {
+              find_item: ToolFindItem,
+              Fallback: ToolFallback
+            },
           }}
         />
         <MessageError />

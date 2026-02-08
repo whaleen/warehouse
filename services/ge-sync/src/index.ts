@@ -6,7 +6,7 @@ import { syncSimpleInventory } from './sync/inventory.js';
 import { syncInboundReceipts } from './sync/inbound.js';
 import { syncBackhaul } from './sync/backhaul.js';
 import { logSyncActivity } from './db/activityLog.js';
-import { getLocationConfig } from './db/supabase.js';
+import { getLocationConfig, updateSyncTimestamp } from './db/supabase.js';
 import type { SyncResult, AuthStatus } from './types/index.js';
 import { handleAgentChat } from './agent/agentChat.js';
 
@@ -143,9 +143,13 @@ app.post('/sync/asis', async (req, res) => {
       success: true,
       details: {
         duration_ms: result.duration,
-        ...result.stats,
+        stats: result.stats,
+        log: result.log,
       },
     });
+
+    // Update last sync timestamp
+    await updateSyncTimestamp(locationId, 'asis');
 
     res.json(result);
   } catch (error) {
@@ -221,6 +225,8 @@ app.post('/sync/fg', async (req, res) => {
       },
     });
 
+    await updateSyncTimestamp(locationId, 'fg');
+
     res.json(result);
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error';
@@ -295,6 +301,10 @@ app.post('/sync/backhaul', async (req, res) => {
       error: result.error,
     });
 
+    if (result.success) {
+      await updateSyncTimestamp(locationId, 'backhaul');
+    }
+
     res.json(result);
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error';
@@ -345,6 +355,8 @@ app.post('/sync/sta', async (req, res) => {
         ...result.stats,
       },
     });
+
+    await updateSyncTimestamp(locationId, 'sta');
 
     res.json(result);
   } catch (error) {
@@ -571,6 +583,10 @@ app.post('/sync/inventory', async (req, res) => {
       ...(errors.length > 0 ? { error: errors.join('; ') } : {}),
     });
 
+    if (allSucceeded) {
+      await updateSyncTimestamp(locationId, 'inventory');
+    }
+
     res.json(result);
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error';
@@ -645,6 +661,10 @@ app.post('/sync/inbound', async (req, res) => {
         ...result.stats,
       },
     });
+
+    if (result.success) {
+      await updateSyncTimestamp(locationId, 'inbound');
+    }
 
     res.json(result);
   } catch (error) {

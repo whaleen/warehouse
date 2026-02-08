@@ -6,7 +6,7 @@
 
 ## Scanner Issues
 - **Camera scanner not working**: grant camera permission and improve lighting.
-- **Model scan rejected**: use a Scanning Session for model‑only scans.
+- **Model scan rejected**: use a Scanning Session for model‑only scans (feature in development).
 
 ## Inventory Gaps
 - **Item not found**: it may not be synced from GE DMS yet.

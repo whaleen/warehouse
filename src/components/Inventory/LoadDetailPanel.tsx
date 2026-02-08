@@ -305,6 +305,8 @@ export function LoadDetailPanel({
     if (!value) return null;
     const trimmed = value.trim().toUpperCase();
     if (!trimmed) return null;
+    // Only validate 1-2 letter codes for duplicate detection
+    // Allow other formats (numbers, dates, etc.) to pass through
     if (!/^[A-Z]{1,2}$/.test(trimmed)) return null;
     return trimmed;
   };
@@ -337,14 +339,17 @@ export function LoadDetailPanel({
   const friendlyNameError = (() => {
     if (load.inventory_type !== 'ASIS') return null;
     if (!currentFriendly) return null;
-    if (currentFriendly === originalFriendly && !normalizeFriendlyCode(originalFriendly)) {
-      return null;
+    if (currentFriendly === originalFriendly) return null;
+
+    // Only check for duplicates if it matches the letter-code format (1-2 letters)
+    // Allow other formats like "6", "1/2", "2nd" without validation
+    if (normalizedFriendlyInput) {
+      if (normalizedFriendlyInput === normalizeFriendlyCode(load.friendly_name)) return null;
+      if (recentCodes.has(normalizedFriendlyInput)) {
+        return `Code "${normalizedFriendlyInput}" already used in the last ${recentWindowSize} loads.`;
+      }
     }
-    if (!normalizedFriendlyInput) return 'Use 1–2 letters only (A–Z).';
-    if (normalizedFriendlyInput === normalizeFriendlyCode(load.friendly_name)) return null;
-    if (recentCodes.has(normalizedFriendlyInput)) {
-      return `Already used in the last ${recentWindowSize} loads.`;
-    }
+
     return null;
   })();
 
@@ -930,8 +935,8 @@ export function LoadDetailPanel({
                   <label className="text-xs uppercase tracking-wide text-muted-foreground/70">Friendly name</label>
                   <Input
                     value={friendlyName}
-                    onChange={(e) => setFriendlyName(e.target.value.toUpperCase())}
-                    placeholder="Optional display name"
+                    onChange={(e) => setFriendlyName(e.target.value)}
+                    placeholder="e.g., A, 6, 1/2, 2nd"
                   />
                 </div>
                 <div className="space-y-2">

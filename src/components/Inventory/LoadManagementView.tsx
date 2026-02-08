@@ -46,7 +46,7 @@ export function LoadManagementView({ onMenuClick }: LoadManagementViewProps) {
   const standaloneScrollRef = useRef<HTMLDivElement | null>(null);
 
   // Filter state
-  type LoadFilter = 'all' | 'for_sale' | 'picked' | 'shipped' | 'delivered';
+  type LoadFilter = 'all' | 'for_sale' | 'picked' | 'shipped' | 'delivered' | 'salvage';
   const [loadFilter, setLoadFilter] = useState<LoadFilter>('all');
 
   // Dialog states
@@ -222,6 +222,7 @@ export function LoadManagementView({ onMenuClick }: LoadManagementViewProps) {
               >
                 {([
                   { key: 'all', label: 'All' },
+                  { key: 'salvage', label: 'Salvage' },
                   { key: 'for_sale', label: 'For Sale' },
                   { key: 'picked', label: 'Picked' },
                   { key: 'shipped', label: 'Shipped' },
@@ -234,6 +235,7 @@ export function LoadManagementView({ onMenuClick }: LoadManagementViewProps) {
                   const count = loads.filter((load) => {
                     if (!isVisibleLoad(load)) return false;
                     if (key === 'all') return true;
+                    if (key === 'salvage') return load.category?.toLowerCase() === 'salvage';
                     if (key === 'for_sale') return normalizeGeStatus(load.ge_source_status) === 'for sale';
                     return (
                       normalizeGeStatus(load.ge_source_status) === 'sold' &&
@@ -324,6 +326,7 @@ export function LoadManagementView({ onMenuClick }: LoadManagementViewProps) {
                       .filter((load) => isVisibleLoad(load))
                       .filter((load) => {
                         if (loadFilter === 'all') return true;
+                        if (loadFilter === 'salvage') return load.category?.toLowerCase() === 'salvage';
                         if (loadFilter === 'for_sale') return normalizeGeStatus(load.ge_source_status) === 'for sale';
                         return (
                           normalizeGeStatus(load.ge_source_status) === 'sold' &&

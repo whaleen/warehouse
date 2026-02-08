@@ -92,3 +92,23 @@ export async function getProductLookup(_companyId: string) {
 
   return lookup;
 }
+
+/**
+ * Update last sync timestamp for a specific sync type
+ */
+export async function updateSyncTimestamp(
+  locationId: string,
+  syncType: 'asis' | 'fg' | 'sta' | 'inbound' | 'backhaul' | 'inventory'
+) {
+  const db = getSupabase();
+  const columnName = `last_sync_${syncType}_at`;
+
+  const { error } = await db
+    .from('settings')
+    .update({ [columnName]: new Date().toISOString() })
+    .eq('location_id', locationId);
+
+  if (error) {
+    console.error(`Failed to update ${columnName}:`, error);
+  }
+}

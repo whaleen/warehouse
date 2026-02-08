@@ -36,6 +36,12 @@ export type SettingsRecord = {
   sso_username?: string | null;
   sso_password?: string | null;
   ui_handedness?: string | null;
+  last_sync_asis_at?: string | null;
+  last_sync_fg_at?: string | null;
+  last_sync_sta_at?: string | null;
+  last_sync_inbound_at?: string | null;
+  last_sync_backhaul_at?: string | null;
+  last_sync_inventory_at?: string | null;
 };
 
 export async function getLocations(): Promise<LocationRecord[]> {
@@ -106,7 +112,7 @@ export async function resolveLocationSettings(activeLocationKey: string): Promis
 
   const { data: settings, error: settingsError } = await supabase
     .from('settings')
-    .select('sso_username, sso_password, ui_handedness')
+    .select('sso_username, sso_password, ui_handedness, last_sync_asis_at, last_sync_fg_at, last_sync_sta_at, last_sync_inbound_at, last_sync_backhaul_at, last_sync_inventory_at')
     .eq('location_id', location.id)
     .maybeSingle();
 

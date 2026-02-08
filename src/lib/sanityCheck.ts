@@ -30,8 +30,10 @@ export function getSanityCheckParameters(load: LoadMetadata): SanityCheckParamet
   }
 
   // Final stage: verify everything is ready for pickup
-  const wrappingRequired = isShipped || isSold;
-  const taggingRequired = isSold;
+  // Salvage loads never require wrapping or tagging
+  const isSalvage = load.category?.toLowerCase() === 'salvage';
+  const wrappingRequired = !isSalvage && (isShipped || isSold);
+  const taggingRequired = !isSalvage && isSold;
   const endCapMarkersRequired = taggingRequired && load.prep_tagged === true;
 
   return {

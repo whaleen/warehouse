@@ -89,6 +89,11 @@ function App() {
 
   const [currentView, setCurrentView] = useState<AppView>(initialRoute.view);
   const [displayId, setDisplayId] = useState<string | null>(initialRoute.displayId ?? null);
+  const [docPath, setDocPath] = useState<string | null>(initialRoute.docPath ?? null);
+  const [inventoryType, setInventoryType] = useState<string | null>(initialRoute.inventoryType ?? null);
+  const [partsTab, setPartsTab] = useState<string | null>(initialRoute.partsTab ?? null);
+  const [displaySettingsId, setDisplaySettingsId] = useState<string | null>(initialRoute.displaySettingsId ?? null);
+  const [resetToken, setResetToken] = useState<string | null>(initialRoute.resetToken ?? null);
 
   const navigate = useCallback((view: AppView, options?: { params?: URLSearchParams; sessionId?: string | null; displayId?: string | null; replace?: boolean }) => {
     const params = options?.params ?? new URLSearchParams(window.location.search);
@@ -126,6 +131,11 @@ function App() {
       startTransition(() => {
         setCurrentView(route.view);
         setDisplayId(route.displayId ?? null);
+        setDocPath(route.docPath ?? null);
+        setInventoryType(route.inventoryType ?? null);
+        setPartsTab(route.partsTab ?? null);
+        setDisplaySettingsId(route.displaySettingsId ?? null);
+        setResetToken(route.resetToken ?? null);
       });
     };
     window.addEventListener('popstate', syncRoute);
@@ -194,7 +204,7 @@ function App() {
         <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme-marketing">
           <Suspense fallback={null}>
             <PageTransition>
-              <UpdatePasswordView />
+              <UpdatePasswordView resetToken={resetToken} />
             </PageTransition>
           </Suspense>
         </ThemeProvider>
@@ -276,13 +286,13 @@ function App() {
                       />
                     )}
                     {currentView === "inventory" && (
-                      <InventoryView />
+                      <InventoryView inventoryType={inventoryType} />
                     )}
                     {currentView === "inventory-guide" && (
                       <InventoryVisualGuide />
                     )}
                     {currentView === "parts" && (
-                      <PartsView />
+                      <PartsView partsTab={partsTab} />
                     )}
                     {currentView === "products" && (
                       <ProductEnrichment
@@ -308,7 +318,7 @@ function App() {
                       <DataQualityDashboard />
                     )}
                     {currentView === "docs" && (
-                      <DocsView />
+                      <DocsView docPath={docPath} />
                     )}
                     {currentView === "settings-locations" && (
                       <SettingsView section="locations" />
@@ -326,7 +336,7 @@ function App() {
                       <SettingsView section="profile" />
                     )}
                     {currentView === "settings-displays" && (
-                      <SettingsView section="displays" />
+                      <SettingsView section="displays" displaySettingsId={displaySettingsId} />
                     )}
                     {currentView === "settings-gesync" && (
                       <GESyncView />
@@ -354,13 +364,13 @@ function App() {
                       />
                     )}
                     {currentView === "inventory" && (
-                      <InventoryView />
+                      <InventoryView inventoryType={inventoryType} />
                     )}
                     {currentView === "inventory-guide" && (
                       <InventoryVisualGuide />
                     )}
                     {currentView === "parts" && (
-                      <PartsView />
+                      <PartsView partsTab={partsTab} />
                     )}
                     {currentView === "products" && (
                       <ProductEnrichment
@@ -386,7 +396,7 @@ function App() {
                       <DataQualityDashboard />
                     )}
                     {currentView === "docs" && (
-                      <DocsView />
+                      <DocsView docPath={docPath} />
                     )}
                     {currentView === "settings-locations" && (
                       <SettingsView section="locations" />
@@ -404,7 +414,7 @@ function App() {
                       <SettingsView section="profile" />
                     )}
                     {currentView === "settings-displays" && (
-                      <SettingsView section="displays" />
+                      <SettingsView section="displays" displaySettingsId={displaySettingsId} />
                     )}
                     {currentView === "settings-gesync" && (
                       <GESyncView />

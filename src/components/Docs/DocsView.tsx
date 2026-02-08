@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useRef } from 'react';
 import "@assistant-ui/react-markdown/styles/dot.css";
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -17,6 +17,10 @@ type DocEntry = {
   path: string;
   content: string;
   group: string;
+};
+
+type SearchResult = DocEntry & {
+  snippet?: string;
 };
 
 const docModules = import.meta.glob(
@@ -58,13 +62,19 @@ const extractTitle = (content: string, fallback: string) => {
 };
 
 const getGroupLabel = (docPath: string) => {
+  // Key overview docs go in "Start Here"
   if (docPath === 'README.md') return 'Start Here';
+  if (docPath === 'services/ge-sync/README.md') return 'Start Here';
+  if (docPath === 'services/ge-sync/src/scripts/README.md') return 'Start Here';
+  if (docPath === 'src/components/Map/README.md') return 'Start Here';
+
+  // Specific doc sections
   if (docPath.startsWith('docs/warehouse/')) return 'Warehouse';
   if (docPath.startsWith('docs/ge-dms/')) {
     if (docPath.includes('/pages/')) return 'GE DMS / Archive';
     return 'GE DMS';
   }
-  if (docPath.startsWith('docs/ge-sync/')) return 'GE Sync';
+  if (docPath.startsWith('docs/agent/')) return 'Agent';
   if (docPath.startsWith('docs/features/')) return 'Features';
   if (docPath.startsWith('docs/architecture/')) return 'Architecture';
   if (docPath.startsWith('docs/')) return 'Docs';
@@ -76,25 +86,17 @@ const getGroupLabel = (docPath: string) => {
 const buildDocs = (): DocEntry[] => {
   return Object.entries(docModules)
     .map(([fullPath, content]) => {
-      let docPath = '';
-      if (fullPath.includes('/docs/')) {
-        docPath = `docs/${fullPath.split('/docs/')[1]}`;
-      } else if (fullPath.endsWith('/README.md')) {
-        docPath = 'README.md';
-      } else if (fullPath.includes('/services/')) {
-        docPath = `services/${fullPath.split('/services/')[1]}`;
-      } else if (fullPath.includes('/src/')) {
-        docPath = `src/${fullPath.split('/src/')[1]}`;
-      } else {
-        docPath = fullPath;
-      }
+      // Extract clean relative path
+      const parts = fullPath.split('../../../')[1] || fullPath;
+      const docPath = parts.replace(/^\//, '');
 
       const segments = docPath.split('/');
       const group = getGroupLabel(docPath);
       const title = segments.map(toTitle).join(' / ');
       const displayTitle = extractTitle(content, title);
+
       return {
-        id: docPath,
+        id: docPath, // Unique ID for each file
         title,
         displayTitle,
         path: docPath,
@@ -102,22 +104,84 @@ const buildDocs = (): DocEntry[] => {
         group,
       };
     })
-    .sort((a, b) => a.title.localeCompare(b.title));
+    .sort((a, b) => {
+      // Sort by group first, then by displayTitle within group
+      if (a.group !== b.group) {
+        // Custom group ordering: Start Here first, then alphabetical
+        if (a.group === 'Start Here') return -1;
+        if (b.group === 'Start Here') return 1;
+        return a.group.localeCompare(b.group);
+      }
+      return a.displayTitle.localeCompare(b.displayTitle);
+    });
 };
 
 const allDocs = buildDocs();
 
-export function DocsView() {
+const extractSnippet = (content: string, query: string, maxLength = 150): string => {
+  const lowerContent = content.toLowerCase();
+  const lowerQuery = query.toLowerCase();
+  const index = lowerContent.indexOf(lowerQuery);
+
+  if (index === -1) return '';
+
+  const contextRadius = Math.floor(maxLength / 2);
+  const start = Math.max(0, index - contextRadius);
+  const end = Math.min(content.length, index + query.length + contextRadius);
+
+  let snippet = content.slice(start, end);
+  if (start > 0) snippet = '...' + snippet;
+  if (end < content.length) snippet = snippet + '...';
+
+  if (snippet.length > maxLength) {
+    snippet = `${snippet.slice(0, Math.max(0, maxLength - 3))}...`;
+  }
+
+  return snippet;
+};
+
+const highlightMatch = (text: string, query: string): React.ReactNode => {
+  if (!query) return text;
+
+  const parts = text.split(new RegExp(`(${query})`, 'gi'));
+  return parts.map((part, i) =>
+    part.toLowerCase() === query.toLowerCase() ? (
+      <mark key={i} className="bg-yellow-200 dark:bg-yellow-900/50 font-medium">
+        {part}
+      </mark>
+    ) : (
+      part
+    )
+  );
+};
+
+interface DocsViewProps {
+  docPath?: string | null;
+}
+
+export function DocsView({ docPath }: DocsViewProps) {
   const [search, setSearch] = useState('');
   const [activeDocId, setActiveDocId] = useState<string>(() => {
+    // Try path-based parameter first, then fall back to query param for backward compatibility
+    if (docPath) return docPath;
     const params = new URLSearchParams(window.location.search);
     return params.get('doc') ?? allDocs[0]?.id ?? '';
   });
+  const [selectedIndex, setSelectedIndex] = useState(0);
+  const selectedButtonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     const syncFromUrl = () => {
+      // Extract doc path from URL pathname
+      const pathSegments = window.location.pathname.split('/').filter(Boolean);
+      // Path structure: /docs/:group/:page -> segments[1+]
+      const pathBasedDoc = pathSegments.length > 1 ? pathSegments.slice(1).join('/') : null;
+
+      // Fall back to query param for backward compatibility
       const params = new URLSearchParams(window.location.search);
-      const next = params.get('doc');
+      const queryBasedDoc = params.get('doc');
+
+      const next = pathBasedDoc || queryBasedDoc;
       if (next && next !== activeDocId) {
         setActiveDocId(next);
       }
@@ -130,12 +194,28 @@ export function DocsView() {
     };
   }, [activeDocId]);
 
-  const filteredDocs = useMemo<DocEntry[]>(() => {
+  const filteredDocs = useMemo<SearchResult[]>(() => {
     const query = search.trim().toLowerCase();
     if (!query) return allDocs;
-    return allDocs.filter((doc) =>
-      doc.title.toLowerCase().includes(query) || doc.path.toLowerCase().includes(query)
-    );
+
+    return allDocs
+      .filter((doc) =>
+        doc.title.toLowerCase().includes(query) ||
+        doc.path.toLowerCase().includes(query) ||
+        doc.content.toLowerCase().includes(query)
+      )
+      .map((doc) => {
+        // Extract snippet if match is in content
+        const snippet = doc.content.toLowerCase().includes(query)
+          ? extractSnippet(doc.content, query)
+          : undefined;
+        return { ...doc, snippet };
+      });
+  }, [search]);
+
+  // Reset selected index when search changes
+  useEffect(() => {
+    setSelectedIndex(0);
   }, [search]);
 
   const activeDoc = useMemo<DocEntry | null>(
@@ -145,22 +225,38 @@ export function DocsView() {
 
   useEffect(() => {
     if (!activeDoc) return;
+
+    // Build path-based URL: /docs/:group/:page
+    const currentPath = window.location.pathname;
+    const expectedPath = `/docs/${activeDoc.id}`;
+
+    // Only update if path changed
+    if (currentPath === expectedPath) return;
+
+    // Preserve query params (like ?from=dashboard)
     const params = new URLSearchParams(window.location.search);
-    if (params.get('doc') === activeDoc.id) return;
-    params.set('doc', activeDoc.id);
-    const nextUrl = `${window.location.pathname}?${params.toString()}`;
+    params.delete('doc'); // Remove legacy query param
+    const query = params.toString();
+    const nextUrl = query ? `${expectedPath}?${query}` : expectedPath;
+
     window.history.replaceState({}, '', nextUrl);
+    window.dispatchEvent(new Event('app:locationchange'));
   }, [activeDoc]);
 
-  const groupedDocs = useMemo<Array<[string, DocEntry[]]>>(() => {
-    const groups = new Map<string, DocEntry[]>();
+  const groupedDocs = useMemo<Array<[string, SearchResult[]]>>(() => {
+    const groups = new Map<string, SearchResult[]>();
     filteredDocs.forEach((doc) => {
       const group = doc.group;
       const list = groups.get(group) ?? [];
       list.push(doc);
       groups.set(group, list);
     });
-    return Array.from(groups.entries()).sort(([a], [b]) => a.localeCompare(b));
+    return Array.from(groups.entries()).sort(([a], [b]) => {
+      // Start Here always first
+      if (a === 'Start Here') return -1;
+      if (b === 'Start Here') return 1;
+      return a.localeCompare(b);
+    });
   }, [filteredDocs]);
 
   const handleSelectDoc = (doc: DocEntry) => {
@@ -175,6 +271,40 @@ export function DocsView() {
       // Ignore clipboard errors
     }
   };
+
+  // Keyboard navigation
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Only handle if search input is focused
+      const isSearchFocused = document.activeElement?.tagName === 'INPUT';
+      if (!isSearchFocused || filteredDocs.length === 0) return;
+
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        setSelectedIndex((prev) => Math.min(prev + 1, filteredDocs.length - 1));
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        setSelectedIndex((prev) => Math.max(prev - 1, 0));
+      } else if (e.key === 'Enter') {
+        e.preventDefault();
+        const selectedDoc = filteredDocs[selectedIndex];
+        if (selectedDoc) {
+          handleSelectDoc(selectedDoc);
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [filteredDocs, selectedIndex]);
+
+  // Scroll selected item into view
+  useEffect(() => {
+    selectedButtonRef.current?.scrollIntoView({
+      behavior: 'smooth',
+      block: 'nearest',
+    });
+  }, [selectedIndex]);
 
   const markdownComponents = useMemo(() => ({
     h1: ({ className, ...props }: React.ComponentPropsWithoutRef<'h1'>) => (
@@ -241,27 +371,52 @@ export function DocsView() {
               onChange={(e) => setSearch(e.target.value)}
             />
             <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-1">
-              {groupedDocs.map(([group, docs]) => (
-                <div key={group} className="space-y-2">
-                  <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                    {group}
+              {groupedDocs.map(([group, docs]) => {
+                // Calculate global index for each doc
+                const groupStartIndex = filteredDocs.findIndex((d) => d.id === docs[0]?.id);
+                return (
+                  <div key={group} className="space-y-2">
+                    <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                      {group}
+                    </div>
+                    <div className="space-y-1">
+                      {docs.map((doc, localIndex) => {
+                        const globalIndex = groupStartIndex + localIndex;
+                        const isKeyboardSelected = globalIndex === selectedIndex && !!search.trim();
+                        const isActive = activeDoc?.id === doc.id;
+
+                        return (
+                          <button
+                            key={doc.id}
+                            ref={isKeyboardSelected ? selectedButtonRef : undefined}
+                            type="button"
+                            className={cn(
+                              'w-full text-left rounded-md px-2 py-1.5 text-sm transition-colors',
+                              isActive
+                                ? 'bg-accent text-foreground'
+                                : isKeyboardSelected
+                                ? 'ring-2 ring-primary text-foreground'
+                                : 'text-muted-foreground hover:bg-accent/50'
+                            )}
+                            onClick={() => handleSelectDoc(doc)}
+                          >
+                            <div className="font-medium">
+                              {search.trim()
+                                ? highlightMatch(doc.displayTitle, search.trim())
+                                : doc.displayTitle}
+                            </div>
+                            {doc.snippet && (
+                              <div className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                                {highlightMatch(doc.snippet, search.trim())}
+                              </div>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
-                  <div className="space-y-1">
-                    {docs.map((doc) => (
-                      <button
-                        key={doc.id}
-                        type="button"
-                        className={`w-full text-left rounded-md px-2 py-1.5 text-sm hover:bg-accent ${
-                          doc.id === activeDoc?.id ? 'bg-accent text-foreground' : 'text-muted-foreground'
-                        }`}
-                        onClick={() => handleSelectDoc(doc)}
-                      >
-                        {doc.displayTitle}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              ))}
+                );
+              })}
               {filteredDocs.length === 0 && (
                 <div className="text-sm text-muted-foreground">No docs match that search.</div>
               )}

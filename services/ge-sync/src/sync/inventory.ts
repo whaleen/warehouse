@@ -230,7 +230,7 @@ export async function syncSimpleInventory(
 
     // Fetch existing items from DB
     // For STA sync, also fetch ASIS items to enable ASIS→STA migration (respecting GE as source of truth)
-    const inventoryTypesToFetch = [inventoryType];
+    const inventoryTypesToFetch: string[] = [inventoryType];
     if (inventoryType === 'STA') {
       inventoryTypesToFetch.push('ASIS');
     }

@@ -27,7 +27,7 @@ const defaultModels: Record<AgentProvider, string> = {
   openai: 'gpt-4o-mini',
   anthropic: 'claude-3-5-sonnet-20241022',
   groq: 'llama-3.3-70b-versatile',
-  gemini: 'gemini-1.5-flash',
+  gemini: 'gemini-2.0-flash',
 };
 
 export function AgentView({ onMenuClick }: { onMenuClick?: () => void }) {
@@ -131,7 +131,7 @@ export function AgentView({ onMenuClick }: { onMenuClick?: () => void }) {
                             placeholder={defaultModels[provider]}
                           />
                           <p className="text-xs text-muted-foreground">
-                            Leave blank to use the provider default.
+                            Leave blank to use: {defaultModels[provider]}
                           </p>
                         </div>
                       </div>
