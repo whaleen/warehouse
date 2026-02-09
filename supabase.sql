@@ -5,7 +5,6 @@ CREATE TABLE public.activity_log (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
   company_id uuid NOT NULL,
   location_id uuid NOT NULL,
-  user_id bigint,
   actor_name text NOT NULL,
   actor_image text,
   action text NOT NULL,
@@ -13,10 +12,50 @@ CREATE TABLE public.activity_log (
   entity_id text,
   details jsonb,
   created_at timestamp with time zone DEFAULT now(),
+  user_id uuid,
   CONSTRAINT activity_log_pkey PRIMARY KEY (id),
   CONSTRAINT activity_log_company_id_fkey FOREIGN KEY (company_id) REFERENCES public.companies(id),
   CONSTRAINT activity_log_location_id_fkey FOREIGN KEY (location_id) REFERENCES public.locations(id),
-  CONSTRAINT activity_log_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id)
+  CONSTRAINT activity_log_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id)
+);
+CREATE TABLE public.backhaul_order_lines (
+  iso text NOT NULL,
+  iso_line_number text NOT NULL,
+  company_id uuid NOT NULL,
+  location_id uuid NOT NULL,
+  model text,
+  serial text,
+  acc_qty integer,
+  line_status text,
+  cancel text,
+  confirm text,
+  last_seen_at timestamp with time zone NOT NULL DEFAULT now(),
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  updated_at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT backhaul_order_lines_pkey PRIMARY KEY (iso, iso_line_number, location_id)
+);
+CREATE TABLE public.backhaul_orders (
+  iso text NOT NULL,
+  iso_id text,
+  company_id uuid NOT NULL,
+  location_id uuid NOT NULL,
+  inv_org text,
+  start_date date,
+  end_date date,
+  backhaul_status text,
+  cancel text,
+  total_units integer,
+  total_points integer,
+  type text,
+  sub_inventory text,
+  adc text,
+  scac text,
+  is_open boolean NOT NULL DEFAULT true,
+  last_seen_at timestamp with time zone NOT NULL DEFAULT now(),
+  source text NOT NULL DEFAULT 'ge_dms_backhaul'::text,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  updated_at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT backhaul_orders_pkey PRIMARY KEY (iso, location_id)
 );
 CREATE TABLE public.beacons (
   id uuid NOT NULL DEFAULT uuid_generate_v4(),
@@ -120,6 +159,48 @@ CREATE TABLE public.ge_changes (
   CONSTRAINT ge_changes_pkey PRIMARY KEY (id),
   CONSTRAINT ge_changes_company_id_fkey FOREIGN KEY (company_id) REFERENCES public.companies(id),
   CONSTRAINT ge_changes_location_id_fkey FOREIGN KEY (location_id) REFERENCES public.locations(id)
+);
+CREATE TABLE public.inbound_receipt_items (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  company_id uuid NOT NULL,
+  location_id uuid NOT NULL,
+  inbound_shipment_no text NOT NULL,
+  line_index integer NOT NULL,
+  cso text,
+  tracking_number text,
+  model text,
+  serial text,
+  inbound_replacement text,
+  qty integer,
+  rcvd integer,
+  short integer,
+  damage integer,
+  serial_mix text,
+  raw_line text,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  updated_at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT inbound_receipt_items_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.inbound_receipts (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  company_id uuid NOT NULL,
+  location_id uuid NOT NULL,
+  inbound_shipment_no text NOT NULL,
+  scac text,
+  truck_number text,
+  scheduled_arrival_date text,
+  scheduled_arrival_time text,
+  actual_arrival_time text,
+  total_units integer,
+  total_pc_units integer,
+  seal_number text,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  updated_at timestamp with time zone NOT NULL DEFAULT now(),
+  summary_units integer,
+  summary_points integer,
+  asn_row_count integer,
+  units_gap integer,
+  CONSTRAINT inbound_receipts_pkey PRIMARY KEY (id)
 );
 CREATE TABLE public.inventory_conflicts (
   id uuid NOT NULL DEFAULT uuid_generate_v4(),
@@ -254,6 +335,13 @@ CREATE TABLE public.load_metadata (
   sanity_check_requested_by text,
   sanity_check_completed_at timestamp with time zone,
   sanity_check_completed_by text,
+  items_scanned_count integer DEFAULT 0,
+  items_total_count integer DEFAULT 0,
+  scanning_complete boolean DEFAULT false,
+  sanity_check_stage text CHECK (sanity_check_stage = ANY (ARRAY['early'::text, 'final'::text])),
+  sanity_check_parameters jsonb,
+  sanity_last_checked_at timestamp with time zone,
+  sanity_last_checked_by text,
   CONSTRAINT load_metadata_pkey PRIMARY KEY (id),
   CONSTRAINT load_metadata_company_fk FOREIGN KEY (company_id) REFERENCES public.companies(id),
   CONSTRAINT load_metadata_location_fk FOREIGN KEY (location_id) REFERENCES public.locations(id)
@@ -279,6 +367,78 @@ CREATE TABLE public.locations (
   active boolean DEFAULT true,
   CONSTRAINT locations_pkey PRIMARY KEY (id),
   CONSTRAINT locations_company_fk FOREIGN KEY (company_id) REFERENCES public.companies(id)
+);
+CREATE TABLE public.order_deliveries (
+  delivery_id text NOT NULL,
+  cso text NOT NULL,
+  company_id uuid NOT NULL,
+  location_id uuid NOT NULL,
+  delivery_status text,
+  cso_type text,
+  customer_po_number text,
+  rap text,
+  zip_group text,
+  delivery_date date,
+  delivery_name text,
+  delivery_address_1 text,
+  delivery_address_2 text,
+  delivery_city text,
+  delivery_state text,
+  delivery_zip text,
+  delivery_phone jsonb,
+  last_updated_date timestamp with time zone,
+  last_seen_at timestamp with time zone NOT NULL DEFAULT now(),
+  source text NOT NULL DEFAULT 'ge_dms_orderdata'::text,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  updated_at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT order_deliveries_pkey PRIMARY KEY (delivery_id, cso, location_id)
+);
+CREATE TABLE public.order_lines (
+  cso text NOT NULL,
+  delivery_id text NOT NULL,
+  line_number text NOT NULL,
+  company_id uuid NOT NULL,
+  location_id uuid NOT NULL,
+  line_status text,
+  line_type text,
+  item_type text,
+  item text,
+  product_type text,
+  crated_indicator text,
+  anti_tip_indicator text,
+  product_weight integer,
+  nmfc text,
+  carton_code text,
+  quantity integer,
+  points numeric,
+  shipment_number text,
+  customer_tracking_number text,
+  serials jsonb,
+  last_seen_at timestamp with time zone NOT NULL DEFAULT now(),
+  source text NOT NULL DEFAULT 'ge_dms_orderdata'::text,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  updated_at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT order_lines_pkey PRIMARY KEY (cso, delivery_id, line_number, location_id)
+);
+CREATE TABLE public.orders (
+  cso text NOT NULL,
+  company_id uuid NOT NULL,
+  location_id uuid NOT NULL,
+  order_type text,
+  order_date date,
+  customer_name text,
+  customer_account text,
+  customer_phone text,
+  freight_terms text,
+  shipping_instructions text,
+  shipping_method text,
+  additional_service text,
+  points numeric,
+  last_seen_at timestamp with time zone NOT NULL DEFAULT now(),
+  source text NOT NULL DEFAULT 'ge_dms_orderdata'::text,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  updated_at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT orders_pkey PRIMARY KEY (cso, location_id)
 );
 CREATE TABLE public.product_location_history (
   id uuid NOT NULL DEFAULT uuid_generate_v4(),
@@ -344,7 +504,6 @@ CREATE TABLE public.scanning_sessions (
   inventory_type text NOT NULL,
   sub_inventory text,
   status text NOT NULL DEFAULT 'active'::text CHECK (status = ANY (ARRAY['draft'::text, 'active'::text, 'closed'::text])),
-  items jsonb NOT NULL DEFAULT '[]'::jsonb,
   scanned_item_ids ARRAY NOT NULL DEFAULT '{}'::uuid[],
   created_at timestamp with time zone DEFAULT now(),
   updated_at timestamp with time zone DEFAULT now(),
@@ -354,6 +513,7 @@ CREATE TABLE public.scanning_sessions (
   closed_by text,
   company_id uuid NOT NULL DEFAULT '00000000-0000-0000-0000-000000000001'::uuid,
   location_id uuid NOT NULL,
+  session_source text DEFAULT 'manual'::text CHECK (session_source = ANY (ARRAY['manual'::text, 'ge_sync'::text, 'system'::text])),
   CONSTRAINT scanning_sessions_pkey PRIMARY KEY (id),
   CONSTRAINT scanning_sessions_company_fk FOREIGN KEY (company_id) REFERENCES public.companies(id),
   CONSTRAINT scanning_sessions_location_fk FOREIGN KEY (location_id) REFERENCES public.locations(id)
@@ -367,6 +527,13 @@ CREATE TABLE public.settings (
   ge_cookies jsonb,
   ge_cookies_updated_at timestamp with time zone,
   ui_handedness text DEFAULT 'right'::text,
+  last_sync_asis_at timestamp with time zone,
+  last_sync_fg_at timestamp with time zone,
+  last_sync_sta_at timestamp with time zone,
+  last_sync_inbound_at timestamp with time zone,
+  last_sync_backhaul_at timestamp with time zone,
+  last_sync_inventory_at timestamp with time zone,
+  last_sync_orders_at timestamp with time zone,
   CONSTRAINT settings_pkey PRIMARY KEY (location_id),
   CONSTRAINT settings_company_fk FOREIGN KEY (company_id) REFERENCES public.companies(id),
   CONSTRAINT settings_location_fk FOREIGN KEY (location_id) REFERENCES public.locations(id)
@@ -401,6 +568,16 @@ CREATE TABLE public.trucks (
   CONSTRAINT trucks_pkey PRIMARY KEY (id),
   CONSTRAINT trucks_company_fk FOREIGN KEY (company_id) REFERENCES public.companies(id),
   CONSTRAINT trucks_location_fk FOREIGN KEY (location_id) REFERENCES public.locations(id)
+);
+CREATE TABLE public.user_agent_keys (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL,
+  provider text NOT NULL CHECK (provider = ANY (ARRAY['openai'::text, 'anthropic'::text, 'groq'::text, 'gemini'::text])),
+  api_key text NOT NULL,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  updated_at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT user_agent_keys_pkey PRIMARY KEY (id),
+  CONSTRAINT user_agent_keys_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id)
 );
 CREATE TABLE public.users (
   id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,

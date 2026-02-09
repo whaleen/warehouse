@@ -11,8 +11,7 @@
     "preview": "doppler run -- vite preview",
     "lint": "eslint .",
     "prepare": "husky",
-    "db:types": "supabase gen types typescript --local > src/types/database.ts",
-    "db:docs": "node scripts/generate-field-docs.js"
+    "db:types": "supabase gen types typescript --local > src/types/database.ts"
   },
   "lint-staged": {
     "*.{ts,tsx}": [

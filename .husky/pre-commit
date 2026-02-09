@@ -2,17 +2,3 @@
 
 # Run linting on staged files
 pnpm lint-staged
-
-# Check if database types changed
-if git diff --cached --name-only | grep -q "src/types/database.ts"; then
-  echo ""
-  echo "🔍 Database types changed - running field documentation check..."
-  pnpm db:docs
-
-  echo ""
-  echo "⚠️  Database types were updated!"
-  echo "   Please review and update if needed:"
-  echo "   • docs/DATA_DICTIONARY.md"
-  echo "   • docs/field-sources.json"
-  echo ""
-fi
