@@ -52,6 +52,8 @@ export interface GEInventoryItem {
   'Inv Qty': string;
   'Availability Status': string;
   'Availability Message': string;
+  'LOAD NUMBER'?: string;
+  'Load Number'?: string;
 }
 
 export interface GELoadMetadata {
