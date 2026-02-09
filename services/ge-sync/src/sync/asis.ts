@@ -869,8 +869,25 @@ export async function syncASIS(locationId: string): Promise<SyncResult> {
       const serial = geItem['Serial #']?.trim();
       if (!serial) continue;
 
+      const loadNumber = serialToLoad.get(serial);
+      const loadCso = loadNumber ? loadCsoByLoadNumber.get(loadNumber) : undefined;
+      const csoValue = loadCso?.trim() || '';
+
       // Skip items that already exist as STA — STA is the source of truth for picked loads
+      // But backfill sub_inventory and CSO on the STA item from load data
       if (staSerials.has(serial)) {
+        if (loadNumber) {
+          await db
+            .from('inventory_items')
+            .update({
+              sub_inventory: loadNumber,
+              ...(csoValue ? { cso: csoValue } : {}),
+            })
+            .eq('company_id', config.companyId)
+            .eq('location_id', locationId)
+            .eq('inventory_type', 'STA')
+            .eq('serial', serial);
+        }
         staExcluded++;
         continue;
       }
@@ -879,9 +896,6 @@ export async function syncASIS(locationId: string): Promise<SyncResult> {
       const product = getProductForModel(model, productLookup);
       const detail = serialDetails.get(serial);
       const ordcValue = detail?.ordc?.trim() || undefined;
-      const loadNumber = serialToLoad.get(serial);
-      const loadCso = loadNumber ? loadCsoByLoadNumber.get(loadNumber) : undefined;
-      const csoValue = loadCso?.trim() || '';
       const existing = existingBySerial.get(serial);
 
       if (loadNumber) itemsInLoads++;
