@@ -112,25 +112,28 @@ export function SessionsView({ onViewChange, onMenuClick }: SessionsViewProps) {
 
       const { data: inventoryItems, error: inventoryError } = await supabase
         .from('inventory_items')
-        .select('id, sub_inventory, inventory_type, inventory_bucket')
+        .select('id, sub_inventory, inventory_type, inventory_bucket, serial, qty')
         .eq('location_id', locationId)
         .limit(50000); // Override default 1000 row limit
 
       if (inventoryError) throw inventoryError;
 
-      const itemMap = new Map<string, { sub_inventory: string | null; inventory_bucket: string | null }>();
+      const itemMap = new Map<string, { sub_inventory: string | null; inventory_bucket: string | null; weight: number }>();
       const totalsByKey = new Map<string, number>();
 
       for (const item of inventoryItems ?? []) {
         if (!item.id) continue;
         const bucket = item.inventory_bucket || item.inventory_type || 'unknown';
+        const isSerialized = Boolean(item.serial && String(item.serial).trim());
+        const weight = isSerialized ? 1 : (item.qty ?? 1);
         const key = item.sub_inventory
           ? `load:${item.sub_inventory}`
           : `bucket:${bucket}`;
-        totalsByKey.set(key, (totalsByKey.get(key) ?? 0) + 1);
+        totalsByKey.set(key, (totalsByKey.get(key) ?? 0) + weight);
         itemMap.set(item.id, {
           sub_inventory: item.sub_inventory ?? null,
           inventory_bucket: bucket,
+          weight,
         });
       }
 
@@ -157,7 +160,7 @@ export function SessionsView({ onViewChange, onMenuClick }: SessionsViewProps) {
         const key = item.sub_inventory
           ? `load:${item.sub_inventory}`
           : `bucket:${bucket}`;
-        scannedByKey.set(key, (scannedByKey.get(key) ?? 0) + 1);
+        scannedByKey.set(key, (scannedByKey.get(key) ?? 0) + item.weight);
       }
 
       return { totalsByKey, scannedByKey };

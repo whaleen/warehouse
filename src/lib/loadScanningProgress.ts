@@ -35,7 +35,7 @@ export async function updateLoadScanningProgress(loadName: string): Promise<void
     // Get all items in this load (regardless of inventory_type - items can change type when sold)
     const { data: loadItems, error: itemsError } = await supabase
       .from('inventory_items')
-      .select('id')
+      .select('id, serial, qty')
       .eq('location_id', locationId)
       .eq('sub_inventory', loadName);
 
@@ -44,7 +44,7 @@ export async function updateLoadScanningProgress(loadName: string): Promise<void
       return;
     }
 
-    const loadItemIds = (loadItems || []).map(item => item.id);
+    const loadItemIds = (loadItems || []).map(item => item.id).filter(Boolean);
 
     if (loadItemIds.length === 0) {
       // No items found - set counts to 0
@@ -64,10 +64,10 @@ export async function updateLoadScanningProgress(loadName: string): Promise<void
       return;
     }
 
-    // Count distinct items that have location history (are mapped)
-    const { count: scannedCount, error: scannedError } = await supabase
+    // Count scanned items (qty-aware for non-serialized items)
+    const { data: scannedRows, error: scannedError } = await supabase
       .from('product_location_history')
-      .select('inventory_item_id', { count: 'exact', head: true })
+      .select('inventory_item_id')
       .eq('location_id', locationId)
       .in('inventory_item_id', loadItemIds);
 
@@ -76,13 +76,20 @@ export async function updateLoadScanningProgress(loadName: string): Promise<void
       return;
     }
 
-    const scanningComplete = totalCount > 0 && (scannedCount || 0) >= totalCount;
+    const scannedIds = new Set((scannedRows || []).map(row => row.inventory_item_id));
+    const scannedCount = (loadItems || []).reduce((sum, item) => {
+      if (!item.id || !scannedIds.has(item.id)) return sum;
+      const isSerialized = Boolean(item.serial && String(item.serial).trim());
+      return sum + (isSerialized ? 1 : (item.qty ?? 1));
+    }, 0);
+
+    const scanningComplete = totalCount > 0 && scannedCount >= totalCount;
 
     // Update load metadata
     const { error: updateError } = await supabase
       .from('load_metadata')
       .update({
-        items_scanned_count: scannedCount || 0,
+          items_scanned_count: scannedCount,
         items_total_count: totalCount,
         scanning_complete: scanningComplete,
       })

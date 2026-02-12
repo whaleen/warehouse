@@ -44,28 +44,60 @@ async function recalculateAllLoadScanningProgress() {
 
   for (const load of loads) {
     try {
-      // Count total items for this load
-      const { count: totalCount, error: totalError } = await supabase
-        .from('inventory_items')
-        .select('*', { count: 'exact', head: true })
+      const { data: loadMetadata, error: loadMetaError } = await supabase
+        .from('load_metadata')
+        .select('ge_units')
         .eq('location_id', load.location_id)
-        .eq('inventory_type', load.inventory_type)
-        .eq('sub_inventory', load.sub_inventory_name);
+        .eq('sub_inventory_name', load.sub_inventory_name)
+        .single();
 
-      if (totalError) {
-        console.warn(`Failed to count total for ${load.sub_inventory_name}:`, totalError.message);
+      if (loadMetaError) {
+        console.warn(`Failed to load metadata for ${load.sub_inventory_name}:`, loadMetaError.message);
         errorCount++;
         continue;
       }
 
-      // Count scanned items (those with map_inventory entry)
-      const { count: scannedCount, error: scannedError } = await supabase
+      const itemsTotal = loadMetadata?.ge_units || 0;
+
+      const { data: loadItems, error: itemsError } = await supabase
         .from('inventory_items')
-        .select('*', { count: 'exact', head: true })
+        .select('id, serial, qty')
         .eq('location_id', load.location_id)
-        .eq('inventory_type', load.inventory_type)
-        .eq('sub_inventory', load.sub_inventory_name)
-        .not('map_inventory', 'is', null);
+        .eq('sub_inventory', load.sub_inventory_name);
+
+      if (itemsError) {
+        console.warn(`Failed to fetch items for ${load.sub_inventory_name}:`, itemsError.message);
+        errorCount++;
+        continue;
+      }
+
+      const itemIds = (loadItems || []).map(item => item.id).filter(Boolean);
+      if (itemIds.length === 0) {
+        const { error: updateError } = await supabase
+          .from('load_metadata')
+          .update({
+            items_scanned_count: 0,
+            items_total_count: itemsTotal,
+            scanning_complete: false,
+          })
+          .eq('location_id', load.location_id)
+          .eq('sub_inventory_name', load.sub_inventory_name);
+
+        if (updateError) {
+          console.warn(`Failed to update ${load.sub_inventory_name}:`, updateError.message);
+          errorCount++;
+        } else {
+          console.log(`  ✓ ${load.sub_inventory_name}: 0/${itemsTotal} items scanned`);
+          successCount++;
+        }
+        continue;
+      }
+
+      const { data: scannedRows, error: scannedError } = await supabase
+        .from('product_location_history')
+        .select('inventory_item_id')
+        .eq('location_id', load.location_id)
+        .in('inventory_item_id', itemIds);
 
       if (scannedError) {
         console.warn(`Failed to count scanned for ${load.sub_inventory_name}:`, scannedError.message);
@@ -73,8 +105,12 @@ async function recalculateAllLoadScanningProgress() {
         continue;
       }
 
-      const itemsTotal = totalCount || 0;
-      const itemsScanned = scannedCount || 0;
+      const scannedIds = new Set((scannedRows || []).map(row => row.inventory_item_id));
+      const itemsScanned = (loadItems || []).reduce((sum, item) => {
+        if (!item.id || !scannedIds.has(item.id)) return sum;
+        const isSerialized = Boolean(item.serial && String(item.serial).trim());
+        return sum + (isSerialized ? 1 : (item.qty ?? 1));
+      }, 0);
       const isComplete = itemsTotal > 0 && itemsScanned >= itemsTotal;
 
       // Update load metadata

@@ -110,15 +110,34 @@ export function useInventoryScanCounts() {
 
       const { data: items, error: itemsError } = await supabase
         .from('inventory_items')
-        .select('inventory_bucket, inventory_type')
-        .eq('location_id', locationId);
+        .select('id, serial, qty, inventory_bucket, inventory_type, sub_inventory')
+        .eq('location_id', locationId)
+        .limit(50000);
 
       if (itemsError) throw itemsError;
 
+      const { data: scannedRows, error: scannedError } = await supabase
+        .from('product_location_history')
+        .select('inventory_item_id')
+        .eq('location_id', locationId);
+
+      if (scannedError) throw scannedError;
+
+      const scannedIds = new Set((scannedRows || []).map(row => row.inventory_item_id));
+
       for (const item of items ?? []) {
+        if (item.sub_inventory) continue;
         const bucket = (item.inventory_bucket || item.inventory_type || 'Unknown') as string;
         const key = `bucket:${bucket}`;
-        totalByKey.set(key, (totalByKey.get(key) ?? 0) + 1);
+        const typeKey = `type:${bucket}`;
+        const isSerialized = Boolean(item.serial && String(item.serial).trim());
+        const weight = isSerialized ? 1 : (item.qty ?? 1);
+        totalByKey.set(key, (totalByKey.get(key) ?? 0) + weight);
+        totalByKey.set(typeKey, (totalByKey.get(typeKey) ?? 0) + weight);
+        if (item.id && scannedIds.has(item.id)) {
+          scannedByKey.set(key, (scannedByKey.get(key) ?? 0) + weight);
+          scannedByKey.set(typeKey, (scannedByKey.get(typeKey) ?? 0) + weight);
+        }
       }
 
       return { totalByKey, scannedByKey };

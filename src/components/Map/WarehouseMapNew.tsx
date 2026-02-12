@@ -1008,9 +1008,10 @@ export function WarehouseMapNew({ locations }: WarehouseMapNewProps) {
                           }
                           if (group.inventoryBucket) {
                             const key = `bucket:${group.inventoryBucket}`;
+                            const scanned = inventoryScanCountsQuery.data.scannedByKey.get(key);
                             const total = inventoryScanCountsQuery.data.totalByKey.get(key);
                             if (typeof total === 'number') {
-                              return `${group.count}/${total}`;
+                              return `${scanned ?? 0}/${total}`;
                             }
                           }
                           return group.count;
