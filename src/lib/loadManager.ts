@@ -14,7 +14,7 @@ function getInventoryTypes(mainType: InventoryType): InventoryType[] {
     case 'LocalStock':
       return ['LocalStock', 'Staged', 'STA', 'Inbound', 'WillCall'];
     case 'ASIS':
-      return ['ASIS', 'STA'];
+      return ['ASIS'];
     default:
       return [mainType];
   }

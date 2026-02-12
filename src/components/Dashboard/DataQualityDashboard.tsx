@@ -162,7 +162,7 @@ export function DataQualityDashboard() {
               <span className="font-semibold">{qualityData.inventoryIntegrity.totalItems.toLocaleString()}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-muted-foreground">ASIS/STA Duplicates (expected)</span>
+              <span className="text-muted-foreground">Bucket overlaps (expected)</span>
               <span className="font-semibold">{qualityData.inventoryIntegrity.asisStaDuplicates.toLocaleString()}</span>
             </div>
             <div className="flex justify-between">

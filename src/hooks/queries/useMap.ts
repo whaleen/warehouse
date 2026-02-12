@@ -66,12 +66,13 @@ export function useInventoryItemCount() {
     queryFn: async () => {
       if (!locationId) return 0;
 
-      // Use database function to get deduplicated count (excludes ASIS/STA duplicates and delivered loads)
-      const { data, error } = await supabase
-        .rpc('get_total_inventory_count', { p_location_id: locationId });
+      const { count, error } = await supabase
+        .from('inventory_items')
+        .select('*', { count: 'exact', head: true })
+        .eq('location_id', locationId);
 
       if (error) throw error;
-      return Number(data) || 0;
+      return Number(count) || 0;
     },
   });
 }
@@ -105,6 +106,19 @@ export function useInventoryScanCounts() {
         const key = `load:${load.sub_inventory_name}`;
         totalByKey.set(key, load.items_total_count || 0);
         scannedByKey.set(key, load.items_scanned_count || 0);
+      }
+
+      const { data: items, error: itemsError } = await supabase
+        .from('inventory_items')
+        .select('inventory_bucket, inventory_type')
+        .eq('location_id', locationId);
+
+      if (itemsError) throw itemsError;
+
+      for (const item of items ?? []) {
+        const bucket = (item.inventory_bucket || item.inventory_type || 'Unknown') as string;
+        const key = `bucket:${bucket}`;
+        totalByKey.set(key, (totalByKey.get(key) ?? 0) + 1);
       }
 
       return { totalByKey, scannedByKey };

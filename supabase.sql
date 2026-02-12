@@ -156,9 +156,37 @@ CREATE TABLE public.ge_changes (
   processed_action text,
   notes text,
   detected_at timestamp with time zone DEFAULT now(),
+  inventory_bucket text,
+  inventory_state text,
+  source_type text,
+  source_id uuid,
   CONSTRAINT ge_changes_pkey PRIMARY KEY (id),
   CONSTRAINT ge_changes_company_id_fkey FOREIGN KEY (company_id) REFERENCES public.companies(id),
   CONSTRAINT ge_changes_location_id_fkey FOREIGN KEY (location_id) REFERENCES public.locations(id)
+);
+CREATE TABLE public.ge_inventory_source_items (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  company_id uuid NOT NULL,
+  location_id uuid NOT NULL,
+  source_type text NOT NULL,
+  inventory_bucket text,
+  inventory_state text,
+  serial text NOT NULL,
+  model text,
+  qty integer,
+  cso text,
+  sub_inventory text,
+  ge_ordc text,
+  ge_availability_status text,
+  ge_availability_message text,
+  ge_inv_qty integer,
+  raw_payload jsonb NOT NULL DEFAULT '{}'::jsonb,
+  last_seen_at timestamp with time zone NOT NULL DEFAULT now(),
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  updated_at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT ge_inventory_source_items_pkey PRIMARY KEY (id),
+  CONSTRAINT ge_inventory_source_items_company_fk FOREIGN KEY (company_id) REFERENCES public.companies(id),
+  CONSTRAINT ge_inventory_source_items_location_fk FOREIGN KEY (location_id) REFERENCES public.locations(id)
 );
 CREATE TABLE public.inbound_receipt_items (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
@@ -283,10 +311,17 @@ CREATE TABLE public.inventory_items (
   ge_inv_qty integer,
   ge_orphaned boolean DEFAULT false,
   ge_orphaned_at timestamp with time zone,
+  inventory_bucket text,
+  inventory_state text,
+  source_type text,
+  source_id uuid,
+  source_meta jsonb NOT NULL DEFAULT '{}'::jsonb,
+  last_seen_at timestamp with time zone,
   CONSTRAINT inventory_items_pkey PRIMARY KEY (id),
   CONSTRAINT fk_inventory_product FOREIGN KEY (product_fk) REFERENCES public.products(id),
   CONSTRAINT inventory_items_company_fk FOREIGN KEY (company_id) REFERENCES public.companies(id),
-  CONSTRAINT inventory_items_location_fk FOREIGN KEY (location_id) REFERENCES public.locations(id)
+  CONSTRAINT inventory_items_location_fk FOREIGN KEY (location_id) REFERENCES public.locations(id),
+  CONSTRAINT inventory_items_source_id_fkey FOREIGN KEY (source_id) REFERENCES public.ge_inventory_source_items(id)
 );
 CREATE TABLE public.load_conflicts (
   id uuid NOT NULL DEFAULT uuid_generate_v4(),
@@ -578,14 +613,4 @@ CREATE TABLE public.user_agent_keys (
   updated_at timestamp with time zone NOT NULL DEFAULT now(),
   CONSTRAINT user_agent_keys_pkey PRIMARY KEY (id),
   CONSTRAINT user_agent_keys_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id)
-);
-CREATE TABLE public.users (
-  id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
-  created_at timestamp with time zone NOT NULL DEFAULT now(),
-  username character varying UNIQUE,
-  password character varying,
-  image character varying,
-  company_ids ARRAY DEFAULT '{}'::uuid[],
-  role text NOT NULL DEFAULT 'user'::text CHECK (role = ANY (ARRAY['admin'::text, 'user'::text])),
-  CONSTRAINT users_pkey PRIMARY KEY (id)
 );

@@ -56,7 +56,7 @@ export function GESyncIndexView({ onMenuClick }: GESyncIndexViewProps) {
                 <strong>💡 Recommended:</strong> Use "Sync All Inventory" below for best results.
               </p>
               <p className="text-xs">
-                The unified sync runs in the correct order (FG → ASIS → STA) and handles ASIS→STA migrations automatically.
+                The unified sync runs in the correct order (FG → ASIS → STA) and keeps GE source records intact while deriving a single canonical inventory view.
               </p>
               <div className="border-t border-border/40 my-3 pt-3">
                 <p className="text-xs font-medium text-foreground mb-1">Inventory Types:</p>
@@ -67,7 +67,7 @@ export function GESyncIndexView({ onMenuClick }: GESyncIndexViewProps) {
                   <strong>ASIS:</strong> As-Is inventory (open-box, damaged, discounted items)
                 </p>
                 <p className="text-xs">
-                  <strong>STA:</strong> Staged inventory (items prepared for delivery/pickup)
+                  <strong>STA:</strong> Staged state reported by GE (items prepared for delivery/pickup)
                 </p>
                 <p className="text-xs">
                   <strong>Inbound:</strong> Receiving reports (arrival shipments)

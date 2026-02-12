@@ -52,6 +52,9 @@ export interface ProductLocationForMap {
   raw_lng: number | null;
   inventory_item_id?: string | null;
   inventory_type?: string | null;
+  inventory_bucket?: string | null;
+  inventory_state?: string | null;
+  source_type?: string | null;
   image_url?: string | null;
   load_item_count?: number | null;
   product_type: string | null;

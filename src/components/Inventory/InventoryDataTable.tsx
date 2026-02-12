@@ -8,7 +8,6 @@ import {
 } from '@tanstack/react-table';
 import { ArrowUpDown, Eye, Package } from 'lucide-react';
 
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import type { InventoryItem } from '@/types/inventory';
@@ -116,9 +115,26 @@ export function InventoryDataTable({ items, onViewItem }: InventoryDataTableProp
             <ArrowUpDown className="ml-2 h-4 w-4" />
           </Button>
         ),
-        cell: ({ row }) => (
-          <Badge variant="secondary">{row.original.inventory_type}</Badge>
-        ),
+        cell: ({ row }) => {
+          const bucket = row.original.inventory_bucket || row.original.inventory_type;
+          if (!bucket) return '—';
+          return (
+            <span
+              className="inline-flex items-center rounded-sm border px-2 py-0.5 text-[10px] font-semibold tracking-wide"
+              style={{
+                backgroundColor: 'rgba(255,255,255,0.9)',
+                backgroundImage: bucket === 'FG'
+                  ? 'repeating-linear-gradient(45deg, rgba(100,116,139,0.4) 0, rgba(100,116,139,0.4) 0.7px, transparent 0.7px, transparent 3px), repeating-linear-gradient(-45deg, rgba(100,116,139,0.4) 0, rgba(100,116,139,0.4) 0.7px, transparent 0.7px, transparent 3px)'
+                  : bucket === 'ASIS'
+                    ? 'radial-gradient(circle, rgba(100,116,139,0.4) 0.8px, transparent 0.8px)'
+                    : undefined,
+                backgroundSize: bucket === 'ASIS' ? '4px 4px' : undefined,
+              }}
+            >
+              {bucket}
+            </span>
+          );
+        },
       },
       {
         id: 'serial',

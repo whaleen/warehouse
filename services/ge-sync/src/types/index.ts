@@ -12,7 +12,9 @@ export type InventoryType =
   | 'WillCall'
   | 'FG'
   | 'LocalStock'
-  | 'Parts';
+  | 'Parts'
+  | 'UNKNOWN'
+  | (string & {});
 
 export type GEChangeType =
   | 'item_appeared'
@@ -21,6 +23,9 @@ export type GEChangeType =
   | 'item_reserved'
   | 'item_load_changed'
   | 'item_qty_changed'
+  | 'item_bucket_changed'
+  | 'item_state_changed'
+  | 'item_source_changed'
   | 'item_migrated'
   | 'load_appeared'
   | 'load_disappeared'
@@ -33,6 +38,10 @@ export interface GEChange {
   company_id: string;
   location_id: string;
   inventory_type: InventoryType;
+  inventory_bucket?: string;
+  inventory_state?: string;
+  source_type?: string;
+  source_id?: string;
   serial?: string;
   model?: string;
   load_number?: string;

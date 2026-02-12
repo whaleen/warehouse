@@ -49,21 +49,9 @@ export function useDashboardInventoryItems() {
         }
       }
 
-      // Deduplicate: When an ASIS item is sold, it appears in both ASIS and STA
-      // Priority rule: STA wins - exclude ASIS items when serial exists in STA
-      const staSerials = new Set(
-        allItems
-          .filter(item => item.inventory_type === 'STA' && item.serial)
-          .map(item => item.serial)
-      );
-
       const deduplicatedItems = allItems.filter(item => {
         // Exclude items from delivered loads
         if (item.sub_inventory && deliveredLoadNames.has(item.sub_inventory)) {
-          return false;
-        }
-        // Exclude ASIS items that have moved to STA
-        if (item.inventory_type === 'ASIS' && item.serial && staSerials.has(item.serial)) {
           return false;
         }
         return true;

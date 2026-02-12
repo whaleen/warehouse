@@ -165,6 +165,7 @@ export const InventoryItemCard = memo(function InventoryItemCard({
   const routeDisplay = routeValue ?? item.route_id;
   const resolvedImage = imageUrl ?? item.products?.image_url ?? null;
   const availabilityStatus = item.ge_availability_status ?? item.status;
+  const inventoryBucket = item.inventory_bucket || item.inventory_type;
   const isGeOrphaned = Boolean(item.ge_orphaned);
   const imageSizeClass =
     imageSize === "xl"
@@ -217,8 +218,21 @@ export const InventoryItemCard = memo(function InventoryItemCard({
                   <span className="block text-xs text-muted-foreground">{subtitle}</span>
                 )}
               </div>
-              {showInventoryTypeBadge && (
-                <Badge variant="secondary">{item.inventory_type}</Badge>
+              {showInventoryTypeBadge && inventoryBucket && (
+                <span
+                  className="inline-flex items-center rounded-sm border px-2 py-0.5 text-[10px] font-semibold tracking-wide"
+                  style={{
+                    backgroundColor: 'rgba(255,255,255,0.9)',
+                    backgroundImage: inventoryBucket === 'FG'
+                      ? 'repeating-linear-gradient(45deg, rgba(100,116,139,0.4) 0, rgba(100,116,139,0.4) 0.7px, transparent 0.7px, transparent 3px), repeating-linear-gradient(-45deg, rgba(100,116,139,0.4) 0, rgba(100,116,139,0.4) 0.7px, transparent 0.7px, transparent 3px)'
+                      : inventoryBucket === 'ASIS'
+                        ? 'radial-gradient(circle, rgba(100,116,139,0.4) 0.8px, transparent 0.8px)'
+                        : undefined,
+                    backgroundSize: inventoryBucket === 'ASIS' ? '4px 4px' : undefined,
+                  }}
+                >
+                  {inventoryBucket}
+                </span>
               )}
               {availabilityStatus && (
                 <Badge variant="outline">{availabilityStatus}</Badge>

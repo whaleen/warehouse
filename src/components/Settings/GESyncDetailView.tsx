@@ -37,7 +37,7 @@ const SYNC_CONFIG = {
   },
   sta: {
     title: "Staged Inventory",
-    description: "Sync staged items for delivery",
+    description: "Sync staged state from GE",
     icon: Truck,
     footer: undefined,
   },

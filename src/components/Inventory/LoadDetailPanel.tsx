@@ -15,8 +15,6 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { useAuth } from '@/context/AuthContext';
 import { getActiveLocationContext } from '@/lib/tenant';
 import { useLogActivity } from '@/hooks/queries/useActivity';
-import { useQuery } from '@tanstack/react-query';
-import supabase from '@/lib/supabase';
 import { SanityCheckDialog } from '@/components/Loads/SanityCheckDialog';
 
 interface LoadDetailPanelProps {
@@ -47,35 +45,6 @@ export function LoadDetailPanel({
     load.inventory_type,
     load.sub_inventory_name
   );
-
-  const otherInventoryQuery = useQuery({
-    queryKey: ['load-cross-inventory', locationId ?? 'none', load.sub_inventory_name, load.inventory_type],
-    enabled: !!locationId && !!load.sub_inventory_name,
-    queryFn: async () => {
-      if (!locationId) return [];
-      const { data, error } = await supabase
-        .from('inventory_items')
-        .select('serial, inventory_type')
-        .eq('location_id', locationId)
-        .eq('sub_inventory', load.sub_inventory_name)
-        .neq('inventory_type', load.inventory_type)
-        .not('serial', 'is', null);
-
-      if (error) throw error;
-      return data ?? [];
-    },
-  });
-
-  const otherInventoryBySerial = useMemo(() => {
-    const map = new Map<string, Set<string>>();
-    for (const row of otherInventoryQuery.data ?? []) {
-      if (!row.serial) continue;
-      const current = map.get(row.serial) ?? new Set<string>();
-      if (row.inventory_type) current.add(row.inventory_type);
-      map.set(row.serial, current);
-    }
-    return map;
-  }, [otherInventoryQuery.data]);
 
   const items = loadDetail?.items ?? [];
   const [searchTerm, setSearchTerm] = useState('');
@@ -890,10 +859,8 @@ export function LoadDetailPanel({
                       {syntheticSerial && (
                         <Badge variant="outline">No serial</Badge>
                       )}
-                      {item.serial && otherInventoryBySerial.has(item.serial) && (
-                        <Badge variant="secondary">
-                          Also in {Array.from(otherInventoryBySerial.get(item.serial) ?? []).join(', ')}
-                        </Badge>
+                      {(item.inventory_state === 'staged' || item.source_type === 'ge_sta') && (
+                        <Badge variant="secondary">Staged (STA)</Badge>
                       )}
                     </>
                   );

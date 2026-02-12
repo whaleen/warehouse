@@ -28,10 +28,10 @@ interface DashboardViewProps {
 interface DetailedStats {
   totalItems: number;
 
-  // STA = Sold items (migrated from ASIS loads when sold)
+  // STA = Staged/Crated bucket
   sta: {
     total: number;
-    inAsisLoads: number; // STA items still in ASIS loads (sold but not yet delivered)
+    inAsisLoads: number; // STA items assigned to ASIS loads
     unassigned: number;  // STA items not in any load
   };
 
@@ -42,7 +42,7 @@ interface DetailedStats {
     unassigned: number;  // Not assigned to CSOs
   };
 
-  // Staged = Items staged for something
+  // Staged = Items in staged state
   staged: {
     total: number;
     assigned: number;
@@ -67,7 +67,6 @@ interface DetailedStats {
     unassigned: number;
     regular: number;
     salvage: number;
-    scrap: number;
   };
 
   asisLoads: {
@@ -99,7 +98,7 @@ const EMPTY_STATS: DetailedStats = {
   staged: { total: 0, assigned: 0, unassigned: 0 },
   inbound: { total: 0, assigned: 0, unassigned: 0 },
   fg: { total: 0, regular: 0, backhaul: 0 },
-  asis: { total: 0, unassigned: 0, regular: 0, salvage: 0, scrap: 0 },
+  asis: { total: 0, unassigned: 0, regular: 0, salvage: 0 },
   asisLoads: {
     total: 0,
     forSale: 0,
@@ -118,7 +117,6 @@ const EMPTY_LOAD_DETAILS: Record<string, { loadName: string; count: number; cate
   'FG-backhaul': [],
   'ASIS-regular': [],
   'ASIS-salvage': [],
-  'ASIS-scrap': [],
 };
 
 const EMPTY_ASIS_ACTION_LOADS = {
@@ -249,7 +247,7 @@ export function DashboardView({ onViewChange, onMenuClick }: DashboardViewProps)
       staged: { total: 0, assigned: 0, unassigned: 0 },
       inbound: { total: 0, assigned: 0, unassigned: 0 },
       fg: { total: 0, regular: 0, backhaul: 0 },
-      asis: { total: 0, unassigned: 0, regular: 0, salvage: 0, scrap: 0 },
+       asis: { total: 0, unassigned: 0, regular: 0, salvage: 0 },
       asisLoads: {
         total: 0,
         forSale: 0,
@@ -264,34 +262,20 @@ export function DashboardView({ onViewChange, onMenuClick }: DashboardViewProps)
     };
 
     const loadCategoryMap = new Map<string, string>();
+    const loadTypeMap = new Map<string, string>();
     loads.forEach(load => {
       if (load.category && load.sub_inventory_name) {
         loadCategoryMap.set(load.sub_inventory_name, load.category);
       }
+      if (load.inventory_type && load.sub_inventory_name) {
+        loadTypeMap.set(load.sub_inventory_name, load.inventory_type);
+      }
     });
 
     itemsData.forEach((item) => {
-      // STA = Sold items (migrated from ASIS when sold)
-      if (item.inventory_type === 'STA') {
-        newStats.sta.total++;
-        if (!item.sub_inventory) {
-          newStats.sta.unassigned++;
-        } else {
-          // STA items with sub_inventory are in ASIS loads (sold but not yet delivered)
-          newStats.sta.inAsisLoads++;
-        }
-      }
-      // LocalStock = Normal crated STA ready for ordering
-      else if (item.inventory_type === 'LocalStock') {
-        newStats.localStock.total++;
-        if (!item.sub_inventory) {
-          newStats.localStock.unassigned++;
-        } else {
-          newStats.localStock.inOrders++;
-        }
-      }
-      // Staged = Items staged for something
-      else if (item.inventory_type === 'Staged') {
+      const bucket = item.inventory_bucket || item.inventory_type;
+
+      if (item.inventory_state === 'staged') {
         newStats.staged.total++;
         if (!item.sub_inventory) {
           newStats.staged.unassigned++;
@@ -299,8 +283,29 @@ export function DashboardView({ onViewChange, onMenuClick }: DashboardViewProps)
           newStats.staged.assigned++;
         }
       }
+
+      // STA bucket
+      if (bucket === 'STA') {
+        newStats.sta.total++;
+        if (!item.sub_inventory) {
+          newStats.sta.unassigned++;
+        } else {
+          if (loadTypeMap.get(item.sub_inventory) === 'ASIS') {
+            newStats.sta.inAsisLoads++;
+          }
+        }
+      }
+      // LocalStock = Normal crated STA ready for ordering
+      else if (bucket === 'LocalStock') {
+        newStats.localStock.total++;
+        if (!item.sub_inventory) {
+          newStats.localStock.unassigned++;
+        } else {
+          newStats.localStock.inOrders++;
+        }
+      }
       // Inbound = Incoming items
-      else if (item.inventory_type === 'Inbound') {
+      else if (bucket === 'Inbound') {
         newStats.inbound.total++;
         if (!item.sub_inventory) {
           newStats.inbound.unassigned++;
@@ -309,17 +314,17 @@ export function DashboardView({ onViewChange, onMenuClick }: DashboardViewProps)
         }
       }
       // FG = Finished Goods
-      else if (item.inventory_type === 'FG') {
+      else if (bucket === 'FG') {
         newStats.fg.total++;
         newStats.fg.regular++;
       }
       // BackHaul
-      else if (item.inventory_type === 'BackHaul') {
+      else if (bucket === 'BackHaul') {
         newStats.fg.total++;
         newStats.fg.backhaul++;
       }
       // ASIS = Uncrated items in loads
-      else if (item.inventory_type === 'ASIS') {
+      else if (bucket === 'ASIS') {
         newStats.asis.total++;
 
         if (!item.sub_inventory) {
@@ -328,10 +333,8 @@ export function DashboardView({ onViewChange, onMenuClick }: DashboardViewProps)
           const category = loadCategoryMap.get(item.sub_inventory);
           if (category === 'Salvage') {
             newStats.asis.salvage++;
-          } else if (category === 'Scrap') {
-            newStats.asis.scrap++;
           } else {
-            // Regular = any load that is NOT marked Salvage or Scrap (includes null/undefined category)
+            // ASIS Loads = any load not marked Salvage (includes null/undefined category)
             newStats.asis.regular++;
           }
         }
@@ -348,7 +351,6 @@ export function DashboardView({ onViewChange, onMenuClick }: DashboardViewProps)
       'FG-backhaul': [],
       'ASIS-regular': [],
       'ASIS-salvage': [],
-      'ASIS-scrap': [],
     };
     const nextAsisActions = {
       forSaleNeedsWrap: [] as AsisActionLoad[],
@@ -420,12 +422,6 @@ export function DashboardView({ onViewChange, onMenuClick }: DashboardViewProps)
             count: itemsInLoad,
             category: load.category
           });
-        } else if (load.category === 'Scrap') {
-          loadsByCategory['ASIS-scrap'].push({
-            loadName: load.friendly_name || load.sub_inventory_name,
-            count: itemsInLoad,
-            category: load.category
-          });
         }
       } else if (load.inventory_type === 'BackHaul') {
         newStats.loads.byType.fg++;
@@ -435,7 +431,6 @@ export function DashboardView({ onViewChange, onMenuClick }: DashboardViewProps)
         });
       } else if (
         load.inventory_type === 'LocalStock' ||
-        load.inventory_type === 'Staged' ||
         load.inventory_type === 'STA' ||
         load.inventory_type === 'Inbound'
       ) {
@@ -490,12 +485,11 @@ export function DashboardView({ onViewChange, onMenuClick }: DashboardViewProps)
         { name: 'BackHaul', value: stats.fg.backhaul, fill: 'var(--color-chart-3)' },
       ];
     } else if (selectedChartType === 'ASIS') {
-      return [
-        { name: 'Unassigned', value: stats.asis.unassigned, fill: 'var(--color-chart-3)' },
-        { name: 'Regular', value: stats.asis.regular, fill: 'var(--color-chart-1)' },
-        { name: 'Salvage', value: stats.asis.salvage, fill: 'var(--color-chart-2)' },
-        { name: 'Scrap', value: stats.asis.scrap, fill: 'var(--color-chart-4)' },
-      ];
+        return [
+          { name: 'Loose ASIS', value: stats.asis.unassigned, fill: 'var(--color-chart-3)' },
+          { name: 'ASIS Loads', value: stats.asis.regular, fill: 'var(--color-chart-1)' },
+          { name: 'ASIS Salvage', value: stats.asis.salvage, fill: 'var(--color-chart-2)' },
+        ];
     }
     return [];
   }, [stats, selectedChartType, selectedDrilldown, loadDetails]);
@@ -1031,9 +1025,8 @@ export function DashboardView({ onViewChange, onMenuClick }: DashboardViewProps)
                             if (selectedChartType === 'FG' && data.name === 'BackHaul') {
                               setSelectedDrilldown('FG-backhaul');
                             } else if (selectedChartType === 'ASIS') {
-                              if (data.name === 'Regular') setSelectedDrilldown('ASIS-regular');
-                              else if (data.name === 'Salvage') setSelectedDrilldown('ASIS-salvage');
-                              else if (data.name === 'Scrap') setSelectedDrilldown('ASIS-scrap');
+                              if (data.name === 'ASIS Loads') setSelectedDrilldown('ASIS-regular');
+                              else if (data.name === 'ASIS Salvage') setSelectedDrilldown('ASIS-salvage');
                             }
                           }
                         }}
@@ -1126,15 +1119,15 @@ export function DashboardView({ onViewChange, onMenuClick }: DashboardViewProps)
                   </div>
                   <div className="space-y-1 text-xs">
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">Regular</span>
+                      <span className="text-muted-foreground">ASIS Loads</span>
                       <span className="font-medium">{stats.asis.regular}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">Salvage</span>
+                      <span className="text-muted-foreground">ASIS Salvage</span>
                       <span className="font-medium">{stats.asis.salvage}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">Unassigned</span>
+                      <span className="text-muted-foreground">Loose ASIS</span>
                       <span className="font-medium">{stats.asis.unassigned}</span>
                     </div>
                   </div>

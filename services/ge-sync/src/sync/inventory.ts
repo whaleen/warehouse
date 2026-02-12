@@ -2,7 +2,8 @@ import * as XLSX from 'xlsx';
 import { getCookieHeader } from '../auth/playwright.js';
 import { getSupabase, getLocationConfig, getProductLookup } from '../db/supabase.js';
 import { ENDPOINTS, HEADERS, REFERERS } from './endpoints.js';
-import type { GEInventoryItem, GEChange, SyncResult, SyncStats } from '../types/index.js';
+import { reconcileInventoryForSerials } from './reconcileInventory.js';
+import type { GEInventoryItem, SyncResult, SyncStats } from '../types/index.js';
 
 /**
  * Fetch XLS from GE endpoint and parse to JSON
@@ -139,28 +140,6 @@ async function fetchMasterInventory(
 }
 
 /**
- * Log changes to ge_changes table
- */
-async function logChange(
-  db: ReturnType<typeof getSupabase>,
-  companyId: string,
-  locationId: string,
-  inventoryType: string,
-  change: Omit<GEChange, 'company_id' | 'location_id' | 'inventory_type'>
-): Promise<void> {
-  const { error } = await db.from('ge_changes').insert({
-    company_id: companyId,
-    location_id: locationId,
-    inventory_type: inventoryType,
-    ...change,
-  });
-
-  if (error) {
-    console.error(`Failed to log change:`, error);
-  }
-}
-
-/**
  * Sync simple inventory (FG or STA) - master inventory export only
  */
 export async function syncSimpleInventory(
@@ -174,7 +153,7 @@ export async function syncSimpleInventory(
   log.push(`Starting ${inventoryType} sync`);
 
   const startTime = Date.now();
-  const changes: GEChange[] = [];
+    const sourceType = inventoryType === 'FG' ? 'ge_fg' : 'ge_sta';
 
   try {
     // Get database connection and config
@@ -228,38 +207,30 @@ export async function syncSimpleInventory(
       };
     }
 
-    // Fetch existing items from DB
-    // For STA sync, also fetch ASIS items to enable ASIS→STA migration (respecting GE as source of truth)
-    const inventoryTypesToFetch: string[] = [inventoryType];
-    if (inventoryType === 'STA') {
-      inventoryTypesToFetch.push('ASIS');
-    }
-
-    const { data: existingItems, error: fetchError } = await db
-      .from('inventory_items')
-      .select('id, serial, model, ge_availability_status, ge_availability_message, ge_inv_qty, inventory_type, sub_inventory, cso')
+    const { data: existingSourceItems, error: fetchError } = await db
+      .from('ge_inventory_source_items')
+      .select('id, serial, model, qty, inventory_bucket, inventory_state, ge_availability_status, ge_availability_message, ge_inv_qty, sub_inventory, cso')
       .eq('company_id', config.companyId)
       .eq('location_id', locationId)
-      .in('inventory_type', inventoryTypesToFetch);
+      .eq('source_type', sourceType);
 
     if (fetchError) {
-      throw new Error(`Failed to fetch existing items: ${fetchError.message}`);
+      throw new Error(`Failed to fetch existing source items: ${fetchError.message}`);
     }
 
-    console.log(`[${inventoryType}] Existing items in DB: ${existingItems?.length || 0}`);
-    log.push(`Existing items in DB: ${existingItems?.length || 0}`);
+    console.log(`[${inventoryType}] Existing source items: ${existingSourceItems?.length || 0}`);
+    log.push(`Existing source items: ${existingSourceItems?.length || 0}`);
 
     // Fetch load CSO mappings for STA items
     const loadCsoMap = new Map<string, string>();
+    const loadBucketMap = new Map<string, string>();
     const serialCsoMap = new Map<string, string>();
     if (inventoryType === 'STA') {
       const { data: loads, error: loadError } = await db
         .from('load_metadata')
-        .select('sub_inventory_name, ge_cso')
+        .select('sub_inventory_name, ge_cso, inventory_type')
         .eq('company_id', config.companyId)
-        .eq('location_id', locationId)
-        .not('ge_cso', 'is', null)
-        .neq('ge_cso', '');
+        .eq('location_id', locationId);
 
       if (loadError) {
         console.warn(`[${inventoryType}] Failed to fetch load CSO mappings: ${loadError.message}`);
@@ -267,6 +238,9 @@ export async function syncSimpleInventory(
         for (const load of loads) {
           if (load.sub_inventory_name && load.ge_cso) {
             loadCsoMap.set(load.sub_inventory_name, load.ge_cso);
+          }
+          if (load.sub_inventory_name && load.inventory_type) {
+            loadBucketMap.set(load.sub_inventory_name, load.inventory_type);
           }
         }
         console.log(`[${inventoryType}] Loaded ${loadCsoMap.size} load CSO mappings`);
@@ -302,40 +276,19 @@ export async function syncSimpleInventory(
       }
     }
 
-    // Build maps for comparison
-    // For STA sync: prefer existing STA items over ASIS items (in case both exist)
-    const existingBySerial = new Map<string, typeof existingItems[0]>();
-    for (const item of existingItems || []) {
-      const existing = existingBySerial.get(item.serial);
-      if (!existing) {
-        existingBySerial.set(item.serial, item);
-      } else if (inventoryType === 'STA' && item.inventory_type === 'STA') {
-        // If importing STA and found existing STA item, use it over ASIS
+    const existingBySerial = new Map<string, typeof existingSourceItems[0]>();
+    for (const item of existingSourceItems || []) {
+      if (item.serial) {
         existingBySerial.set(item.serial, item);
       }
     }
 
     const geSerials = new Set<string>();
-    const itemsToUpsert: Array<{
-      id?: string;
-      company_id: string;
-      location_id: string;
-      inventory_type: string;
-      serial: string;
-      model: string;
-      cso: string;
-      sub_inventory?: string;
-      product_type: string;
-      product_fk: string | null;
-      ge_model: string;
-      ge_serial: string;
-      ge_inv_qty: string;
-      ge_availability_status: string;
-      ge_availability_message: string;
-    }> = [];
+    const itemsToUpsert: Array<Record<string, unknown>> = [];
 
     let newItems = 0;
     let updatedItems = 0;
+    const nowIso = new Date().toISOString();
 
     // Process each inventory item
     for (const item of inventory) {
@@ -348,272 +301,144 @@ export async function syncSimpleInventory(
 
       geSerials.add(serial);
 
-      const productInfo = productLookup.get(model);
       const existingItem = existingBySerial.get(serial);
 
-      // Detect changes
       if (existingItem) {
-        const statusChanged = existingItem.ge_availability_status !== status;
-        const messageChanged = existingItem.ge_availability_message !== message;
-        const qtyChanged = String(existingItem.ge_inv_qty) !== qty;
+        const statusChanged = (existingItem.ge_availability_status ?? '') !== (status ?? '');
+        const messageChanged = (existingItem.ge_availability_message ?? '') !== (message ?? '');
+        const qtyChanged = String(existingItem.ge_inv_qty ?? '') !== qty;
+        const loadChanged = (existingItem.sub_inventory ?? '') !== (loadNumber ?? '');
 
-        if (statusChanged || messageChanged || qtyChanged) {
+        if (statusChanged || messageChanged || qtyChanged || loadChanged) {
           updatedItems++;
-
-          if (statusChanged) {
-            await logChange(db, config.companyId, locationId, inventoryType, {
-              serial,
-              model,
-              change_type: 'item_status_changed',
-              field_changed: 'availability_status',
-              old_value: existingItem.ge_availability_status || '',
-              new_value: status,
-              source: 'erp_inventory',
-            });
-            changes.push({
-              serial,
-              model,
-              change_type: 'item_status_changed',
-              field_changed: 'availability_status',
-              old_value: existingItem.ge_availability_status || '',
-              new_value: status,
-              source: 'erp_inventory',
-            } as GEChange);
-          }
-
-          if (qtyChanged) {
-            await logChange(db, config.companyId, locationId, inventoryType, {
-              serial,
-              model,
-              change_type: 'item_qty_changed',
-              field_changed: 'inv_qty',
-              old_value: String(existingItem.ge_inv_qty),
-              new_value: qty,
-              source: 'erp_inventory',
-            });
-            changes.push({
-              serial,
-              model,
-              change_type: 'item_qty_changed',
-              field_changed: 'inv_qty',
-              old_value: String(existingItem.ge_inv_qty),
-              new_value: qty,
-              source: 'erp_inventory',
-            } as GEChange);
-          }
         }
       } else {
-        // Check if this is an ASIS→STA migration
-        if (inventoryType === 'STA') {
-          // Look for ASIS item with this serial in the full existingItems list
-          const asisItem = (existingItems || []).find(
-            (item) => item.serial === serial && item.inventory_type === 'ASIS'
-          );
-          if (asisItem) {
-            // This is a migration from ASIS to STA
-            console.log(`[${inventoryType}] Migrating ${serial} from ASIS to STA`);
-            await logChange(db, config.companyId, locationId, inventoryType, {
-              serial,
-              model,
-              change_type: 'item_migrated',
-              field_changed: 'inventory_type',
-              old_value: 'ASIS',
-              new_value: 'STA',
-              source: 'erp_inventory',
-            });
-            changes.push({
-              serial,
-              model,
-              change_type: 'item_migrated',
-              field_changed: 'inventory_type',
-              old_value: 'ASIS',
-              new_value: 'STA',
-              source: 'erp_inventory',
-            } as GEChange);
-          } else {
-            // True new item
-            newItems++;
-            await logChange(db, config.companyId, locationId, inventoryType, {
-              serial,
-              model,
-              change_type: 'item_appeared',
-              source: 'erp_inventory',
-            });
-            changes.push({
-              serial,
-              model,
-              change_type: 'item_appeared',
-              source: 'erp_inventory',
-            } as GEChange);
-          }
-        } else {
-          // FG or other inventory types
-          newItems++;
-          await logChange(db, config.companyId, locationId, inventoryType, {
-            serial,
-            model,
-            change_type: 'item_appeared',
-            source: 'erp_inventory',
-          });
-          changes.push({
-            serial,
-            model,
-            change_type: 'item_appeared',
-            source: 'erp_inventory',
-          } as GEChange);
-        }
+        newItems++;
       }
 
       // Determine CSO value for STA items
       let csoValue = '';
       if (inventoryType === 'STA') {
-        if (existingItem?.sub_inventory) {
-          // STA items with load assignment: look up load's CSO
-          csoValue = loadCsoMap.get(existingItem.sub_inventory) || existingItem.cso || '';
-        } else if (existingItem?.cso) {
-          // Preserve existing CSO
-          csoValue = existingItem.cso;
-        } else {
-          // No load, no existing CSO: check order_lines by serial
+        if (loadNumber) {
+          csoValue = loadCsoMap.get(loadNumber) || '';
+        }
+        if (!csoValue) {
           csoValue = serialCsoMap.get(serial) || '';
         }
-      } else if (existingItem?.cso) {
-        // Non-STA items: preserve existing CSO
-        csoValue = existingItem.cso;
       }
+
+      const inventoryBucket = inventoryType === 'FG'
+        ? 'FG'
+        : loadNumber
+          ? loadBucketMap.get(loadNumber) || null
+          : null;
+      const inventoryState = inventoryType === 'STA' ? 'staged' : 'on_hand';
+      const qtyValue = parseInt(qty, 10);
 
       // Prepare upsert
       itemsToUpsert.push({
         ...(existingItem?.id ? { id: existingItem.id } : {}),
         company_id: config.companyId,
         location_id: locationId,
-        inventory_type: inventoryType,
+        source_type: sourceType,
+        inventory_bucket: inventoryBucket,
+        inventory_state: inventoryState,
         serial,
         model,
-        cso: csoValue,
-        ...(loadNumber ? { sub_inventory: loadNumber.trim() } : existingItem?.sub_inventory ? { sub_inventory: existingItem.sub_inventory } : {}),
-        product_type: productInfo?.product_type || 'Unknown',
-        product_fk: productInfo?.id || null,
-        ge_model: model,
-        ge_serial: serial,
-        ge_inv_qty: qty,
-        ge_availability_status: status,
-        ge_availability_message: message,
+        qty: Number.isFinite(qtyValue) && qtyValue > 0 ? qtyValue : 1,
+        cso: csoValue || null,
+        ...(loadNumber ? { sub_inventory: loadNumber.trim() } : {}),
+        ge_availability_status: status || null,
+        ge_availability_message: message || null,
+        ge_inv_qty: Number.isFinite(qtyValue) ? qtyValue : null,
+        raw_payload: item as unknown as Record<string, unknown>,
+        last_seen_at: nowIso,
+        updated_at: nowIso,
       });
     }
+    const orphanedSerials = Array.from(existingBySerial.keys()).filter((s) => !geSerials.has(s));
 
-    // Detect disappeared items (orphans)
-    for (const [serial, existingItem] of existingBySerial) {
-      if (!geSerials.has(serial)) {
-        await logChange(db, config.companyId, locationId, inventoryType, {
-          serial,
-          model: existingItem.model,
-          change_type: 'item_disappeared',
-          source: 'erp_inventory',
-        });
-        changes.push({
-          serial,
-          model: existingItem.model,
-          change_type: 'item_disappeared',
-          source: 'erp_inventory',
-        } as GEChange);
-      }
-    }
-
-    // Handle ASIS→STA migrations by deleting ASIS items first
-    if (inventoryType === 'STA') {
-      const serialsToMigrate: string[] = [];
-      for (const item of itemsToUpsert) {
-        const asisItem = (existingItems || []).find(
-          (existing) => existing.serial === item.serial && existing.inventory_type === 'ASIS'
-        );
-        if (asisItem) {
-          serialsToMigrate.push(item.serial);
-        }
-      }
-
-      if (serialsToMigrate.length > 0) {
-        console.log(`[${inventoryType}] Deleting ${serialsToMigrate.length} ASIS items to migrate to STA...`);
-        log.push(`Migrating ${serialsToMigrate.length} items from ASIS to STA`);
-
-        const { error: deleteError } = await db
-          .from('inventory_items')
-          .delete()
-          .eq('company_id', config.companyId)
-          .eq('location_id', locationId)
-          .eq('inventory_type', 'ASIS')
-          .in('serial', serialsToMigrate);
-
-        if (deleteError) {
-          console.error(`Failed to delete ASIS items for migration:`, deleteError);
-          throw new Error(`Failed to delete ASIS items for migration: ${deleteError.message}`);
-        }
-      }
-    }
-
-    // Upsert items to database
     if (itemsToUpsert.length > 0) {
-      console.log(`[${inventoryType}] Upserting ${itemsToUpsert.length} items...`);
-      log.push(`Upserting ${itemsToUpsert.length} items`);
+      console.log(`[${inventoryType}] Upserting ${itemsToUpsert.length} source items...`);
+      log.push(`Upserting ${itemsToUpsert.length} source items`);
 
-      // Deduplicate by unique key (company_id, location_id, serial, inventory_type)
-      // to prevent "cannot affect row a second time" error
-      const uniqueKey = (item: typeof itemsToUpsert[0]) =>
-        `${item.company_id}|${item.location_id}|${item.serial}|${item.inventory_type}`;
-      const dedupedMap = new Map<string, typeof itemsToUpsert[0]>();
-
+      const dedupedMap = new Map<string, Record<string, unknown>>();
       for (const item of itemsToUpsert) {
-        const key = uniqueKey(item);
-        if (dedupedMap.has(key)) {
-          console.warn(`⚠️ Duplicate serial detected in GE data: ${item.serial} (inventory_type: ${item.inventory_type})`);
-        }
-        dedupedMap.set(key, item); // Keep last occurrence
+        const serial = String(item.serial || '');
+        if (!serial) continue;
+        dedupedMap.set(serial, item);
       }
 
-      const dedupedItems = Array.from(dedupedMap.values());
-      const duplicatesRemoved = itemsToUpsert.length - dedupedItems.length;
-
-      if (duplicatesRemoved > 0) {
-        console.log(`[${inventoryType}] Removed ${duplicatesRemoved} duplicate(s) from upsert payload`);
-        log.push(`Removed ${duplicatesRemoved} duplicate(s)`);
-      }
-
-      const upsertPayload = dedupedItems.map((item) => {
+      const upsertPayload = Array.from(dedupedMap.values()).map((item) => {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { id: _id, ...rest } = item;
         return rest;
       });
 
       const { error: upsertError } = await db
-        .from('inventory_items')
-        .upsert(upsertPayload, {
-          onConflict: 'company_id,location_id,serial,inventory_type',
-          ignoreDuplicates: false,
-        });
+        .from('ge_inventory_source_items')
+        .upsert(upsertPayload, { onConflict: 'company_id,location_id,source_type,serial' });
 
       if (upsertError) {
-        throw new Error(`Failed to upsert items: ${upsertError.message}`);
+        throw new Error(`Failed to upsert source items: ${upsertError.message}`);
       }
     }
 
-    // Delete orphaned items (items in DB but not in GE)
-    const orphanedSerials = Array.from(existingBySerial.keys()).filter((s) => !geSerials.has(s));
     if (orphanedSerials.length > 0) {
-      console.log(`[${inventoryType}] Deleting ${orphanedSerials.length} orphaned items...`);
-      log.push(`Deleting ${orphanedSerials.length} orphaned items`);
+      console.log(`[${inventoryType}] Deleting ${orphanedSerials.length} orphaned source items...`);
+      log.push(`Deleting ${orphanedSerials.length} orphaned source items`);
 
-      const { error: deleteError } = await db
-        .from('inventory_items')
-        .delete()
-        .eq('company_id', config.companyId)
-        .eq('location_id', locationId)
-        .eq('inventory_type', inventoryType)
-        .in('serial', orphanedSerials);
+      const chunkSize = 500;
+      for (let i = 0; i < orphanedSerials.length; i += chunkSize) {
+        const chunk = orphanedSerials.slice(i, i + chunkSize);
+        const { data: orphanedSourceRows, error: orphanedFetchError } = await db
+          .from('ge_inventory_source_items')
+          .select('id')
+          .eq('company_id', config.companyId)
+          .eq('location_id', locationId)
+          .eq('source_type', sourceType)
+          .in('serial', chunk);
 
-      if (deleteError) {
-        console.error(`Failed to delete orphaned items:`, deleteError);
+        if (orphanedFetchError) {
+          throw new Error(`Failed to fetch orphaned source items: ${orphanedFetchError.message}`);
+        }
+
+        const orphanedIds = (orphanedSourceRows ?? []).map((row) => row.id).filter(Boolean);
+        if (orphanedIds.length > 0) {
+          const { error: clearRefError } = await db
+            .from('inventory_items')
+            .update({ source_id: null })
+            .eq('company_id', config.companyId)
+            .eq('location_id', locationId)
+            .in('source_id', orphanedIds);
+
+          if (clearRefError) {
+            throw new Error(`Failed to clear inventory source references: ${clearRefError.message}`);
+          }
+        }
+
+        const { error: deleteError } = await db
+          .from('ge_inventory_source_items')
+          .delete()
+          .eq('company_id', config.companyId)
+          .eq('location_id', locationId)
+          .eq('source_type', sourceType)
+          .in('serial', chunk);
+
+        if (deleteError) {
+          console.error(`Failed to delete orphaned source items:`, deleteError);
+        }
       }
     }
+
+    const reconcileSerials = Array.from(new Set([...geSerials, ...orphanedSerials]));
+    const reconcileResult = await reconcileInventoryForSerials(
+      db,
+      config.companyId,
+      locationId,
+      reconcileSerials,
+      productLookup
+    );
 
     const duration = ((Date.now() - startTime) / 1000).toFixed(2);
 
@@ -625,7 +450,7 @@ export async function syncSimpleInventory(
       updatedItems,
       forSaleLoads: 0, // N/A for simple inventory
       pickedLoads: 0, // N/A for simple inventory
-      changesLogged: changes.length,
+      changesLogged: reconcileResult.changesLogged,
     };
 
     console.log(`\n${'='.repeat(60)}`);
@@ -645,7 +470,7 @@ export async function syncSimpleInventory(
       success: true,
       message: `${inventoryType} sync completed successfully`,
       stats,
-      changes,
+      changes: [],
       log,
     };
   } catch (error) {
@@ -669,9 +494,9 @@ export async function syncSimpleInventory(
         updatedItems: 0,
         forSaleLoads: 0,
         pickedLoads: 0,
-        changesLogged: changes.length,
+        changesLogged: 0,
       },
-      changes,
+      changes: [],
       error: errorMessage,
       log,
     };

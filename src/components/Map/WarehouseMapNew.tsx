@@ -6,13 +6,14 @@
  */
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Map as MapComponent, MapMarker, MarkerContent, MarkerPopup, MarkerTooltip, MapControls, MapControlGroup, MapControlButton, mapDefaultStyles, type MapRef } from '@/components/ui/map';
+import { Map as MapComponent, MapMarker, MarkerContent, MarkerPopup, MarkerTooltip, MapControls, mapDefaultStyles, type MapRef } from '@/components/ui/map';
 import { Button } from '@/components/ui/button';
-import { Globe, Package, Pencil, ScanLine, Trash2, X, Layers } from 'lucide-react';
+import { Package, Pencil, ScanLine, Trash2, X, Layers, MoreVertical } from 'lucide-react';
 import { Spinner } from '@/components/ui/spinner';
 import { Badge } from '@/components/ui/badge';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { Drawer, DrawerClose, DrawerContent, DrawerHeader, DrawerTitle } from '@/components/ui/drawer';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useDeleteProductLocation, useClearAllScans, useDeleteSessionScans, useInventoryItemCount, useInventoryScanCounts } from '@/hooks/queries/useMap';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { getCurrentPosition, logProductLocation } from '@/lib/mapManager';
@@ -26,14 +27,12 @@ import { feedbackScanDetected, feedbackSuccess, feedbackError } from '@/lib/feed
 import { MinimalScanOverlay } from '@/components/Scanner/MinimalScanOverlay';
 import { BarcodeScanner } from '@/components/Scanner/BarcodeScanner';
 import type { ProductLocationForMap } from '@/types/map';
-import { blankMapStyle } from './BlankMapStyle';
 import { useLoadMetadata, useSessionMetadata } from '@/hooks/queries/useMapMetadata';
 
 interface WarehouseMapNewProps {
   locations: ProductLocationForMap[];
 }
 
-const WORLD_MAP_STORAGE_KEY = 'warehouse.map.showWorldMap';
 const VIEW_STATE_STORAGE_KEY = 'warehouse.map.viewState';
 const ACTIVE_SESSION_STORAGE_KEY = 'warehouse.map.activeSession';
 
@@ -58,10 +57,6 @@ export function WarehouseMapNew({ locations }: WarehouseMapNewProps) {
 
   const [mapInstance, setMapInstance] = useState<MapRef | null>(null);
   const [hiddenSessions, setHiddenSessions] = useState<Set<string>>(new Set());
-  const [showWorldMap, setShowWorldMap] = useState(() => {
-    if (typeof window === 'undefined') return false;
-    return window.localStorage.getItem(WORLD_MAP_STORAGE_KEY) === 'true';
-  });
   const [currentLocation, setCurrentLocation] = useState<{ lat: number; lng: number } | null>(null);
 
   // Scanner state
@@ -74,7 +69,13 @@ export function WarehouseMapNew({ locations }: WarehouseMapNewProps) {
   const [clearAllConfirmOpen, setClearAllConfirmOpen] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [scanAlert, setScanAlert] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
-  const [scanFeedback, setScanFeedback] = useState('');
+  const [lastScan, setLastScan] = useState<{
+    status: 'success' | 'error';
+    headline: string;
+    title: string;
+    subtitle?: string;
+    badges?: string[];
+  } | null>(null);
   const fogCanvasRef = useRef<HTMLCanvasElement | null>(null);
 
   // Get active session details
@@ -135,7 +136,8 @@ export function WarehouseMapNew({ locations }: WarehouseMapNewProps) {
   // Filter visible locations based on hidden sessions
   const getLocationGroupKey = useCallback((loc: ProductLocationForMap) => {
     if (loc.sub_inventory) return `load:${loc.sub_inventory}`;
-    return 'unassigned';
+    const bucket = loc.inventory_bucket || loc.inventory_type || 'unassigned';
+    return `bucket:${bucket}`;
   }, []);
 
   const visibleLocations = useMemo(() => {
@@ -146,8 +148,6 @@ export function WarehouseMapNew({ locations }: WarehouseMapNewProps) {
   }, [getLocationGroupKey, hiddenSessions, validLocations]);
 
   const totalScanCount = validLocations.length;
-  const visibleScanCount = visibleLocations.length;
-  const hiddenScanCount = Math.max(0, totalScanCount - visibleScanCount);
   const scannedInventoryItemCount = useMemo(() => {
     const ids = new Set(
       validLocations
@@ -185,12 +185,6 @@ export function WarehouseMapNew({ locations }: WarehouseMapNewProps) {
       localStorage.setItem(ACTIVE_SESSION_STORAGE_KEY, activeSessionId);
     }
   }, [activeSessionId]);
-
-  useEffect(() => {
-    if (scanOverlayOpen) {
-      setScanFeedback('');
-    }
-  }, [scanOverlayOpen]);
 
   const drawFogLayer = useCallback(() => {
     if (!mapInstance || !fogCanvasRef.current) return;
@@ -256,11 +250,38 @@ export function WarehouseMapNew({ locations }: WarehouseMapNewProps) {
     setTimeout(() => setScanAlert(null), duration);
   };
 
+  const buildScanFeedback = (item: { model?: string | null; product_type?: string | null; serial?: string | null; cso?: string | null; sub_inventory?: string | null; inventory_bucket?: string | null; inventory_state?: string | null; inventory_type?: string | null }) => {
+    const badges: string[] = [];
+    const bucket = item.inventory_bucket || item.inventory_type;
+    if (bucket) badges.push(bucket);
+    if (item.inventory_state === 'staged') badges.push('Staged');
+
+    const subInventory = item.sub_inventory ?? null;
+    if (subInventory) {
+      const loadMeta = loadMetadata.get(subInventory);
+      badges.push(loadMeta?.friendly_name || subInventory);
+    }
+
+    const title = item.model || item.product_type || 'Item';
+    const subtitle = item.serial
+      ? `Serial ${item.serial}`
+      : item.cso
+        ? `CSO ${item.cso}`
+        : undefined;
+
+    return {
+      status: 'success' as const,
+      headline: 'Marked',
+      title,
+      subtitle,
+      badges,
+    };
+  };
+
   const handleScan = async (barcode: string) => {
     if (!activeSessionId) {
       feedbackError();
       showScanAlert('error', 'No active session - select one first');
-      setScanFeedback('No active session');
       return;
     }
 
@@ -284,43 +305,17 @@ export function WarehouseMapNew({ locations }: WarehouseMapNewProps) {
       if (result.type === 'not_found') {
         if (isAdHoc) {
           feedbackError();
-          setScanFeedback('Not in inventory');
           showScanAlert('error', 'Not in inventory');
           return;
         }
 
-        if (isFogOfWar) {
-          const logResult = await logProductLocation({
-            raw_lat: position.latitude,
-            raw_lng: position.longitude,
-            accuracy: position.accuracy,
-            scanned_by: userDisplayName,
-            product_type: barcode,
-            sub_inventory: 'Review',
-          });
-
-          if (!logResult.success) {
-            feedbackError();
-            showScanAlert('error', `Failed: ${logResult.error instanceof Error ? logResult.error.message : 'Unknown error'}`);
-            return;
-          }
-
-          feedbackSuccess();
-          setScanFeedback('Not in inventory - marked for review');
-          showScanAlert('success', 'Not in inventory - marked for review');
-          queryClient.invalidateQueries({ queryKey: ['product-locations', locationId] });
-          return;
-        }
-
         feedbackError();
-        setScanFeedback('Not in inventory');
         showScanAlert('error', 'Not in inventory');
         return;
       }
 
       if (result.type === 'multiple') {
         feedbackError();
-        setScanFeedback('Multiple matches');
         showScanAlert('error', 'Multiple matches found - use load context', 5000);
         return;
       }
@@ -331,6 +326,7 @@ export function WarehouseMapNew({ locations }: WarehouseMapNewProps) {
         const logResult = await logProductLocation({
           product_id: item.products?.id ?? item.product_fk,
           inventory_item_id: item.id,
+          serial: item.serial ?? item.ge_serial ?? undefined,
           raw_lat: position.latitude,
           raw_lng: position.longitude,
           accuracy: position.accuracy,
@@ -346,8 +342,7 @@ export function WarehouseMapNew({ locations }: WarehouseMapNewProps) {
         }
 
         feedbackSuccess();
-        setScanFeedback(`Logged to ${item.sub_inventory || 'inventory'}`);
-        showScanAlert('success', `Logged to ${item.sub_inventory || 'inventory'}`);
+        setLastScan(buildScanFeedback(item));
         queryClient.invalidateQueries({ queryKey: ['product-locations', locationId] });
         return;
       }
@@ -356,6 +351,7 @@ export function WarehouseMapNew({ locations }: WarehouseMapNewProps) {
         const logResult = await logProductLocation({
           product_id: item.products?.id ?? item.product_fk,
           inventory_item_id: item.id,
+          serial: item.serial ?? item.ge_serial ?? undefined,
           raw_lat: position.latitude,
           raw_lng: position.longitude,
           accuracy: position.accuracy,
@@ -371,15 +367,15 @@ export function WarehouseMapNew({ locations }: WarehouseMapNewProps) {
         }
 
         feedbackSuccess();
-        setScanFeedback(logResult.action === 'updated' ? 'Mark updated' : 'Marked');
-        showScanAlert('success', logResult.action === 'updated' ? 'Mark updated' : 'Marked');
+        setLastScan(buildScanFeedback(item));
         queryClient.invalidateQueries({ queryKey: ['product-locations', locationId] });
         return;
       }
     } catch (err) {
       feedbackError();
-      setScanFeedback('Scan failed');
-      showScanAlert('error', err instanceof Error ? err.message : 'Scan failed');
+      const message = err instanceof Error ? err.message : 'Scan failed';
+      showScanAlert('error', message);
+      console.error('Scan failed:', err);
     } finally {
       setIsProcessing(false);
     }
@@ -407,18 +403,6 @@ export function WarehouseMapNew({ locations }: WarehouseMapNewProps) {
       console.error('Failed to create fog-of-war session:', error);
     }
   }, []);
-
-  const toggleSessionVisibility = (groupKey: string) => {
-    setHiddenSessions(prev => {
-      const next = new Set(prev);
-      if (next.has(groupKey)) {
-        next.delete(groupKey);
-      } else {
-        next.add(groupKey);
-      }
-      return next;
-    });
-  };
 
   // Auto-activate Fog of War if no session is active
   useEffect(() => {
@@ -455,7 +439,7 @@ export function WarehouseMapNew({ locations }: WarehouseMapNewProps) {
 
   // Group locations by session for legend
   const sessionGroups = useMemo(() => {
-    const groups = new Map<string, { key: string; name: string; color: string; count: number; subInventory: string | null; locationIds: string[]; inventoryType: string | null }>();
+    const groups = new Map<string, { key: string; name: string; color: string; count: number; subInventory: string | null; locationIds: string[]; inventoryBucket: string | null }>();
 
     validLocations.forEach(loc => {
       const groupKey = getLocationGroupKey(loc);
@@ -477,12 +461,16 @@ export function WarehouseMapNew({ locations }: WarehouseMapNewProps) {
         displayName = session?.name || sessionId.slice(0, 8);
       }
 
+      const inventoryBucket = loc.inventory_bucket || loc.inventory_type || null;
+      if (!subInventory && !groupKey.startsWith('session:') && inventoryBucket) {
+        displayName = inventoryBucket;
+      }
       const existing = groups.get(groupKey);
       if (existing) {
         existing.count += 1;
         existing.locationIds.push(loc.id);
-        if (!existing.inventoryType && loc.inventory_type) {
-          existing.inventoryType = loc.inventory_type;
+        if (!existing.inventoryBucket && inventoryBucket) {
+          existing.inventoryBucket = inventoryBucket;
         }
       } else {
         groups.set(groupKey, {
@@ -492,7 +480,7 @@ export function WarehouseMapNew({ locations }: WarehouseMapNewProps) {
           count: 1,
           subInventory,
           locationIds: [loc.id],
-          inventoryType: loc.inventory_type ?? null,
+          inventoryBucket,
         });
       }
     });
@@ -500,18 +488,23 @@ export function WarehouseMapNew({ locations }: WarehouseMapNewProps) {
     return Array.from(groups.values());
   }, [getLocationGroupKey, loadMetadata, sessionMetadata, validLocations]);
 
+  const toggleSessionVisibility = (groupKey: string) => {
+    setHiddenSessions(prev => {
+      const next = new Set(prev);
+      if (next.has(groupKey)) {
+        next.delete(groupKey);
+      } else {
+        next.add(groupKey);
+      }
+      return next;
+    });
+  };
+
   const scanMode = activeSession?.name === '🧪 Ad-hoc Scans' ? 'adhoc' : 'fog';
 
   const mapStyles = useMemo(
-    () => (
-      showWorldMap
-        ? mapDefaultStyles
-        : {
-            light: blankMapStyle(false),
-            dark: blankMapStyle(true),
-          }
-    ),
-    [showWorldMap]
+    () => mapDefaultStyles,
+    []
   );
 
   useEffect(() => {
@@ -635,22 +628,6 @@ export function WarehouseMapNew({ locations }: WarehouseMapNewProps) {
           showLocate
           showFullscreen={!isMobile}
         >
-          <MapControlGroup>
-            <MapControlButton
-              onClick={() => {
-                setShowWorldMap((prev) => {
-                  const next = !prev;
-                  if (typeof window !== 'undefined') {
-                    window.localStorage.setItem(WORLD_MAP_STORAGE_KEY, String(next));
-                  }
-                  return next;
-                });
-              }}
-              label={showWorldMap ? 'Hide world map' : 'Show world map'}
-            >
-              <Globe className="size-4" />
-            </MapControlButton>
-          </MapControlGroup>
         </MapControls>
         {visibleLocations.map((location) => (
             <MapMarker
@@ -666,12 +643,24 @@ export function WarehouseMapNew({ locations }: WarehouseMapNewProps) {
                       className="size-4 rounded-full border-2 border-white shadow-lg hover:scale-125 transition-transform"
                       style={{ backgroundColor: location.load_color || '#ef4444' }}
                     />
-                  ) : /* Non-load items - grayscale with type label */ (
-                    <div className="size-5 rounded-sm border-2 border-white shadow-lg bg-gray-500 text-white flex items-center justify-center text-[9px] font-semibold tracking-tight hover:scale-110 transition-transform">
-                      {location.inventory_type === 'FG' ? 'FG' :
-                       location.inventory_type === 'STA' ? 'ST' :
-                       location.inventory_type === 'BackHaul' ? 'BH' :
-                       location.inventory_type === 'Inbound' ? 'IN' :
+                  ) : /* Non-load items - bucket pill marker */ (
+                    <div
+                      className="h-5 rounded-md border-2 border-white shadow-lg text-[9px] font-semibold tracking-tight hover:scale-110 transition-transform px-2 flex items-center text-slate-900"
+                      style={{
+                        backgroundColor: 'rgba(255,255,255,0.9)',
+                        backgroundImage: location.inventory_bucket === 'FG'
+                          ? 'repeating-linear-gradient(45deg, rgba(100,116,139,0.4) 0, rgba(100,116,139,0.4) 0.7px, transparent 0.7px, transparent 3px), repeating-linear-gradient(-45deg, rgba(100,116,139,0.4) 0, rgba(100,116,139,0.4) 0.7px, transparent 0.7px, transparent 3px)'
+                          : location.inventory_bucket === 'ASIS'
+                            ? 'radial-gradient(circle, rgba(100,116,139,0.4) 0.8px, transparent 0.8px)'
+                            : undefined,
+                        backgroundSize: location.inventory_bucket === 'ASIS' ? '4px 4px' : undefined,
+                      }}
+                    >
+                      {location.inventory_bucket === 'FG' ? 'FG' :
+                       location.inventory_bucket === 'BackHaul' ? 'BH' :
+                       location.inventory_bucket === 'Inbound' ? 'IN' :
+                       location.inventory_bucket === 'ASIS' ? 'AS' :
+                       location.inventory_bucket?.substring(0, 2) ||
                        location.inventory_type?.substring(0, 2) || '?'}
                     </div>
                   )}
@@ -706,34 +695,63 @@ export function WarehouseMapNew({ locations }: WarehouseMapNewProps) {
                         Serial: {location.serial}
                       </p>
                     )}
+                    {(location.inventory_bucket || location.inventory_state) && (
+                      <div className="mt-2 flex flex-wrap items-center gap-1.5 text-xs">
+                        {location.inventory_bucket && (
+                          <Badge variant="outline" className="text-[10px]">
+                            {location.inventory_bucket}
+                          </Badge>
+                        )}
+                        {location.inventory_state === 'staged' && (
+                          <Badge variant="secondary" className="text-[10px]">
+                            Staged
+                          </Badge>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
 
                 {location.sub_inventory && (() => {
                   const load = loadMetadata.get(location.sub_inventory);
                   return load ? (
-                    <div className="pt-2 border-t space-y-2">
+                    <div className="mt-3 rounded-sm border border-border/60 bg-muted/30 p-2 space-y-2">
                       {/* Load Info */}
                       <div className="space-y-1">
-                        <div className="flex items-center gap-2">
+                        <div
+                          className="inline-flex items-center gap-2 px-2 py-1 rounded-sm border shadow-sm"
+                          style={{ borderColor: location.load_color || '#ef4444' }}
+                        >
                           <div
-                            className="w-4 h-4 rounded"
+                            className="h-4 w-4 rounded-sm"
+                            style={{ backgroundColor: location.load_color || '#ef4444' }}
+                          />
+                          <div
+                            className="h-4 w-px"
                             style={{ backgroundColor: location.load_color || '#ef4444' }}
                           />
                           <span className="font-medium text-sm">
                             {load.friendly_name || load.sub_inventory_name}
                           </span>
+                          {load.ge_cso && (
+                            <>
+                              <div
+                                className="h-4 w-px"
+                                style={{ backgroundColor: location.load_color || '#ef4444' }}
+                              />
+                              <span className="text-sm font-medium">
+                                {load.ge_cso.slice(-4)}
+                              </span>
+                            </>
+                          )}
                         </div>
 
                         {/* Status & CSO */}
                         <div className="flex items-center gap-2 text-xs text-muted-foreground">
                           {load.ge_source_status && (
-                            <Badge variant="secondary" className="text-xs">
+                            <Badge variant="outline" className="text-[10px] uppercase tracking-wide">
                               {load.ge_source_status}
                             </Badge>
-                          )}
-                          {load.ge_cso && (
-                            <span className="font-mono">CSO: {load.ge_cso.slice(-4)}</span>
                           )}
                         </div>
 
@@ -886,11 +904,6 @@ export function WarehouseMapNew({ locations }: WarehouseMapNewProps) {
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <DrawerTitle>Inventory</DrawerTitle>
-                    <div className="mt-2 flex flex-wrap items-center gap-2">
-                      <Badge variant="outline">Visible {visibleScanCount}</Badge>
-                      <Badge variant="outline">Hidden {hiddenScanCount}</Badge>
-                      <Badge variant="outline">Total {totalScanCount}</Badge>
-                    </div>
                   </div>
                   <DrawerClose asChild>
                     <Button
@@ -908,99 +921,231 @@ export function WarehouseMapNew({ locations }: WarehouseMapNewProps) {
 
               <div className="flex-1 overflow-y-auto px-4 py-3">
                 <div className="space-y-6">
-                  <div className="rounded-md border border-border/60 bg-background/60 px-3 py-2">
-                    <div className="flex items-center justify-between gap-3 text-xs">
-                      <div className="flex items-center gap-2 text-muted-foreground">
-                        <div className="size-2.5 rounded-full bg-blue-500" />
-                        <span className="font-medium text-foreground">Fog of War</span>
-                        <span className="text-muted-foreground">All scans</span>
+                  <div className="rounded-lg border border-border/60 bg-gradient-to-br from-muted/60 via-background/80 to-transparent px-4 py-3 shadow-sm">
+                    <div className="flex items-center justify-between gap-4">
+                      <div className="flex items-center gap-3">
+                        <div className="relative size-10 rounded-full border border-border/60 bg-muted/60 overflow-hidden">
+                          <div className="absolute inset-0 rounded-full border border-border/40" />
+                          <div className="absolute inset-1 rounded-full border border-border/40" />
+                          <div className="absolute inset-0 rounded-full bg-[conic-gradient(from_0deg,rgba(148,163,184,0.5),rgba(148,163,184,0)_45%,rgba(148,163,184,0)_100%)] animate-[spin_3s_linear_infinite]" />
+                          <div className="absolute inset-0 rounded-full bg-[radial-gradient(circle,rgba(148,163,184,0.35)_0,rgba(148,163,184,0.12)_45%,transparent_70%)]" />
+                          <div className="absolute left-1/2 top-1/2 size-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-slate-500 shadow-[0_0_8px_rgba(100,116,139,0.6)]" />
+                        </div>
+                        <div>
+                          <div className="text-xs uppercase tracking-[0.2em] text-slate-600 dark:text-slate-300">Fog of War</div>
+                          <div className="text-sm font-medium text-foreground">All scans, live coverage</div>
+                        </div>
                       </div>
-                      <span className="tabular-nums text-foreground">
-                        {scannedInventoryItemCount}/{totalInventoryItemCount || '—'}
-                      </span>
+                      <div className="text-right">
+                        <div className="text-xs text-muted-foreground">Coverage</div>
+                        <div className="text-base font-semibold tabular-nums text-foreground">
+                          {scannedInventoryItemCount}/{totalInventoryItemCount || '—'}
+                        </div>
+                      </div>
                     </div>
                   </div>
-                  <div className="space-y-2">
-                    <div className="text-xs text-muted-foreground font-medium">Loads / Buckets (tap to toggle)</div>
+                    <div className="space-y-2">
+                      <div className="text-xs text-muted-foreground font-medium">Loads</div>
 
-                    {sessionGroups.length === 0 ? (
-                      <div className="text-sm text-muted-foreground">No scans yet.</div>
-                    ) : (
-                      <div className="space-y-1">
-                        {sessionGroups.map((group) => {
-                          const isHidden = hiddenSessions.has(group.key);
-                          return (
-                            <div key={group.key} className="flex items-center gap-2">
-                                <button
-                                  type="button"
-                                  className="flex items-center gap-2 flex-1 min-w-0 hover:bg-accent rounded px-2 py-2"
-                                  onClick={() => toggleSessionVisibility(group.key)}
-                                >
+                      {sessionGroups.length === 0 ? (
+                        <div className="text-sm text-muted-foreground">No scans yet.</div>
+                      ) : (
+                        <div className="space-y-1">
+                          {sessionGroups.filter(group => group.subInventory).map((group) => {
+                            const isHidden = hiddenSessions.has(group.key);
+                            return (
+                              <div key={group.key} className="flex items-center gap-2">
+                                <div className="flex items-center gap-2 flex-1 min-w-0 rounded px-2 py-2">
                                   {group.subInventory ? (
                                     <div
-                                      className="h-8 w-8 rounded-md shrink-0 border border-border shadow-sm"
+                                      className="flex items-center gap-2 px-2 py-1 rounded-sm border shadow-sm min-w-0"
                                       style={{
-                                        backgroundColor: group.color || '#ef4444',
+                                        borderColor: group.color || '#ef4444',
                                         opacity: isHidden ? 0.3 : 1,
                                       }}
-                                    />
+                                    >
+                                      <div
+                                        className="h-4 w-4 rounded-sm shrink-0"
+                                        style={{ backgroundColor: group.color || '#ef4444' }}
+                                      />
+                                      <div
+                                        className="h-4 w-px"
+                                        style={{ backgroundColor: group.color || '#ef4444' }}
+                                      />
+                                      <span className="truncate text-sm font-medium">
+                                        {group.name}
+                                      </span>
+                                    </div>
                                   ) : (
                                     <div
                                       className="h-8 w-8 rounded-sm shrink-0 border-2 border-border shadow-sm bg-gray-500 text-white flex items-center justify-center text-[10px] font-semibold"
                                       style={{ opacity: isHidden ? 0.3 : 1 }}
                                     >
-                                      {group.inventoryType === 'FG' ? 'FG' :
-                                       group.inventoryType === 'STA' ? 'ST' :
-                                       group.inventoryType === 'BackHaul' ? 'BH' :
-                                       group.inventoryType === 'Inbound' ? 'IN' :
-                                       group.inventoryType?.substring(0, 2) || '?'}
+                                      {group.inventoryBucket === 'FG' ? 'FG' :
+                                       group.inventoryBucket === 'BackHaul' ? 'BH' :
+                                       group.inventoryBucket === 'Inbound' ? 'IN' :
+                                       group.inventoryBucket === 'ASIS' ? 'AS' :
+                                       group.inventoryBucket?.substring(0, 2) || '?'}
                                     </div>
                                   )}
                                 <span className={`truncate flex-1 text-left text-sm ${isHidden ? 'opacity-40 line-through' : ''}`}>
-                                  {group.name}
+                                  {!group.subInventory ? group.name : ''}
                                 </span>
-                                <span className={`text-muted-foreground shrink-0 text-xs tabular-nums ${isHidden ? 'opacity-40' : ''}`}>
-                        {(() => {
-                          if (!inventoryScanCountsQuery.data) return group.count;
-                          const key = group.subInventory
-                            ? `load:${group.subInventory}`
-                            : group.inventoryType
-                            ? `type:${group.inventoryType}`
-                            : null;
-                          if (!key) return group.count;
-                          const scanned = inventoryScanCountsQuery.data.scannedByKey.get(key) ?? 0;
-                          const total = inventoryScanCountsQuery.data.totalByKey.get(key) ?? 0;
-                          return `${scanned}/${total}`;
+                                {(() => {
+                                  const loadMeta = group.subInventory ? loadMetadata.get(group.subInventory) : null;
+                                  const status = loadMeta?.ge_source_status?.toLowerCase();
+                                  if (!status) return null;
+                                  const label = status.includes('sold') ? 'Sold' : status.includes('for sale') ? 'For sale' : null;
+                                  if (!label) return null;
+                                  return (
+                                    <Badge variant="outline" className="text-[10px] uppercase tracking-wide">
+                                      {label}
+                                    </Badge>
+                                  );
+                                })()}
+                                <span className={`shrink-0 text-sm font-semibold tabular-nums tracking-[0.08em] text-foreground ${isHidden ? 'opacity-40' : ''}`}>
+                                  {(() => {
+                                    if (!inventoryScanCountsQuery.data) return group.count;
+                                    if (group.subInventory) {
+                            const key = `load:${group.subInventory}`;
+                            const scanned = inventoryScanCountsQuery.data.scannedByKey.get(key) ?? 0;
+                            const total = inventoryScanCountsQuery.data.totalByKey.get(key) ?? 0;
+                            return `${scanned}/${total}`;
+                          }
+                          if (group.inventoryBucket) {
+                            const key = `bucket:${group.inventoryBucket}`;
+                            const total = inventoryScanCountsQuery.data.totalByKey.get(key);
+                            if (typeof total === 'number') {
+                              return `${group.count}/${total}`;
+                            }
+                          }
+                          return group.count;
                         })()}
                                 </span>
-                              </button>
+                              </div>
 
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8 shrink-0"
-                                onClick={() => {
-                                  if (deleteSessionScans.isPending) return;
-                                  if (confirm(`Delete ${group.count} scans from "${group.name}"?`)) {
-                                    deleteSessionScans.mutate(group.locationIds);
-                                  }
-                                }}
-                                disabled={deleteSessionScans.isPending}
-                                aria-label={`Delete scans for ${group.name}`}
-                              >
-                                {deleteSessionScans.isPending ? (
-                                  <Spinner size="sm" />
-                                ) : (
-                                  <X className="h-4 w-4" />
-                                )}
-                              </Button>
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8 shrink-0"
+                                  >
+                                    <MoreVertical className="h-4 w-4" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                  <DropdownMenuItem onClick={() => toggleSessionVisibility(group.key)}>
+                                    {isHidden ? 'Show' : 'Hide'}
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem
+                                    onClick={() => {
+                                      const path = `/loads/${encodeURIComponent(group.subInventory ?? '')}`;
+                                      const params = new URLSearchParams(window.location.search);
+                                      params.set('from', 'map');
+                                      const nextUrl = params.toString() ? `${path}?${params.toString()}` : path;
+                                      window.history.replaceState({}, '', nextUrl);
+                                      window.dispatchEvent(new Event('app:locationchange'));
+                                    }}
+                                  >
+                                    Manage load
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem
+                                    onClick={() => {
+                                      if (deleteSessionScans.isPending) return;
+                                      if (confirm(`Delete ${group.count} scans from "${group.name}"?`)) {
+                                        deleteSessionScans.mutate(group.locationIds);
+                                      }
+                                    }}
+                                  >
+                                    {deleteSessionScans.isPending ? 'Deleting…' : 'Delete scans'}
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
                             </div>
                           );
                         })}
                       </div>
                     )}
                   </div>
+
+                  {sessionGroups.some(group => !group.subInventory) && (
+                    <div className="space-y-2">
+                      <div className="text-xs text-muted-foreground font-medium">Buckets</div>
+                      <div className="space-y-1">
+                        {sessionGroups.filter(group => !group.subInventory).map((group) => {
+                          const isHidden = hiddenSessions.has(group.key);
+                          return (
+                            <div key={group.key} className="flex items-center gap-2">
+                              <div className="flex items-center gap-2 flex-1 min-w-0 rounded px-2 py-2">
+                                <div
+                                  className="flex items-center gap-2 px-2 py-1 rounded-sm border shadow-sm min-w-0"
+                                  style={{
+                                    opacity: isHidden ? 0.3 : 1,
+                                    backgroundImage: group.inventoryBucket === 'FG'
+                                      ? 'repeating-linear-gradient(45deg, rgba(100,116,139,0.4) 0, rgba(100,116,139,0.4) 0.7px, transparent 0.7px, transparent 3px), repeating-linear-gradient(-45deg, rgba(100,116,139,0.4) 0, rgba(100,116,139,0.4) 0.7px, transparent 0.7px, transparent 3px)'
+                                      : group.inventoryBucket === 'ASIS'
+                                        ? 'radial-gradient(circle, rgba(100,116,139,0.4) 0.8px, transparent 0.8px)'
+                                        : undefined,
+                                    backgroundSize: group.inventoryBucket === 'ASIS' ? '4px 4px' : undefined,
+                                  }}
+                                >
+                                  <div
+                                    className="h-4 w-4 rounded-sm shrink-0 bg-gray-500 text-white flex items-center justify-center text-[9px] font-semibold"
+                                  >
+                                    {group.inventoryBucket === 'FG' ? 'FG' :
+                                     group.inventoryBucket === 'BackHaul' ? 'BH' :
+                                     group.inventoryBucket === 'Inbound' ? 'IN' :
+                                     group.inventoryBucket === 'ASIS' ? 'AS' :
+                                     group.inventoryBucket?.substring(0, 2) || '?'}
+                                  </div>
+                                  <div className="h-4 w-px bg-gray-400" />
+                                  <span className="truncate text-sm font-medium">
+                                    {group.name}
+                                  </span>
+                                </div>
+                                <span className={`truncate flex-1 text-left text-sm ${isHidden ? 'opacity-40 line-through' : ''}`}>
+                                  {' '}
+                                </span>
+                                <span className={`shrink-0 text-sm font-semibold tabular-nums tracking-[0.08em] text-foreground ${isHidden ? 'opacity-40' : ''}`}>
+                                  {(() => {
+                                    if (!inventoryScanCountsQuery.data) return group.count;
+                                    if (group.inventoryBucket) {
+                                      const key = `bucket:${group.inventoryBucket}`;
+                                      const total = inventoryScanCountsQuery.data.totalByKey.get(key);
+                                      if (typeof total === 'number') {
+                                        return `${group.count}/${total}`;
+                                      }
+                                    }
+                                    return group.count;
+                                  })()}
+                              </span>
+                            </div>
+
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8 shrink-0"
+                                >
+                                  <MoreVertical className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem onClick={() => toggleSessionVisibility(group.key)}>
+                                  {isHidden ? 'Show' : 'Hide'}
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
 
                   <div className="border-t pt-3 space-y-1">
                     <Button
@@ -1053,7 +1198,7 @@ export function WarehouseMapNew({ locations }: WarehouseMapNewProps) {
         }}
         isProcessing={isProcessing}
         alert={scanAlert}
-        feedbackText={scanFeedback}
+        feedback={lastScan}
         mode={scanMode}
         onSelectFog={handleActivateFogOfWar}
         onSelectAdHoc={handleActivateAdHoc}

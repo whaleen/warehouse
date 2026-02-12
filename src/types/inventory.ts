@@ -13,6 +13,11 @@ export interface InventoryItem {
   product_type: string;
   status?: string;
   inventory_type: InventoryType;
+  inventory_bucket?: string | null;
+  inventory_state?: string | null;
+  source_type?: string | null;
+  source_id?: string | null;
+  source_meta?: Record<string, unknown> | null;
   sub_inventory?: string;
   is_scanned: boolean;
   scanned_at?: string;

@@ -63,6 +63,7 @@ export async function getCurrentPosition(): Promise<RawGPSPosition | null> {
 export async function logProductLocation(input: {
   product_id?: string;
   inventory_item_id?: string;
+  serial?: string;
   raw_lat: number;
   raw_lng: number;
   accuracy: number;
@@ -71,15 +72,36 @@ export async function logProductLocation(input: {
   sub_inventory?: string;
 }): Promise<{ success: boolean; error?: unknown; action?: 'created' | 'updated' }> {
   const { locationId, companyId } = getActiveLocationContext();
-
   const now = new Date().toISOString();
-  const canUpdateExisting = Boolean(input.inventory_item_id);
+  const isUuid = (value?: string | null) =>
+    Boolean(value && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value));
+
+  let resolvedInventoryItemId = isUuid(input.inventory_item_id) ? input.inventory_item_id : null;
+
+  if (!resolvedInventoryItemId && input.serial) {
+    const sanitizedSerial = input.serial.trim().replace(/[^A-Za-z0-9]/g, '');
+    if (sanitizedSerial) {
+      const { data, error } = await supabase
+        .from('inventory_items')
+        .select('id')
+        .eq('location_id', locationId)
+        .or(`serial.ilike.${sanitizedSerial},ge_serial.ilike.${sanitizedSerial}`)
+        .limit(1)
+        .maybeSingle();
+
+      if (!error && data?.id && isUuid(data.id)) {
+        resolvedInventoryItemId = data.id;
+      }
+    }
+  }
+
+  const canUpdateExisting = Boolean(resolvedInventoryItemId);
 
   if (canUpdateExisting) {
     const { data: recent, error: recentError } = await supabase
       .from('product_location_history')
       .select('id, created_at')
-      .eq('inventory_item_id', input.inventory_item_id ?? null)
+      .eq('inventory_item_id', resolvedInventoryItemId ?? null)
       .order('created_at', { ascending: false })
       .limit(1)
       .maybeSingle();
@@ -119,7 +141,7 @@ export async function logProductLocation(input: {
       company_id: companyId,
       location_id: locationId,
       product_id: input.product_id ?? null,
-      inventory_item_id: input.inventory_item_id ?? null,
+      inventory_item_id: resolvedInventoryItemId ?? null,
       scanning_session_id: null,
       position_x: 0,
       position_y: 0,
@@ -151,6 +173,7 @@ export async function getProductLocations(): Promise<{
   error: unknown;
 }> {
   const { locationId } = getActiveLocationContext();
+  const adHocSubInventoryName = 'Ad-hoc Scan';
 
   const { data, error } = await supabase
     .from('product_location_history')
@@ -179,6 +202,9 @@ export async function getProductLocations(): Promise<{
       product_fk: string | null;
       sub_inventory: string | null;
       inventory_type: string | null;
+      inventory_bucket: string | null;
+      inventory_state: string | null;
+      source_type: string | null;
     }
   >();
   if (inventoryItemIds.length > 0) {
@@ -188,7 +214,7 @@ export async function getProductLocations(): Promise<{
       const batch = inventoryItemIds.slice(i, i + batchSize);
       const { data: inventoryItems, error: inventoryError } = await supabase
         .from('inventory_items')
-        .select('id, model, serial, product_type, product_fk, sub_inventory, inventory_type')
+        .select('id, model, serial, product_type, product_fk, sub_inventory, inventory_type, inventory_bucket, inventory_state, source_type')
         .in('id', batch);
 
       if (!inventoryError && inventoryItems) {
@@ -200,10 +226,41 @@ export async function getProductLocations(): Promise<{
           product_fk: string | null;
           sub_inventory: string | null;
           inventory_type: string | null;
+          inventory_bucket: string | null;
+          inventory_state: string | null;
+          source_type: string | null;
         }[]) {
           inventoryItemById.set(item.id, item);
         }
       }
+    }
+  }
+
+  const staleLocationIds: string[] = [];
+  for (const item of data as ProductLocationHistory[]) {
+    const hasInventoryId = Boolean(item.inventory_item_id);
+    if (hasInventoryId) {
+      if (!inventoryItemById.has(item.inventory_item_id as string)) {
+        staleLocationIds.push(item.id);
+      }
+      continue;
+    }
+
+    const subInventory = item.sub_inventory ?? null;
+    if (subInventory !== adHocSubInventoryName) {
+      staleLocationIds.push(item.id);
+    }
+  }
+
+  if (staleLocationIds.length > 0) {
+    const chunkSize = 200;
+    for (let i = 0; i < staleLocationIds.length; i += chunkSize) {
+      const chunk = staleLocationIds.slice(i, i + chunkSize);
+      await supabase
+        .from('product_location_history')
+        .delete()
+        .eq('location_id', locationId)
+        .in('id', chunk);
     }
   }
 
@@ -319,7 +376,14 @@ export async function getProductLocations(): Promise<{
   }
 
   // Map locations with colors
-  const locationsWithColors: ProductLocationForMap[] = (data as ProductLocationHistory[]).map((item) => {
+  const locationsWithColors: ProductLocationForMap[] = (data as ProductLocationHistory[])
+    .filter((item) => {
+      if (item.inventory_item_id) {
+        return inventoryItemById.has(item.inventory_item_id);
+      }
+      return item.sub_inventory === adHocSubInventoryName;
+    })
+    .map((item) => {
     const inventoryItem = item.inventory_item_id ? inventoryItemById.get(item.inventory_item_id) : undefined;
     const resolvedSubInventory = inventoryItem?.sub_inventory ?? item.sub_inventory;
     const loadMeta = resolvedSubInventory ? loadMetadataByName.get(resolvedSubInventory) : null;
@@ -336,6 +400,9 @@ export async function getProductLocations(): Promise<{
     const loadItemCount = resolvedSubInventory ? loadItemCounts.get(resolvedSubInventory) ?? null : null;
 
     const finalInventoryType = inventoryItem?.inventory_type ?? loadMeta?.inventory_type ?? null;
+    const finalInventoryBucket = inventoryItem?.inventory_bucket ?? loadMeta?.inventory_type ?? inventoryItem?.inventory_type ?? null;
+    const finalInventoryState = inventoryItem?.inventory_state ?? null;
+    const finalSourceType = inventoryItem?.source_type ?? null;
 
     return {
       id: item.id,
@@ -345,6 +412,9 @@ export async function getProductLocations(): Promise<{
       raw_lng: item.raw_lng != null ? Number(item.raw_lng) : null,
       inventory_item_id: item.inventory_item_id,
       inventory_type: finalInventoryType,
+      inventory_bucket: finalInventoryBucket,
+      inventory_state: finalInventoryState,
+      source_type: finalSourceType,
       image_url: imageUrl,
       load_item_count: loadItemCount,
       product_type: productType,
