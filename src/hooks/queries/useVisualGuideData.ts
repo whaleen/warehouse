@@ -18,7 +18,7 @@ export interface InventoryTypeCounts {
 export interface VisualGuideData {
   regularLoads: AsisLoadColor[];
   salvageLoads: AsisLoadColor[];
-  scrapCount: number;
+  looseAsisCount: number;
   inventoryTypeCounts: InventoryTypeCounts[];
   allLoadColors: { color: string; name: string }[];
 }
@@ -48,7 +48,7 @@ export function useVisualGuideData() {
       // Get item counts for each load
       const { data: itemCounts, error: countsError } = await supabase
         .from('inventory_items')
-        .select('sub_inventory, inventory_type')
+        .select('sub_inventory, inventory_type, inventory_bucket')
         .eq('location_id', locationId)
         .not('sub_inventory', 'is', null);
 
@@ -83,21 +83,17 @@ export function useVisualGuideData() {
         }
       });
 
-      // Get scrap count
-      const scrapLoads = loads?.filter(l => l.category === 'Scrap').map(l => l.sub_inventory_name) || [];
-      let scrapCount = 0;
+      // Get loose ASIS count (no load)
+      let looseAsisCount = 0;
+      const { count: looseCount, error: looseError } = await supabase
+        .from('inventory_items')
+        .select('*', { count: 'exact', head: true })
+        .eq('location_id', locationId)
+        .is('sub_inventory', null)
+        .or('inventory_bucket.eq.ASIS,inventory_type.eq.ASIS');
 
-      if (scrapLoads.length > 0) {
-        const { count, error: scrapError } = await supabase
-          .from('inventory_items')
-          .select('*', { count: 'exact', head: true })
-          .eq('location_id', locationId)
-          .eq('inventory_type', 'ASIS')
-          .in('sub_inventory', scrapLoads);
-
-        if (!scrapError) {
-          scrapCount = count || 0;
-        }
+      if (!looseError) {
+        looseAsisCount = looseCount || 0;
       }
 
       // Get inventory type counts (for non-ASIS types)
@@ -106,9 +102,9 @@ export function useVisualGuideData() {
       // Count by inventory type
       const typeCountMap = new Map<string, number>();
       itemCounts?.forEach((item) => {
-        const type = item.inventory_type;
-        if (type && type !== 'ASIS') {
-          typeCountMap.set(type, (typeCountMap.get(type) || 0) + 1);
+        const bucket = item.inventory_bucket || item.inventory_type;
+        if (bucket && bucket !== 'ASIS') {
+          typeCountMap.set(bucket, (typeCountMap.get(bucket) || 0) + 1);
         }
       });
 
@@ -132,7 +128,7 @@ export function useVisualGuideData() {
       return {
         regularLoads,
         salvageLoads,
-        scrapCount,
+        looseAsisCount,
         inventoryTypeCounts,
         allLoadColors,
       };

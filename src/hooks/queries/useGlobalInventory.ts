@@ -2,7 +2,6 @@ import { useQuery } from '@tanstack/react-query';
 import supabase from '@/lib/supabase';
 import { getActiveLocationContext } from '@/lib/tenant';
 import type { InventoryItem } from '@/types/inventory';
-import { deduplicateAsisStaItems } from '@/lib/sessionScanner';
 
 /**
  * Global inventory query - single source of truth
@@ -42,8 +41,7 @@ export function useGlobalInventory() {
         item => !item.sub_inventory || !deliveredLoadNames.has(item.sub_inventory)
       );
 
-      // Apply ASIS/STA deduplication (STA wins)
-      return deduplicateAsisStaItems(activeItems as InventoryItem[]);
+      return activeItems as InventoryItem[];
     },
     staleTime: Infinity, // Never goes stale - updated via Realtime
     gcTime: 30 * 60 * 1000, // Keep in cache for 30 minutes

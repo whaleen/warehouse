@@ -178,10 +178,10 @@ export function AsisLoadsWidget({ title = 'ASIS Loads', locationId, className, c
             <div className="text-xs uppercase tracking-wide text-muted-foreground">CSO</div>
             <div className="text-2xl font-semibold text-foreground tracking-widest">
               {csoParts.lead && <span className="text-muted-foreground/70">{csoParts.lead}</span>}
-              {csoParts.last4 ? (
-                <span className="font-bold underline decoration-2 underline-offset-4">
-                  {csoParts.last4}
-                </span>
+                {csoParts.last4 ? (
+                  <span className="font-bold underline decoration-dotted decoration-2 underline-offset-4">
+                    {csoParts.last4}
+                  </span>
               ) : (
                 <span className="text-muted-foreground">—</span>
               )}

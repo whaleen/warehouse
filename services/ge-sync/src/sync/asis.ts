@@ -421,11 +421,13 @@ function mergeLoadSources(loadList: GELoadMetadata[], reportHistory: GEReportHis
     const n = typeof value === 'number' ? value : parseInt(String(value ?? '').trim(), 10);
     return Number.isFinite(n) ? n : 0;
   };
+  const isDelivered = (value?: string | null) => String(value ?? '').trim().toLowerCase() === 'delivered';
 
   const normalizedFromLoadList: NormalizedLoad[] = (loadList ?? [])
     .map(row => {
       const loadNumber = String(row['Load Number'] ?? '').trim();
       if (!loadNumber) return null;
+      if (isDelivered(row.Status)) return null;
       return {
         loadNumber,
         source: 'ASISLoadData',
@@ -446,6 +448,7 @@ function mergeLoadSources(loadList: GELoadMetadata[], reportHistory: GEReportHis
     .map(row => {
       const loadNumber = String(row['Load Number'] ?? '').trim();
       if (!loadNumber) return null;
+      if (isDelivered(row['CSO Status'])) return null;
       return {
         loadNumber,
         source: 'ASISReportHistoryData',

@@ -7,8 +7,9 @@
  * 3. UI States - Muted colors + icons
  */
 
-import { Package, PackageOpen, TruckIcon, PackageCheck, Warehouse, ShoppingCart, AlertTriangle, AlertCircle, CheckCircle, Info, Loader2 } from 'lucide-react';
+import { Package, TruckIcon, PackageCheck, Warehouse, ShoppingCart, AlertTriangle, AlertCircle, CheckCircle, Info, Loader2 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
+import { BucketPill } from '@/components/ui/bucket-pill';
 import { Badge } from '@/components/ui/badge';
 import { AppHeader } from '@/components/Navigation/AppHeader';
 import { PageContainer } from '@/components/Layout/PageContainer';
@@ -39,22 +40,22 @@ const ASIS_LOAD_COLORS = [
 // ASIS Subcategory variations
 const ASIS_SUBCATEGORIES = [
   {
-    name: 'Regular',
+    name: 'Loose ASIS',
+    usesColor: false,
+    description: 'Loose ASIS items on the floor (not assigned to a load)',
+    example: 'Unassigned ASIS items'
+  },
+  {
+    name: 'ASIS Loads',
     usesColor: true,
-    description: 'Standard ASIS loads - get color assignments and friendly names',
+    description: 'Standard ASIS loads with color assignments and friendly names',
     example: 'Red Load, Orange Load, Blue Load'
   },
   {
-    name: 'Salvage',
+    name: 'ASIS Salvage',
     usesColor: false,
-    description: 'Identified by digit codes (S1, S2, S3, S6, etc.) - no color assignment',
+    description: 'Salvage loads identified by digit codes (S1, S2, S3, S6) - no color assignment',
     example: 'S1, S2, S3, S6'
-  },
-  {
-    name: 'Scrap',
-    usesColor: false,
-    description: 'Not mapped, no load name - just a count displayed where needed',
-    example: '15 items in Scrap'
   },
 ];
 
@@ -166,7 +167,7 @@ export function InventoryVisualGuide({ onMenuClick }: InventoryVisualGuideProps)
 
   const regularLoads = guideData?.regularLoads || [];
   const salvageLoads = guideData?.salvageLoads || [];
-  const scrapCount = guideData?.scrapCount || 0;
+  const looseAsisCount = guideData?.looseAsisCount || 0;
 
   return (
     <div className="h-full min-h-0 bg-background flex flex-col">
@@ -218,17 +219,17 @@ export function InventoryVisualGuide({ onMenuClick }: InventoryVisualGuideProps)
           {/* ASIS Load Colors */}
           <Card className="p-6 space-y-6">
             <div className="border-b pb-4">
-              <h2 className="text-lg font-semibold mb-1">ASIS Regular Load Colors</h2>
+              <h2 className="text-lg font-semibold mb-1">ASIS Load Colors</h2>
               <p className="text-sm text-muted-foreground">
-                Vibrant colors for Regular ASIS loads only. Salvage uses digit codes (S1, S2...), Scrap uses counts. Maximum saturation for visibility across the floor.
+                Vibrant colors for ASIS loads. Salvage uses digit codes (S1, S2...). Maximum saturation for visibility across the floor.
               </p>
             </div>
 
             {/* Color Palette - Real Loads */}
             <div>
-              <h3 className="text-sm font-semibold mb-3">Your Active Regular Loads ({regularLoads.length} total)</h3>
+              <h3 className="text-sm font-semibold mb-3">Your Active ASIS Loads ({regularLoads.length} total)</h3>
               {regularLoads.length === 0 ? (
-                <p className="text-sm text-muted-foreground">No regular ASIS loads found. Create loads in Load Management.</p>
+                <p className="text-sm text-muted-foreground">No ASIS loads found. Create loads in Load Management.</p>
               ) : (
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
                   {regularLoads.map((load) => (
@@ -250,9 +251,9 @@ export function InventoryVisualGuide({ onMenuClick }: InventoryVisualGuideProps)
 
             {/* Subcategory Breakdown */}
             <div>
-              <h3 className="text-sm font-semibold mb-3">ASIS Category Breakdown</h3>
+              <h3 className="text-sm font-semibold mb-3">ASIS Breakdown</h3>
               <p className="text-xs text-muted-foreground mb-4">
-                How Regular, Salvage, and Scrap are identified and tracked in the system
+                How loose ASIS, ASIS loads, and salvage loads are identified and tracked
               </p>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -264,11 +265,11 @@ export function InventoryVisualGuide({ onMenuClick }: InventoryVisualGuideProps)
                           <div className="w-10 h-10 rounded" style={{ backgroundColor: ASIS_LOAD_COLORS[0].color }} />
                         ) : (
                           <div className="w-10 h-10 rounded bg-gray-300 flex items-center justify-center text-xs font-bold text-gray-600">
-                            {subcat.name === 'Salvage' ? 'S#' : '—'}
+                            {subcat.name === 'ASIS Salvage' ? 'S#' : '—'}
                           </div>
                         )}
                         <div>
-                          <div className="font-semibold text-sm">ASIS - {subcat.name}</div>
+                          <div className="font-semibold text-sm">{subcat.name}</div>
                           <div className="text-xs text-muted-foreground">
                             {subcat.usesColor ? 'Uses colors' : 'No color'}
                           </div>
@@ -283,7 +284,7 @@ export function InventoryVisualGuide({ onMenuClick }: InventoryVisualGuideProps)
                       </div>
 
                       {/* Real Data Examples */}
-                      {subcat.name === 'Regular' && regularLoads.length > 0 && (
+                      {subcat.name === 'ASIS Loads' && regularLoads.length > 0 && (
                         <div className="flex gap-2 pt-2 flex-wrap">
                           {regularLoads.slice(0, 3).map((load) => (
                             <div key={load.sub_inventory_name} className="flex items-center gap-1.5 px-2 py-1 bg-muted rounded text-xs">
@@ -297,7 +298,7 @@ export function InventoryVisualGuide({ onMenuClick }: InventoryVisualGuideProps)
                         </div>
                       )}
 
-                      {subcat.name === 'Salvage' && (
+                      {subcat.name === 'ASIS Salvage' && (
                         <div className="space-y-2 pt-2">
                           {salvageLoads.length > 0 ? (
                             <div className="flex gap-2 flex-wrap">
@@ -313,11 +314,11 @@ export function InventoryVisualGuide({ onMenuClick }: InventoryVisualGuideProps)
                         </div>
                       )}
 
-                      {subcat.name === 'Scrap' && (
+                      {subcat.name === 'Loose ASIS' && (
                         <div className="pt-2">
                           <div className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-muted rounded text-sm">
-                            <span className="text-muted-foreground">Scrap:</span>
-                            <span className="font-semibold">{scrapCount} items</span>
+                            <span className="text-muted-foreground">Loose ASIS:</span>
+                            <span className="font-semibold">{looseAsisCount} items</span>
                           </div>
                         </div>
                       )}
@@ -331,27 +332,20 @@ export function InventoryVisualGuide({ onMenuClick }: InventoryVisualGuideProps)
             <div>
               <h3 className="text-sm font-semibold mb-3">Map Marker Styles</h3>
               <div className="flex flex-wrap gap-6">
-                {/* Solid Circle */}
                 <div className="flex flex-col items-center gap-2">
-                  <div className="w-10 h-10 rounded-full" style={{ backgroundColor: ASIS_LOAD_COLORS[0].color }} />
-                  <span className="text-xs text-muted-foreground">Solid Circle</span>
+                  <div
+                    className="w-10 h-10 rounded-full border-2 border-white shadow"
+                    style={{ backgroundColor: ASIS_LOAD_COLORS[0].color }}
+                  />
+                  <span className="text-xs text-muted-foreground">Load Dot</span>
                 </div>
-
-                {/* Square */}
                 <div className="flex flex-col items-center gap-2">
-                  <div className="w-10 h-10 rounded" style={{ backgroundColor: ASIS_LOAD_COLORS[1].color }} />
-                  <span className="text-xs text-muted-foreground">Square</span>
+                  <BucketPill bucket="ASIS" label="AS" variant="marker" className="h-6 text-[10px]" />
+                  <span className="text-xs text-muted-foreground">ASIS Bucket</span>
                 </div>
-
-                {/* With Label */}
                 <div className="flex flex-col items-center gap-2">
-                  <div className="relative">
-                    <div className="w-10 h-10 rounded" style={{ backgroundColor: ASIS_LOAD_COLORS[2].color }} />
-                    <div className="absolute -bottom-1 -right-1 bg-background border rounded px-1 text-[10px] font-bold">
-                      A1
-                    </div>
-                  </div>
-                  <span className="text-xs text-muted-foreground">With Label</span>
+                  <BucketPill bucket="FG" label="FG" variant="marker" className="h-6 text-[10px]" />
+                  <span className="text-xs text-muted-foreground">FG Bucket</span>
                 </div>
               </div>
             </div>
@@ -360,20 +354,19 @@ export function InventoryVisualGuide({ onMenuClick }: InventoryVisualGuideProps)
             <div>
               <h3 className="text-sm font-semibold mb-3">Badge Styles</h3>
               <div className="flex flex-wrap gap-3">
-                <div className="flex items-center gap-2 px-3 py-1.5 bg-muted rounded-lg">
-                  <div className="w-3 h-3 rounded" style={{ backgroundColor: ASIS_LOAD_COLORS[0].color }} />
+                <div
+                  className="inline-flex items-center gap-2 px-2 py-1 rounded-sm border shadow-sm"
+                  style={{ borderColor: ASIS_LOAD_COLORS[2].color }}
+                >
+                  <div className="h-4 w-4 rounded-sm" style={{ backgroundColor: ASIS_LOAD_COLORS[2].color }} />
+                  <div className="h-4 w-px" style={{ backgroundColor: ASIS_LOAD_COLORS[2].color }} />
                   <span className="text-sm font-medium">ASIS-001</span>
-                  <span className="text-xs text-muted-foreground">Last 4: 0123</span>
+                  <div className="h-4 w-px" style={{ backgroundColor: ASIS_LOAD_COLORS[2].color }} />
+                  <span className="text-sm font-medium">0123</span>
                 </div>
 
-                <Badge style={{ backgroundColor: ASIS_LOAD_COLORS[3].color, color: 'white' }}>
-                  Lime Load
-                </Badge>
-
-                <div className="flex items-center gap-2 px-3 py-1.5 border rounded-lg" style={{ borderColor: ASIS_LOAD_COLORS[4].color }}>
-                  <PackageOpen className="w-4 h-4" style={{ color: ASIS_LOAD_COLORS[4].color }} />
-                  <span className="text-sm font-medium">Green Load</span>
-                </div>
+                <BucketPill bucket="ASIS" label="ASIS" />
+                <BucketPill bucket="FG" label="FG" />
               </div>
             </div>
           </Card>
@@ -383,7 +376,7 @@ export function InventoryVisualGuide({ onMenuClick }: InventoryVisualGuideProps)
             <div className="border-b pb-4">
               <h2 className="text-lg font-semibold mb-1">Non-ASIS Inventory Types</h2>
               <p className="text-sm text-muted-foreground">
-                Grayscale palette with unique icons. Neutral colors that don't compete with ASIS load identification.
+                Grayscale palette with icons and bucket pills that match the map and inventory drawer.
               </p>
             </div>
 
@@ -408,26 +401,27 @@ export function InventoryVisualGuide({ onMenuClick }: InventoryVisualGuideProps)
                       <div className="text-xs font-medium mb-2">Map Marker:</div>
                       <div className="flex gap-3">
                         <div className="flex flex-col items-center gap-1">
-                          <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ backgroundColor: type.color }}>
-                            <Icon className="w-4 h-4 text-white" />
+                          <div
+                            className="h-6 rounded-sm border-2 border-white shadow px-2 flex items-center text-[10px] font-semibold tracking-tight text-slate-900"
+                            style={{
+                              backgroundColor: 'rgba(255,255,255,0.9)',
+                              backgroundImage: type.code === 'FG'
+                                ? 'repeating-linear-gradient(45deg, rgba(100,116,139,0.4) 0, rgba(100,116,139,0.4) 0.7px, transparent 0.7px, transparent 3px), repeating-linear-gradient(-45deg, rgba(100,116,139,0.4) 0, rgba(100,116,139,0.4) 0.7px, transparent 0.7px, transparent 3px)'
+                                : undefined,
+                            }}
+                          >
+                            {type.code}
                           </div>
-                          <span className="text-[10px] text-muted-foreground">With Icon</span>
-                        </div>
-                        <div className="flex flex-col items-center gap-1">
-                          <div className="w-8 h-8 rounded-full" style={{ backgroundColor: type.color }} />
-                          <span className="text-[10px] text-muted-foreground">Solid</span>
+                          <span className="text-[10px] text-muted-foreground">Bucket pill</span>
                         </div>
                       </div>
                     </div>
 
                     {/* Badge */}
-                    <div>
-                      <div className="text-xs font-medium mb-2">Badge:</div>
-                      <div className="flex items-center gap-2 px-3 py-1.5 bg-muted rounded-md w-fit">
-                        <Icon className="w-3.5 h-3.5" style={{ color: type.color }} />
-                        <span className="text-sm font-medium">{type.code}</span>
+                      <div>
+                        <div className="text-xs font-medium mb-2">Badge:</div>
+                        <BucketPill bucket={type.code} label={type.code} />
                       </div>
-                    </div>
                   </div>
                 );
               })}
@@ -521,10 +515,15 @@ export function InventoryVisualGuide({ onMenuClick }: InventoryVisualGuideProps)
             <div className="border rounded-lg p-4 space-y-3" style={{ borderLeftWidth: '4px', borderLeftColor: ASIS_LOAD_COLORS[0].color }}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-6 h-6 rounded" style={{ backgroundColor: ASIS_LOAD_COLORS[0].color }} />
-                  <div>
-                    <div className="font-semibold">ASIS Load - Red</div>
-                    <div className="text-xs text-muted-foreground">9SU-0123 • 60 items • Regular</div>
+                  <div
+                    className="inline-flex items-center gap-2 px-2 py-1 rounded-sm border shadow-sm"
+                    style={{ borderColor: ASIS_LOAD_COLORS[0].color }}
+                  >
+                    <div className="h-4 w-4 rounded-sm" style={{ backgroundColor: ASIS_LOAD_COLORS[0].color }} />
+                    <div className="h-4 w-px" style={{ backgroundColor: ASIS_LOAD_COLORS[0].color }} />
+                    <span className="text-sm font-medium">ASIS Load - Red</span>
+                    <div className="h-4 w-px" style={{ backgroundColor: ASIS_LOAD_COLORS[0].color }} />
+                    <span className="text-sm font-medium">0123</span>
                   </div>
                 </div>
                 <div className="flex items-center gap-1 px-2 py-1 rounded text-xs" style={{
@@ -537,15 +536,20 @@ export function InventoryVisualGuide({ onMenuClick }: InventoryVisualGuideProps)
               </div>
 
               <div className="flex flex-wrap gap-2">
-                {NON_ASIS_TYPES.slice(0, 3).map((type) => {
-                  const Icon = type.icon;
-                  return (
-                    <div key={type.code} className="flex items-center gap-1.5 px-2 py-1 bg-muted rounded text-xs">
-                      <Icon className="w-3 h-3" style={{ color: type.color }} />
-                      <span>{type.code}</span>
-                    </div>
-                  );
-                })}
+                {NON_ASIS_TYPES.slice(0, 3).map((type) => (
+                  <div
+                    key={type.code}
+                    className="inline-flex items-center rounded-sm border px-2 py-0.5 text-[10px] font-semibold tracking-wide"
+                    style={{
+                      backgroundColor: 'rgba(255,255,255,0.9)',
+                      backgroundImage: type.code === 'FG'
+                        ? 'repeating-linear-gradient(45deg, rgba(100,116,139,0.4) 0, rgba(100,116,139,0.4) 0.7px, transparent 0.7px, transparent 3px), repeating-linear-gradient(-45deg, rgba(100,116,139,0.4) 0, rgba(100,116,139,0.4) 0.7px, transparent 0.7px, transparent 3px)'
+                        : undefined,
+                    }}
+                  >
+                    {type.code}
+                  </div>
+                ))}
               </div>
             </div>
 

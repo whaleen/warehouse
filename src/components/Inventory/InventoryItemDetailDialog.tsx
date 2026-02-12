@@ -6,6 +6,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
+import { BucketPill } from '@/components/ui/bucket-pill';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Loader2, ExternalLink, Copy, Check } from 'lucide-react';
@@ -152,7 +153,7 @@ export function InventoryItemDetailDialog({
                 {item.products?.product_type ?? item.product_type}
               </Badge>
 
-              <Badge>{item.inventory_type}</Badge>
+              <BucketPill bucket={item.inventory_bucket || item.inventory_type} />
 
               {item.sub_inventory && (
                 <Badge variant="outline">

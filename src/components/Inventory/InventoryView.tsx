@@ -27,11 +27,15 @@ import {
   SlidersHorizontal,
   MoreHorizontal,
   ArrowUpDown,
+  ChevronDown,
+  Check,
 } from 'lucide-react';
 import { InventoryItemCard } from '@/components/Inventory/InventoryItemCard';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
+import { CsoValue } from '@/components/ui/cso-value';
 import { toast } from 'sonner';
 import { ButtonGroup } from '@/components/ui/button-group';
 import {
@@ -40,6 +44,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useGeSync } from '@/hooks/queries/useGeSync';
 import { useImportInventorySnapshot } from '@/hooks/queries/useInventoryImport';
@@ -101,7 +106,7 @@ type ExportColumnKey =
   | 'serial'
   | 'item_model'
   | 'item_product_type'
-  | 'inventory_type'
+  | 'inventory_bucket'
   | 'sub_inventory'
   | 'route_id'
   | 'is_scanned'
@@ -131,7 +136,7 @@ const exportColumns: ExportColumn[] = [
   { key: 'serial', label: 'Serial', group: 'Item', getValue: item => item.serial },
   { key: 'item_model', label: 'Item Model', group: 'Item', getValue: item => item.model },
   { key: 'item_product_type', label: 'Item Product Type', group: 'Item', getValue: item => item.product_type },
-  { key: 'inventory_type', label: 'Inventory Type', group: 'Item', getValue: item => item.inventory_type },
+  { key: 'inventory_bucket', label: 'Inventory Bucket', group: 'Item', getValue: item => item.inventory_bucket ?? item.inventory_type },
   { key: 'sub_inventory', label: 'Sub Inventory', group: 'Item', getValue: item => item.sub_inventory },
   { key: 'route_id', label: 'Route', group: 'Item', getValue: item => item.route_id },
   { key: 'is_scanned', label: 'Scanned', group: 'Item', getValue: item => item.is_scanned },
@@ -401,7 +406,7 @@ export function InventoryView({ onMenuClick, inventoryType }: InventoryViewProps
       const source = resolveProductImportSource(inventoryTypeFilter);
       if (!source) {
         toast.error('Missing source', {
-          description: 'Pick ASIS, FG, or STA in the type filter before deleting inventory.',
+          description: 'Pick ASIS, FG, or STA in the bucket filter before deleting inventory.',
         });
         return;
       }
@@ -435,7 +440,7 @@ export function InventoryView({ onMenuClick, inventoryType }: InventoryViewProps
     const source = resolveProductImportSource(inventoryTypeFilter);
     if (!source) {
       toast.error('Missing source', {
-        description: 'Pick ASIS, FG, or STA in the type filter before importing.',
+          description: 'Pick ASIS, FG, or STA in the bucket filter before importing.',
       });
       return;
     }
@@ -551,6 +556,82 @@ export function InventoryView({ onMenuClick, inventoryType }: InventoryViewProps
       ? 'all'
       : subInventoryOptions.find(option => option.value === subInventoryFilter)?.label ?? subInventoryFilter;
 
+  const selectedSubInventory = useMemo(
+    () => subInventoryOptions.find(option => option.value === subInventoryFilter) ?? null,
+    [subInventoryFilter, subInventoryOptions]
+  );
+
+  const normalizeStatus = (value?: string | null) => value?.toLowerCase().trim() ?? '';
+  const getAsisStatusLabel = (option: typeof subInventoryOptions[number]) => {
+    const sourceStatus = normalizeStatus(option.ge_source_status);
+    const csoStatus = normalizeStatus(option.ge_cso_status);
+    if (sourceStatus.includes('pending') || csoStatus.includes('pending')) return 'Pending';
+    if (csoStatus === 'shipped') return 'Shipped';
+    if (sourceStatus === 'for sale') return 'For Sale';
+    if (sourceStatus === 'sold' && csoStatus === 'picked') return 'Sold • Picked';
+    return 'Other';
+  };
+
+  const getAsisStatusBucket = (option: typeof subInventoryOptions[number]) => {
+    const sourceStatus = normalizeStatus(option.ge_source_status);
+    const csoStatus = normalizeStatus(option.ge_cso_status);
+    if (sourceStatus.includes('pending') || csoStatus.includes('pending')) return 'pending';
+    if (csoStatus === 'shipped') return 'shipped';
+    if (sourceStatus === 'for sale') return 'for-sale';
+    if (sourceStatus === 'sold' && csoStatus === 'picked') return 'sold-picked';
+    return 'other';
+  };
+
+  const asisGroupedLoads = useMemo(() => {
+    if (inventoryTypeFilter !== 'ASIS') return [];
+
+    const getPickupRank = (option: typeof subInventoryOptions[number]) =>
+      option.pickup_date ? 0 : 1;
+    const getPickupTime = (option: typeof subInventoryOptions[number]) => {
+      if (!option.pickup_date) return Number.POSITIVE_INFINITY;
+      const time = Date.parse(option.pickup_date);
+      return Number.isNaN(time) ? Number.POSITIVE_INFINITY : time;
+    };
+    const getSubmittedTime = (option: typeof subInventoryOptions[number]) => {
+      if (!option.ge_submitted_date) return 0;
+      const time = Date.parse(option.ge_submitted_date);
+      return Number.isNaN(time) ? 0 : time;
+    };
+
+    const sorted = [...subInventoryOptions].sort((a, b) => {
+      const pickupRank = getPickupRank(a) - getPickupRank(b);
+      if (pickupRank !== 0) return pickupRank;
+
+      const pickupTime = getPickupTime(a) - getPickupTime(b);
+      if (pickupTime !== 0) return pickupTime;
+
+      const submittedDelta = getSubmittedTime(b) - getSubmittedTime(a);
+      if (submittedDelta !== 0) return submittedDelta;
+
+      return a.label.localeCompare(b.label);
+    });
+
+    const groups = {
+      'for-sale': [] as typeof subInventoryOptions,
+      'sold-picked': [] as typeof subInventoryOptions,
+      pending: [] as typeof subInventoryOptions,
+      shipped: [] as typeof subInventoryOptions,
+      other: [] as typeof subInventoryOptions,
+    };
+
+    sorted.forEach(option => {
+      groups[getAsisStatusBucket(option)].push(option);
+    });
+
+    return [
+      { id: 'sold-picked', label: 'Sold • Picked', options: groups['sold-picked'] },
+      { id: 'pending', label: 'Pending', options: groups.pending },
+      { id: 'for-sale', label: 'For Sale', options: groups['for-sale'] },
+      { id: 'shipped', label: 'Shipped', options: groups.shipped },
+      { id: 'other', label: 'Other', options: groups.other },
+    ].filter(group => group.options.length > 0);
+  }, [inventoryTypeFilter, subInventoryOptions]);
+
   const activeFilters = [
     searchTerm && {
       key: 'search',
@@ -562,7 +643,7 @@ export function InventoryView({ onMenuClick, inventoryType }: InventoryViewProps
     },
     inventoryTypeFilter !== 'all' && {
       key: 'type',
-      label: `Type: ${inventoryTypeFilter}`,
+      label: `Bucket: ${inventoryTypeFilter === 'LocalStock' ? 'STA' : inventoryTypeFilter}`,
       clear: () => setInventoryTypeFilter('all'),
     },
     subInventoryFilter !== 'all' && {
@@ -596,7 +677,7 @@ export function InventoryView({ onMenuClick, inventoryType }: InventoryViewProps
   const handleNukeClick = () => {
     if (!selectedImportSource) {
       toast.error('Missing source', {
-        description: 'Pick ASIS, FG, or STA in the type filter before deleting inventory.',
+          description: 'Pick ASIS, FG, or STA in the bucket filter before deleting inventory.',
       });
       return;
     }
@@ -612,177 +693,263 @@ export function InventoryView({ onMenuClick, inventoryType }: InventoryViewProps
       {/* Filters */}
       <div className="border-b">
         <PageContainer className="py-3 space-y-3">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              placeholder="Search CSO, Serial, Model…"
-              value={searchInput}
-              onChange={e => setSearchInput(e.target.value)}
-              size="responsive"
-              className="pl-10 sm:pl-10"
-            />
-          </div>
-
-          <div
-            className={cn(
-              'flex items-center sm:hidden',
-              alignRight ? 'justify-end' : 'justify-start'
-            )}
-          >
-            <Button
-              type="button"
-              size="responsive"
-              variant="outline"
-              onClick={() => setFiltersOpen((prev) => !prev)}
-              className="gap-2"
+          <div className="rounded-lg border bg-background/70 p-3 space-y-3">
+            <div
+              className={cn(
+                'flex items-center gap-2',
+                alignRight ? 'justify-end' : 'justify-start'
+              )}
             >
-              <SlidersHorizontal className="h-4 w-4" />
-              {filtersOpen ? 'Hide filters' : 'Show filters'}
-            </Button>
-          </div>
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  placeholder="Search CSO, Serial, Model…"
+                  value={searchInput}
+                  onChange={e => setSearchInput(e.target.value)}
+                  size="responsive"
+                  className="pl-10 sm:pl-10"
+                />
+              </div>
+              <Button
+                type="button"
+                size="responsive"
+                variant="outline"
+                onClick={() => setFiltersOpen((prev) => !prev)}
+                className="gap-2 sm:hidden"
+              >
+                <SlidersHorizontal className="h-4 w-4" />
+                {filtersOpen ? 'Hide filters' : 'Show filters'}
+              </Button>
+            </div>
 
-          <div
-            className={cn(
-              'grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4',
-              filtersOpen ? 'grid' : 'hidden',
-              'sm:grid'
-            )}
-          >
-            <Select
-              value={inventoryTypeFilter}
-              onValueChange={v =>
-                setInventoryTypeFilter(v as InventoryTypeFilter)
-              }
+            <div
+              className={cn(
+                'grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4',
+                filtersOpen ? 'grid' : 'hidden',
+                'sm:grid'
+              )}
             >
-            <SelectTrigger size="responsive" className="w-full">
-              <SelectValue />
-            </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Types</SelectItem>
-                <SelectItem value="ASIS">ASIS</SelectItem>
-                <SelectItem value="FG">FG</SelectItem>
-                <SelectItem value="LocalStock">STA</SelectItem>
-              </SelectContent>
-            </Select>
-
-            <Select
-              value={productCategoryFilter}
-              onValueChange={v =>
-                setProductCategoryFilter(v as 'all' | 'appliance' | 'accessory')
-              }
-            >
-            <SelectTrigger size="responsive" className="w-full">
-              <SelectValue />
-            </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Categories</SelectItem>
-                <SelectItem value="appliance">Appliances</SelectItem>
-                <SelectItem value="accessory">Accessories</SelectItem>
-              </SelectContent>
-            </Select>
-
-            <Select
-              value={brandFilter}
-              onValueChange={setBrandFilter}
-            >
-            <SelectTrigger size="responsive" className="w-full">
-              <SelectValue />
-            </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Brands</SelectItem>
-                {brandOptions.map(brand => (
-                  <SelectItem key={brand} value={brand}>
-                    {brand}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-          </div>
-
-          {subInventoryOptions.length > 0 && (
-            <div className={cn(filtersOpen ? 'block' : 'hidden', 'sm:block')}>
               <Select
-                value={subInventoryFilter}
-                onValueChange={setSubInventoryFilter}
+                value={inventoryTypeFilter}
+                onValueChange={v =>
+                  setInventoryTypeFilter(v as InventoryTypeFilter)
+                }
               >
                 <SelectTrigger size="responsive" className="w-full">
-                  <SelectValue placeholder="All Sub-Inventories" />
+                  <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Sub-Inventories</SelectItem>
-                  {subInventoryOptions.map(option => {
-                    const friendly = option.friendlyName?.trim() || 'Unnamed';
-                    const csoOrLoad = option.cso?.trim() || option.value;
-                    return (
-                      <SelectItem key={option.value} value={option.value} textValue={option.label}>
-                        <div className="flex items-center gap-2">
-                          {option.color && (
-                            <span
-                              className="h-3 w-3 rounded-sm border border-border/60"
-                              style={{ backgroundColor: option.color }}
-                              aria-hidden="true"
-                            />
-                          )}
-                          {inventoryTypeFilter === 'ASIS' ? (
-                            <>
-                              <span className="font-medium">{friendly}</span>
-                              <span className="text-muted-foreground">| {csoOrLoad}</span>
-                            </>
-                          ) : (
-                            <span>{option.value}</span>
-                          )}
-                        </div>
-                      </SelectItem>
-                    );
-                  })}
+                  <SelectItem value="all">All Buckets</SelectItem>
+                  <SelectItem value="ASIS">ASIS</SelectItem>
+                  <SelectItem value="FG">FG</SelectItem>
+                  <SelectItem value="LocalStock">STA</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Select
+                value={productCategoryFilter}
+                onValueChange={v =>
+                  setProductCategoryFilter(v as 'all' | 'appliance' | 'accessory')
+                }
+              >
+                <SelectTrigger size="responsive" className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Categories</SelectItem>
+                  <SelectItem value="appliance">Appliances</SelectItem>
+                  <SelectItem value="accessory">Accessories</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Select
+                value={brandFilter}
+                onValueChange={setBrandFilter}
+              >
+                <SelectTrigger size="responsive" className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Brands</SelectItem>
+                  {brandOptions.map(brand => (
+                    <SelectItem key={brand} value={brand}>
+                      {brand}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
-          )}
 
-          {/* Filter chips and count */}
-          <div
-            className={cn(
-              'flex flex-wrap items-center gap-2 text-sm',
-              alignRight ? 'justify-end' : 'justify-start'
+            {subInventoryOptions.length > 0 && (
+              <div className={cn(filtersOpen ? 'block' : 'hidden', 'sm:block')}>
+                {inventoryTypeFilter === 'ASIS' ? (
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="responsive"
+                        className="w-full justify-between gap-3 px-3 py-2 text-left"
+                      >
+                        {subInventoryFilter === 'all' ? (
+                          <span className="text-sm text-muted-foreground">Filter by load</span>
+                        ) : (
+                          <span className="flex items-center gap-2 min-w-0">
+                            <Badge variant="outline" className="text-[10px] uppercase tracking-wide">
+                              {selectedSubInventory ? getAsisStatusLabel(selectedSubInventory) : 'Load'}
+                            </Badge>
+                            <span
+                              className="h-3 w-3 rounded-sm border border-border/60 shadow-sm"
+                              style={{ backgroundColor: selectedSubInventory?.color || '#9ca3af' }}
+                              aria-hidden="true"
+                            />
+                            <span className="truncate text-sm font-medium">
+                              {selectedSubInventory?.friendlyName?.trim()
+                                || selectedSubInventory?.value
+                                || 'Unknown'}
+                            </span>
+                            <span className="ml-auto text-xs text-muted-foreground font-mono tracking-wide truncate">
+                              {selectedSubInventory?.cso ? (
+                                <CsoValue value={selectedSubInventory.cso} />
+                              ) : (
+                                selectedSubInventory?.value
+                              )}
+                            </span>
+                          </span>
+                        )}
+                        <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent
+                      align="start"
+                      className="p-2"
+                      style={{ width: 'var(--radix-popover-trigger-width)' }}
+                    >
+                      <div className="max-h-80 overflow-auto">
+                        <button
+                          type="button"
+                          className={cn(
+                            'flex w-full items-center justify-between gap-2 rounded-md px-2 py-2 text-left text-sm transition',
+                            subInventoryFilter === 'all'
+                              ? 'bg-muted text-foreground'
+                              : 'hover:bg-muted/60'
+                          )}
+                          onClick={() => setSubInventoryFilter('all')}
+                        >
+                          <span>Filter by load</span>
+                          {subInventoryFilter === 'all' && <Check className="h-4 w-4 text-muted-foreground" />}
+                        </button>
+
+                        {asisGroupedLoads.map(group => (
+                          <div key={group.id} className="pt-3">
+                            <div className="px-2 pb-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                              {group.label} · {group.options.length}
+                            </div>
+                            <div className="space-y-1">
+                              {group.options.map(option => {
+                                const friendly = option.friendlyName?.trim() || option.value || 'Unknown';
+                                const color = option.color || '#9ca3af';
+                                const isSelected = subInventoryFilter === option.value;
+                                const statusLabel = getAsisStatusLabel(option);
+                                return (
+                                  <button
+                                    key={option.value}
+                                    type="button"
+                                    className={cn(
+                                      'flex w-full items-center justify-between gap-2 rounded-md px-2 py-2 text-left text-sm transition',
+                                      isSelected ? 'bg-muted text-foreground' : 'hover:bg-muted/60'
+                                    )}
+                                    onClick={() => setSubInventoryFilter(option.value)}
+                                  >
+                                    <span className="flex items-center gap-2 min-w-0">
+                                      <Badge variant="outline" className="text-[10px] uppercase tracking-wide">
+                                        {statusLabel}
+                                      </Badge>
+                                      <span
+                                        className="h-3 w-3 rounded-sm border border-border/60 shadow-sm"
+                                        style={{ backgroundColor: color }}
+                                        aria-hidden="true"
+                                      />
+                                      <span className="truncate text-sm font-medium">{friendly}</span>
+                                      <span className="ml-auto text-xs text-muted-foreground font-mono tracking-wide truncate">
+                                        {option.cso ? <CsoValue value={option.cso} /> : option.value}
+                                      </span>
+                                    </span>
+                                    {isSelected && <Check className="h-4 w-4 text-muted-foreground" />}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </PopoverContent>
+                  </Popover>
+                ) : (
+                  <Select
+                    value={subInventoryFilter}
+                    onValueChange={setSubInventoryFilter}
+                  >
+                    <SelectTrigger size="responsive" className="w-full">
+                      <SelectValue placeholder="All Loads" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Loads</SelectItem>
+                      {subInventoryOptions.map(option => (
+                        <SelectItem key={option.value} value={option.value} textValue={option.label}>
+                          {option.value}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              </div>
             )}
-          >
-            <span className="text-muted-foreground">
-              {totalCount > 0 ? `${items.length} of ${totalCount} items` : `${items.length} items`}
-            </span>
-            {activeFilters.map((filter) => (
-              <Button
-                key={filter.key}
-                size="responsive"
-                variant="outline"
-                className="h-7 px-2"
-                onClick={filter.clear}
+
+            <div className="border-t pt-2">
+              <div
+                className={cn(
+                  'flex flex-wrap items-center gap-2 text-sm',
+                  alignRight ? 'justify-end' : 'justify-start'
+                )}
               >
-                <span className="truncate">{filter.label}</span>
-                <X className="ml-1 h-3 w-3" />
-              </Button>
-            ))}
-            {activeFilters.length > 0 && (
-              <Button size="responsive" variant="ghost" onClick={clearAllFilters}>
-                Clear all
-              </Button>
+                <span className="text-muted-foreground">
+                  {totalCount > 0 ? `${items.length} of ${totalCount} items` : `${items.length} items`}
+                </span>
+                {activeFilters.map((filter) => (
+                  <Button
+                    key={filter.key}
+                    size="responsive"
+                    variant="outline"
+                    className="h-7 px-2"
+                    onClick={filter.clear}
+                  >
+                    <span className="truncate">{filter.label}</span>
+                    <X className="ml-1 h-3 w-3" />
+                  </Button>
+                ))}
+                {activeFilters.length > 0 && (
+                  <Button size="responsive" variant="ghost" onClick={clearAllFilters}>
+                    Clear all
+                  </Button>
+                )}
+              </div>
+            </div>
+
+            {(exporting || exportError) && (
+              <div className="text-xs">
+                {exporting && (
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                    Exporting {exportedRows} rows…
+                  </div>
+                )}
+                {exportError && (
+                  <div className="text-destructive">{exportError}</div>
+                )}
+              </div>
             )}
           </div>
-
-          {(exporting || exportError) && (
-            <div className="text-xs">
-              {exporting && (
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <Loader2 className="h-3 w-3 animate-spin" />
-                  Exporting {exportedRows} rows…
-                </div>
-              )}
-              {exportError && (
-                <div className="text-destructive">{exportError}</div>
-              )}
-            </div>
-          )}
 
           <div
             className={cn(

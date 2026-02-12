@@ -14,6 +14,7 @@ import { Badge } from '@/components/ui/badge';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { Drawer, DrawerClose, DrawerContent, DrawerHeader, DrawerTitle } from '@/components/ui/drawer';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { BucketPill } from '@/components/ui/bucket-pill';
 import { useDeleteProductLocation, useClearAllScans, useDeleteSessionScans, useInventoryItemCount, useInventoryScanCounts } from '@/hooks/queries/useMap';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { getCurrentPosition, logProductLocation } from '@/lib/mapManager';
@@ -644,25 +645,20 @@ export function WarehouseMapNew({ locations }: WarehouseMapNewProps) {
                       style={{ backgroundColor: location.load_color || '#ef4444' }}
                     />
                   ) : /* Non-load items - bucket pill marker */ (
-                    <div
-                      className="h-5 rounded-md border-2 border-white shadow-lg text-[9px] font-semibold tracking-tight hover:scale-110 transition-transform px-2 flex items-center text-slate-900"
-                      style={{
-                        backgroundColor: 'rgba(255,255,255,0.9)',
-                        backgroundImage: location.inventory_bucket === 'FG'
-                          ? 'repeating-linear-gradient(45deg, rgba(100,116,139,0.4) 0, rgba(100,116,139,0.4) 0.7px, transparent 0.7px, transparent 3px), repeating-linear-gradient(-45deg, rgba(100,116,139,0.4) 0, rgba(100,116,139,0.4) 0.7px, transparent 0.7px, transparent 3px)'
-                          : location.inventory_bucket === 'ASIS'
-                            ? 'radial-gradient(circle, rgba(100,116,139,0.4) 0.8px, transparent 0.8px)'
-                            : undefined,
-                        backgroundSize: location.inventory_bucket === 'ASIS' ? '4px 4px' : undefined,
-                      }}
-                    >
-                      {location.inventory_bucket === 'FG' ? 'FG' :
-                       location.inventory_bucket === 'BackHaul' ? 'BH' :
-                       location.inventory_bucket === 'Inbound' ? 'IN' :
-                       location.inventory_bucket === 'ASIS' ? 'AS' :
-                       location.inventory_bucket?.substring(0, 2) ||
-                       location.inventory_type?.substring(0, 2) || '?'}
-                    </div>
+                    <BucketPill
+                      bucket={location.inventory_bucket || location.inventory_type}
+                      label={location.inventory_bucket === 'FG'
+                        ? 'FG'
+                        : location.inventory_bucket === 'BackHaul'
+                          ? 'BH'
+                          : location.inventory_bucket === 'Inbound'
+                            ? 'IN'
+                            : location.inventory_bucket === 'ASIS'
+                              ? 'AS'
+                              : location.inventory_bucket?.substring(0, 2) || location.inventory_type?.substring(0, 2) || '?'}
+                      variant="marker"
+                      className="hover:scale-110 transition-transform"
+                    />
                   )}
                 </div>
               </MarkerContent>
@@ -698,9 +694,7 @@ export function WarehouseMapNew({ locations }: WarehouseMapNewProps) {
                     {(location.inventory_bucket || location.inventory_state) && (
                       <div className="mt-2 flex flex-wrap items-center gap-1.5 text-xs">
                         {location.inventory_bucket && (
-                          <Badge variant="outline" className="text-[10px]">
-                            {location.inventory_bucket}
-                          </Badge>
+                          <BucketPill bucket={location.inventory_bucket} />
                         )}
                         {location.inventory_state === 'staged' && (
                           <Badge variant="secondary" className="text-[10px]">
@@ -739,7 +733,7 @@ export function WarehouseMapNew({ locations }: WarehouseMapNewProps) {
                                 className="h-4 w-px"
                                 style={{ backgroundColor: location.load_color || '#ef4444' }}
                               />
-                              <span className="text-sm font-medium">
+                              <span className="text-sm font-medium underline decoration-dotted underline-offset-2">
                                 {load.ge_cso.slice(-4)}
                               </span>
                             </>
@@ -1079,17 +1073,11 @@ export function WarehouseMapNew({ locations }: WarehouseMapNewProps) {
                           return (
                             <div key={group.key} className="flex items-center gap-2">
                               <div className="flex items-center gap-2 flex-1 min-w-0 rounded px-2 py-2">
-                                <div
-                                  className="flex items-center gap-2 px-2 py-1 rounded-sm border shadow-sm min-w-0"
-                                  style={{
-                                    opacity: isHidden ? 0.3 : 1,
-                                    backgroundImage: group.inventoryBucket === 'FG'
-                                      ? 'repeating-linear-gradient(45deg, rgba(100,116,139,0.4) 0, rgba(100,116,139,0.4) 0.7px, transparent 0.7px, transparent 3px), repeating-linear-gradient(-45deg, rgba(100,116,139,0.4) 0, rgba(100,116,139,0.4) 0.7px, transparent 0.7px, transparent 3px)'
-                                      : group.inventoryBucket === 'ASIS'
-                                        ? 'radial-gradient(circle, rgba(100,116,139,0.4) 0.8px, transparent 0.8px)'
-                                        : undefined,
-                                    backgroundSize: group.inventoryBucket === 'ASIS' ? '4px 4px' : undefined,
-                                  }}
+                                <BucketPill
+                                  bucket={group.inventoryBucket}
+                                  variant="drawer"
+                                  className="min-w-0"
+                                  as="div"
                                 >
                                   <div
                                     className="h-4 w-4 rounded-sm shrink-0 bg-gray-500 text-white flex items-center justify-center text-[9px] font-semibold"
@@ -1104,7 +1092,7 @@ export function WarehouseMapNew({ locations }: WarehouseMapNewProps) {
                                   <span className="truncate text-sm font-medium">
                                     {group.name}
                                   </span>
-                                </div>
+                                </BucketPill>
                                 <span className={`truncate flex-1 text-left text-sm ${isHidden ? 'opacity-40 line-through' : ''}`}>
                                   {' '}
                                 </span>

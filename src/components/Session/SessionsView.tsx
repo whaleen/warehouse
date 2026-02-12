@@ -4,6 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
+import { BucketPill } from '@/components/ui/bucket-pill';
 import { Card } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Loader2, Search } from 'lucide-react';
@@ -111,24 +112,25 @@ export function SessionsView({ onViewChange, onMenuClick }: SessionsViewProps) {
 
       const { data: inventoryItems, error: inventoryError } = await supabase
         .from('inventory_items')
-        .select('id, sub_inventory, inventory_type')
+        .select('id, sub_inventory, inventory_type, inventory_bucket')
         .eq('location_id', locationId)
         .limit(50000); // Override default 1000 row limit
 
       if (inventoryError) throw inventoryError;
 
-      const itemMap = new Map<string, { sub_inventory: string | null; inventory_type: string | null }>();
+      const itemMap = new Map<string, { sub_inventory: string | null; inventory_bucket: string | null }>();
       const totalsByKey = new Map<string, number>();
 
       for (const item of inventoryItems ?? []) {
         if (!item.id) continue;
+        const bucket = item.inventory_bucket || item.inventory_type || 'unknown';
         const key = item.sub_inventory
           ? `load:${item.sub_inventory}`
-          : `type:${item.inventory_type ?? 'unknown'}`;
+          : `bucket:${bucket}`;
         totalsByKey.set(key, (totalsByKey.get(key) ?? 0) + 1);
         itemMap.set(item.id, {
           sub_inventory: item.sub_inventory ?? null,
-          inventory_type: item.inventory_type ?? null,
+          inventory_bucket: bucket,
         });
       }
 
@@ -151,9 +153,10 @@ export function SessionsView({ onViewChange, onMenuClick }: SessionsViewProps) {
       for (const id of scannedIds) {
         const item = itemMap.get(id);
         if (!item) continue;
+        const bucket = item.inventory_bucket || 'unknown';
         const key = item.sub_inventory
           ? `load:${item.sub_inventory}`
-          : `type:${item.inventory_type ?? 'unknown'}`;
+          : `bucket:${bucket}`;
         scannedByKey.set(key, (scannedByKey.get(key) ?? 0) + 1);
       }
 
@@ -167,9 +170,9 @@ export function SessionsView({ onViewChange, onMenuClick }: SessionsViewProps) {
       // No stale snapshot fallback - query is loading, use 0 until data arrives
       return { total: 0, scanned: session.scannedCount };
     }
-    const key = session.inventoryType === 'ASIS' && session.subInventory
+    const key = session.subInventory
       ? `load:${session.subInventory}`
-      : `type:${session.inventoryType}`;
+      : `bucket:${session.inventoryType}`;
     const total = sessionCounts.totalsByKey.get(key) ?? 0;
     const scanned = sessionCounts.scannedByKey.get(key) ?? 0;
     return { total, scanned };
@@ -191,17 +194,16 @@ export function SessionsView({ onViewChange, onMenuClick }: SessionsViewProps) {
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="min-w-0 space-y-2">
             <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-              <Badge variant="outline">{inventoryTypeLabels[session.inventoryType]}</Badge>
+              <BucketPill bucket={session.inventoryType} />
               {session.subInventory && (() => {
                 const metadata = sessionLoadMetadata.get(session.subInventory);
                 const friendlyName = metadata?.friendly_name;
                 const color = metadata?.primary_color;
-                const cso = metadata?.ge_cso;
-                const csoDisplay = cso
-                  ? isMobile
-                    ? `...${cso.slice(-4)}`
-                    : cso
-                  : null;
+                const csoValue = metadata?.ge_cso?.trim() || '';
+                const csoTail = csoValue ? csoValue.slice(-4) : '';
+                const csoPrefix = csoValue.length > 4
+                  ? (isMobile ? '...' : csoValue.slice(0, -4))
+                  : '';
 
                 return (
                   <Badge variant="secondary" className="flex items-center gap-1.5">
@@ -213,7 +215,15 @@ export function SessionsView({ onViewChange, onMenuClick }: SessionsViewProps) {
                     )}
                     <span>
                       {friendlyName || session.subInventory}
-                      {csoDisplay && ` - ${csoDisplay}`}
+                      {csoValue && (
+                        <span>
+                          {' - '}
+                          {csoPrefix}
+                          <span className="underline decoration-dotted underline-offset-2">
+                            {csoTail || csoValue}
+                          </span>
+                        </span>
+                      )}
                     </span>
                   </Badge>
                 );

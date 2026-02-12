@@ -1,7 +1,8 @@
-import { useState, useEffect, useRef, useCallback, useMemo, type ChangeEvent } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo, type ChangeEvent, isValidElement } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
+import { BucketPill } from '@/components/ui/bucket-pill';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Loader2, Search, X, Trash2, Printer, CheckCircle2, Circle } from 'lucide-react';
 import { updateLoadMetadata } from '@/lib/loadManager';
@@ -343,7 +344,7 @@ export function LoadDetailPanel({
         ['ID', load.id],
         ['Company ID', load.company_id],
         ['Location ID', load.location_id],
-        ['Inventory Type', load.inventory_type],
+        ['Inventory Type', <BucketPill bucket={load.inventory_type} />],
         ['Load Number', load.sub_inventory_name],
         ['Friendly Name', load.friendly_name],
         ['Status', load.status],
@@ -600,7 +601,7 @@ export function LoadDetailPanel({
             .label { font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
             .value { font-size: 20px; font-weight: 700; word-break: break-word; }
             .cso-value { font-size: 44px; font-weight: 700; letter-spacing: 0.04em; }
-            .cso-emphasis { font-weight: 800; text-decoration: underline; }
+            .cso-emphasis { font-weight: 800; text-decoration: underline; text-decoration-style: dotted; text-underline-offset: 4px; }
             .barcode { margin-top: 0.1in; display: flex; justify-content: flex-start; align-items: flex-start; text-align: left; }
             .barcode svg { width: auto; max-width: 100%; height: 60px; display: block; margin: 0; }
             .tag-bottom { flex: 1; display: flex; align-items: center; justify-content: center; font-size: 160px; font-weight: 800; }
@@ -859,8 +860,8 @@ export function LoadDetailPanel({
                       {syntheticSerial && (
                         <Badge variant="outline">No serial</Badge>
                       )}
-                      {(item.inventory_state === 'staged' || item.source_type === 'ge_sta') && (
-                        <Badge variant="secondary">Staged (STA)</Badge>
+                      {item.inventory_state === 'staged' && (
+                        <Badge variant="secondary">Staged</Badge>
                       )}
                     </>
                   );
@@ -989,7 +990,11 @@ export function LoadDetailPanel({
                   <div key={label} className="space-y-1">
                     <div className="text-xs text-muted-foreground">{label}</div>
                     <div className="font-medium break-words">
-                      {value === null || value === undefined ? '—' : String(value)}
+                      {value === null || value === undefined
+                        ? '—'
+                        : isValidElement(value)
+                          ? value
+                          : String(value)}
                     </div>
                   </div>
                 ))}

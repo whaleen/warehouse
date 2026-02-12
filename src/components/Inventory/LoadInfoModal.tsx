@@ -1,5 +1,7 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import type { LoadMetadata } from '@/types/inventory';
+import { BucketPill } from '@/components/ui/bucket-pill';
+import { CsoValue } from '@/components/ui/cso-value';
 
 interface LoadInfoModalProps {
   load: LoadMetadata | null;
@@ -47,7 +49,7 @@ export function LoadInfoModal({ load, open, onOpenChange, itemCount }: LoadInfoM
               </div>
               <div>
                 <div className="text-xs text-muted-foreground">Inventory Type</div>
-                <div className="font-medium">{load.inventory_type}</div>
+                <BucketPill bucket={load.inventory_type} />
               </div>
               {itemCount !== undefined && (
                 <div>
@@ -86,7 +88,9 @@ export function LoadInfoModal({ load, open, onOpenChange, itemCount }: LoadInfoM
               </div>
               <div>
                 <div className="text-xs text-muted-foreground">GE CSO</div>
-                <div className="font-medium">{load.ge_cso || '—'}</div>
+                <div className="font-medium">
+                  {load.ge_cso ? <CsoValue value={load.ge_cso} className="font-mono" /> : '—'}
+                </div>
               </div>
               <div>
                 <div className="text-xs text-muted-foreground">GE CSO Status</div>

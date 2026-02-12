@@ -46,6 +46,10 @@ export type InventorySubInventoryOption = {
   color?: string | null;
   friendlyName?: string | null;
   cso?: string | null;
+  ge_source_status?: string | null;
+  ge_cso_status?: string | null;
+  ge_submitted_date?: string | null;
+  pickup_date?: string | null;
 };
 
 const chunkArray = <T,>(items: T[], size: number) => {
@@ -307,11 +311,17 @@ export async function getSubInventoryOptions(params: {
   if (typesWithLoads.includes(inventoryType)) {
     // Query load_metadata for ASIS/FG loads
     const types = resolveInventoryTypes(inventoryType);
-    const { data, error } = await supabase
+    let loadQuery = supabase
       .from('load_metadata')
-      .select('sub_inventory_name, friendly_name, primary_color, ge_cso')
+      .select('sub_inventory_name, friendly_name, primary_color, ge_cso, ge_source_status, ge_cso_status, ge_submitted_date, pickup_date')
       .eq('location_id', locationId)
       .in('inventory_type', types);
+
+    if (inventoryType === 'ASIS') {
+      loadQuery = loadQuery.or('ge_cso_status.is.null,ge_cso_status.neq.Delivered');
+    }
+
+    const { data, error } = await loadQuery;
 
     if (error) throw new Error(error.message);
 
@@ -319,8 +329,12 @@ export async function getSubInventoryOptions(params: {
       value: string;
       friendlyName?: string | null;
       color?: string | null;
-      cso?: string | null;
-    }>();
+        cso?: string | null;
+        ge_source_status?: string | null;
+        ge_cso_status?: string | null;
+        ge_submitted_date?: string | null;
+        pickup_date?: string | null;
+      }>();
 
     (data ?? []).forEach((item) => {
       const value = item.sub_inventory_name?.trim();
@@ -331,6 +345,10 @@ export async function getSubInventoryOptions(params: {
         friendlyName: item.friendly_name?.trim() || existing?.friendlyName || null,
         color: item.primary_color?.trim() || existing?.color || null,
         cso: item.ge_cso?.trim() || existing?.cso || null,
+        ge_source_status: item.ge_source_status ?? existing?.ge_source_status ?? null,
+        ge_cso_status: item.ge_cso_status ?? existing?.ge_cso_status ?? null,
+        ge_submitted_date: item.ge_submitted_date ?? existing?.ge_submitted_date ?? null,
+        pickup_date: item.pickup_date ?? existing?.pickup_date ?? null,
       });
     });
 

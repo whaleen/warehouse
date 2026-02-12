@@ -47,7 +47,7 @@ export function LoadManagementView({ onMenuClick }: LoadManagementViewProps) {
   const standaloneScrollRef = useRef<HTMLDivElement | null>(null);
 
   // Filter state
-  type LoadFilter = 'all' | 'for_sale' | 'picked' | 'shipped' | 'delivered' | 'salvage';
+  type LoadFilter = 'all' | 'for_sale' | 'picked' | 'shipped' | 'salvage';
   const [loadFilter, setLoadFilter] = useState<LoadFilter>('all');
 
   // Dialog states
@@ -192,12 +192,6 @@ export function LoadManagementView({ onMenuClick }: LoadManagementViewProps) {
     return true;
   };
 
-  useEffect(() => {
-    if (!showAway && loadFilter === 'delivered') {
-      setLoadFilter('all');
-    }
-  }, [showAway, loadFilter]);
-
   return (
     <>
       <div className="h-screen bg-background flex flex-col">
@@ -227,12 +221,7 @@ export function LoadManagementView({ onMenuClick }: LoadManagementViewProps) {
                   { key: 'for_sale', label: 'For Sale' },
                   { key: 'picked', label: 'Picked' },
                   { key: 'shipped', label: 'Shipped' },
-                  { key: 'delivered', label: 'Delivered' },
                 ] as const).map(({ key, label }) => {
-                  // Only hide "delivered" when showAway is off (shipped is still on floor)
-                  if (!showAway && key === 'delivered') {
-                    return null;
-                  }
                   const count = loads.filter((load) => {
                     if (!isVisibleLoad(load)) return false;
                     if (key === 'all') return true;
@@ -259,7 +248,7 @@ export function LoadManagementView({ onMenuClick }: LoadManagementViewProps) {
                   );
                 })}
                 <div className="flex items-center gap-2 ml-auto">
-                  <span className="text-xs text-muted-foreground">Show delivered</span>
+                  <span className="text-xs text-muted-foreground">Include delivered</span>
                   <Switch checked={showAway} onCheckedChange={setShowAway} />
                 </div>
               </div>
@@ -421,7 +410,7 @@ export function LoadManagementView({ onMenuClick }: LoadManagementViewProps) {
         }
         description={
           loadPendingDelete
-            ? `This removes the load metadata but keeps all ${loadPendingDelete.inventory_type} items. Items will no longer be assigned to this load.`
+            ? `This removes the load metadata but keeps all ${loadPendingDelete.inventory_type} bucket items. Items will no longer be assigned to this load.`
             : undefined
         }
         confirmText="Delete Load"

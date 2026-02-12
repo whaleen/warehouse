@@ -6,7 +6,9 @@
  */
 
 import { Badge } from '@/components/ui/badge';
+import { BucketPill } from '@/components/ui/bucket-pill';
 import { Button } from '@/components/ui/button';
+import { CsoValue } from '@/components/ui/cso-value';
 import { Package, PackageCheck, TruckIcon, ShoppingCart, Warehouse, Edit, AlertTriangle, CheckCircle, MapPin } from 'lucide-react';
 import type { LoadMetadata } from '@/types/inventory';
 import { cn } from '@/lib/utils';
@@ -226,8 +228,9 @@ export function LoadDisplay({
             </div>
             <div>
               <div className="font-semibold text-sm">{displayName}</div>
-              <div className="text-xs text-muted-foreground">
-                {load.inventory_type} • {load.ge_units || '0'} items
+              <div className="text-xs text-muted-foreground flex items-center gap-2">
+                <BucketPill bucket={load.inventory_type} />
+                <span>• {load.ge_units || '0'} items</span>
               </div>
             </div>
           </div>
@@ -241,7 +244,7 @@ export function LoadDisplay({
           )}
           {showCSO && load.ge_cso && (
             <Badge variant="outline" className="text-xs">
-              CSO: {load.ge_cso}
+              CSO: <CsoValue value={load.ge_cso} className="font-mono" />
             </Badge>
           )}
         </div>
@@ -338,9 +341,10 @@ export function LoadDisplay({
           </div>
           <div>
             <div className="font-semibold">{displayName}</div>
-            <div className="text-sm text-muted-foreground">
-              {load.sub_inventory_name} • {load.inventory_type}
-              {isSalvage && ' • Salvage'}
+            <div className="text-sm text-muted-foreground flex items-center gap-2">
+              <span>{load.sub_inventory_name}</span>
+              <BucketPill bucket={load.inventory_type} />
+              {isSalvage && <Badge variant="outline">Salvage</Badge>}
             </div>
           </div>
         </div>
@@ -374,7 +378,7 @@ export function LoadDisplay({
           </Badge>
         )}
         {showCSO && load.ge_cso && (
-          <Badge variant="outline">CSO: {load.ge_cso}</Badge>
+          <Badge variant="outline">CSO: <CsoValue value={load.ge_cso} className="font-mono" /></Badge>
         )}
         {load.ge_units && (
           <Badge variant="outline">{load.ge_units} items</Badge>

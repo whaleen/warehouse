@@ -1,7 +1,9 @@
 import { memo, useEffect, useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { BucketPill } from '@/components/ui/bucket-pill';
 import { Button } from '@/components/ui/button';
+import { CsoValue } from '@/components/ui/cso-value';
 import { Check, Copy, ExternalLink, Package } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { InventoryItem, Product } from '@/types/inventory';
@@ -97,6 +99,10 @@ function CopyField({
 }) {
   const displayValue = value || '-';
   const isInteractive = Boolean(onValueClick);
+  const isCso = label.toLowerCase() === 'cso';
+  const valueContent = isCso && displayValue !== '-'
+    ? <CsoValue value={displayValue} />
+    : displayValue;
 
   const handleValueClick = (event: React.MouseEvent) => {
     event.stopPropagation();
@@ -113,12 +119,12 @@ function CopyField({
             className="flex items-center gap-1 font-mono text-xs text-primary hover:underline break-all"
             onClick={handleValueClick}
           >
-            {displayValue}
+            {valueContent}
             <ExternalLink className="h-3 w-3" />
           </button>
         ) : (
           <div className={cn('font-mono text-xs break-all', displayValue === '-' ? 'text-muted-foreground' : 'text-foreground')}>
-            {displayValue}
+            {valueContent}
           </div>
         )}
       </div>
@@ -219,20 +225,7 @@ export const InventoryItemCard = memo(function InventoryItemCard({
                 )}
               </div>
               {showInventoryTypeBadge && inventoryBucket && (
-                <span
-                  className="inline-flex items-center rounded-sm border px-2 py-0.5 text-[10px] font-semibold tracking-wide"
-                  style={{
-                    backgroundColor: 'rgba(255,255,255,0.9)',
-                    backgroundImage: inventoryBucket === 'FG'
-                      ? 'repeating-linear-gradient(45deg, rgba(100,116,139,0.4) 0, rgba(100,116,139,0.4) 0.7px, transparent 0.7px, transparent 3px), repeating-linear-gradient(-45deg, rgba(100,116,139,0.4) 0, rgba(100,116,139,0.4) 0.7px, transparent 0.7px, transparent 3px)'
-                      : inventoryBucket === 'ASIS'
-                        ? 'radial-gradient(circle, rgba(100,116,139,0.4) 0.8px, transparent 0.8px)'
-                        : undefined,
-                    backgroundSize: inventoryBucket === 'ASIS' ? '4px 4px' : undefined,
-                  }}
-                >
-                  {inventoryBucket}
-                </span>
+                <BucketPill bucket={inventoryBucket} />
               )}
               {availabilityStatus && (
                 <Badge variant="outline">{availabilityStatus}</Badge>
